@@ -1,0 +1,29 @@
+기본 : web,jdbc,h2,  jpa,  thymeleaf, devtools(정적자원재시작), lombok까지 있는 상태
+
+1.프로젝트 폴더 이름 변경하기
+  settings.gradle에서  rootproject이름 변경하기
+2.인텔리제이의 경우 프로젝트이름, module이름 변경하기
+
+정적자원재시작
+thymeleaf html변경 후 저장만할게 아니라 Ctrl + Shift + F9로 recompile 해줘야함. (첫번째는 좀 느림)
+Settings- advancedSetting에  Build -Complier 부분 옵션  allow-auto  확인
+서버 실행할 떄 LiveReload server is running on port 35729 가 있다면 liveReload기능은 잘 적용중이라고 보면됨
+
+항상 작업하기전에 현재 작업이 어느 브랜치에서 하고 있는건지 확인 하자.
+pull하기전에 로컬백업.
+
+
+1. 카카오 map API를 이용해서  전국의 인형뽑기방 API를 보여주는 기능을 만들거고. (상세 내역까지는 생각안했어. )
+2. 어떤 인형뽑기 방과 , 어떤 인형종류들이 있는지, 어떤 인형기계 들이 있는지, 기계힘은 어떤지  등을 제공할거고
+   커뮤니티를 만들어서  후기 등을  작성하게 할거야.  배민처럼 가게별 후기
+3.  회원가입은 기본적으로 카카오 구글로그인 +   직접 회원 로그인을 하려고 하고
+4. 기술적으로는  spring boot에  나중에 APP 까지 생각해서 CSR 방식으로 만드려고 해.
+    프론화면은 뭘로 만들진 모르겠어.  프론트 화면을 제공해주는 웹 서버를 나중에  분리할지는 모르겠지만 일단 현재 이 프로젝트 (spring boot was)에 같이하고
+     REST API만 따로 만드는 걸로하자.   jwt토큰으로 인증해야겠지?
+
+5. 여기에 맞춰 기능정의만 해줘 (SPRING BOOT API  JWT는 참고만 하라는 얘기였고 기능 요구사항은 작성 안해도 돼)
+   사용자 입장에서 제공받는 기능들만 정의해줘  (내부 기능까지는 없는 기능사항 요구정의서? )
+ MD 형식으로 작성해줘
+
+
+
