@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>커뮤니티 - 인형뽑기방 정보</title>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <th:block th:replace="~{layout/common-styles :: styles}"></th:block>
+
+    <style>
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-header h1 {
+            font-size: 28px;
+            font-weight: 500;
+            color: #212121;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .page-header .material-icons {
+            font-size: 32px;
+            color: #6200ea;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 4px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background-color: #6200ea;
+            color: white;
+            box-shadow: 0 2px 4px rgba(98, 0, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            background-color: #5000ca;
+            box-shadow: 0 4px 8px rgba(98, 0, 234, 0.4);
+        }
+
+        .btn .material-icons {
+            font-size: 18px;
+        }
+
+        .search-filter-section {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-input-wrapper {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+
+        .search-input-wrapper input {
+            width: 100%;
+            padding: 12px 16px 12px 40px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .search-input-wrapper input:focus {
+            border-color: #6200ea;
+        }
+
+        .search-input-wrapper .material-icons {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #757575;
+            font-size: 20px;
+        }
+
+        .filter-select {
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .filter-select:focus {
+            border-color: #6200ea;
+        }
+
+        .post-list {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .post-item {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .post-item:hover {
+            background-color: #f5f5f5;
+        }
+
+        .post-item:last-child {
+            border-bottom: none;
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .post-title {
+            font-size: 16px;
+            font-weight: 500;
+            color: #212121;
+            margin-bottom: 8px;
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #757575;
+        }
+
+        .post-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .post-meta-item .material-icons {
+            font-size: 16px;
+        }
+
+        .post-content {
+            font-size: 14px;
+            color: #616161;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 13px;
+            color: #757575;
+        }
+
+        .post-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .post-stat .material-icons {
+            font-size: 16px;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .pagination-btn {
+            width: 36px;
+            height: 36px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .pagination-btn:hover {
+            background-color: #f5f5f5;
+        }
+
+        .pagination-btn.active {
+            background-color: #6200ea;
+            color: white;
+            border-color: #6200ea;
+        }
+
+        .pagination-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #757575;
+        }
+
+        .empty-state .material-icons {
+            font-size: 80px;
+            opacity: 0.5;
+            margin-bottom: 16px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{layout/common-styles :: header}"></th:block>
+
+    <main class="main-content">
+        <div class="page-header">
+            <h1>
+                <span class="material-icons">forum</span>
+                커뮤니티
+            </h1>
+            <a href="/community/write" class="btn btn-primary">
+                <span class="material-icons">edit</span>
+                글쓰기
+            </a>
+        </div>
+
+        <div class="search-filter-section">
+            <div class="search-input-wrapper">
+                <span class="material-icons">search</span>
+                <input type="text" placeholder="게시글 검색...">
+            </div>
+            <select class="filter-select">
+                <option value="latest">최신순</option>
+                <option value="popular">인기순</option>
+                <option value="views">조회순</option>
+            </select>
+            <select class="filter-select">
+                <option value="all">전체</option>
+                <option value="review">후기</option>
+                <option value="question">질문</option>
+                <option value="tip">팁/노하우</option>
+            </select>
+        </div>
+
+        <div class="post-list">
+            <div class="post-item" onclick="location.href='/community/detail'">
+                <div class="post-header">
+                    <div>
+                        <div class="post-title">강남역 신규 오픈한 인형뽑기방 후기</div>
+                        <div class="post-meta">
+                            <span class="post-meta-item">
+                                <span class="material-icons">person</span>
+                                <span>인형러버123</span>
+                            </span>
+                            <span class="post-meta-item">
+                                <span class="material-icons">schedule</span>
+                                <span>2시간 전</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-content">
+                    오늘 강남역 근처에 새로 오픈한 인형뽑기방 다녀왔어요! 기계도 깨끗하고 인형도 다양해서 너무 좋았습니다. 특히 산리오 캐릭터들이 엄청 많더라구요...
+                </div>
+                <div class="post-stats">
+                    <span class="post-stat">
+                        <span class="material-icons">visibility</span>
+                        <span>245</span>
+                    </span>
+                    <span class="post-stat">
+                        <span class="material-icons">thumb_up</span>
+                        <span>32</span>
+                    </span>
+                    <span class="post-stat">
+                        <span class="material-icons">comment</span>
+                        <span>15</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="post-item" onclick="location.href='/community/detail'">
+                <div class="post-header">
+                    <div>
+                        <div class="post-title">인형뽑기 초보자인데 팁 좀 알려주세요!</div>
+                        <div class="post-meta">
+                            <span class="post-meta-item">
+                                <span class="material-icons">person</span>
+                                <span>뽑기초보</span>
+                            </span>
+                            <span class="post-meta-item">
+                                <span class="material-icons">schedule</span>
+                                <span>5시간 전</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-content">
+                    인형뽑기 처음 해보는데 어떻게 하면 잘 뽑을 수 있을까요? 고수님들의 팁이 궁금합니다!
+                </div>
+                <div class="post-stats">
+                    <span class="post-stat">
+                        <span class="material-icons">visibility</span>
+                        <span>189</span>
+                    </span>
+                    <span class="post-stat">
+                        <span class="material-icons">thumb_up</span>
+                        <span>18</span>
+                    </span>
+                    <span class="post-stat">
+                        <span class="material-icons">comment</span>
+                        <span>28</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="post-item" onclick="location.href='/community/detail'">
+                <div class="post-header">
+                    <div>
+                        <div class="post-title">홍대 UFO 캐처존 리뉴얼 소식!</div>
+                        <div class="post-meta">
+                            <span class="post-meta-item">
+                                <span class="material-icons">person</span>
+                                <span>홍대맛집</span>
+                            </span>
+                            <span class="post-meta-item">
+                                <span class="material-icons">schedule</span>
+                                <span>1일 전</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-content">
+                    홍대에 있는 UFO 캐처존이 리뉴얼했다고 해서 다녀왔습니다. 기계들이 전부 새 것으로 교체되었고 인형 라인업도 완전히 바뀌었어요!
+                </div>
+                <div class="post-stats">
+                    <span class="post-stat">
+                        <span class="material-icons">visibility</span>
+                        <span>412</span>
+                    </span>
+                    <span class="post-stat">
+                        <span class="material-icons">thumb_up</span>
+                        <span>56</span>
+                    </span>
+                    <span class="post-stat">
+                        <span class="material-icons">comment</span>
+                        <span>23</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="post-item" onclick="location.href='/community/detail'">
+                <div class="post-header">
+                    <div>
+                        <div class="post-title">오늘의 전리품 자랑 😊</div>
+                        <div class="post-meta">
+                            <span class="post-meta-item">
+                                <span class="material-icons">person</span>
+                                <span>인형수집가</span>
+                            </span>
+                            <span class="post-meta-item">
+                                <span class="material-icons">schedule</span>
+                                <span>1일 전</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-content">
+                    오늘 10번 만에 겨우 뽑았어요! 너무 귀여워서 사진 공유합니다 ㅎㅎ
+                </div>
+                <div class="post-stats">
+                    <span class="post-stat">
+                        <span class="material-icons">visibility</span>
+                        <span>328</span>
+                    </span>
+                    <span class="post-stat">
+                        <span class="material-icons">thumb_up</span>
+                        <span>42</span>
+                    </span>
+                    <span class="post-stat">
+                        <span class="material-icons">comment</span>
+                        <span>19</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="post-item" onclick="location.href='/community/detail'">
+                <div class="post-header">
+                    <div>
+                        <div class="post-title">서울 지역 인형뽑기방 추천 리스트</div>
+                        <div class="post-meta">
+                            <span class="post-meta-item">
+                                <span class="material-icons">person</span>
+                                <span>매장탐험가</span>
+                            </span>
+                            <span class="post-meta-item">
+                                <span class="material-icons">schedule</span>
+                                <span>2일 전</span>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div class="post-content">
+                    제가 직접 가본 서울 지역 인형뽑기방 중에서 추천할 만한 곳들 정리해봤어요. 위치별로 특징도 함께 정리했습니다!
+                </div>
+                <div class="post-stats">
+                    <span class="post-stat">
+                        <span class="material-icons">visibility</span>
+                        <span>567</span>
+                    </span>
+                    <span class="post-stat">
+                        <span class="material-icons">thumb_up</span>
+                        <span>78</span>
+                    </span>
+                    <span class="post-stat">
+                        <span class="material-icons">comment</span>
+                        <span>34</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="pagination">
+            <button class="pagination-btn" disabled>
+                <span class="material-icons">chevron_left</span>
+            </button>
+            <button class="pagination-btn active">1</button>
+            <button class="pagination-btn">2</button>
+            <button class="pagination-btn">3</button>
+            <button class="pagination-btn">4</button>
+            <button class="pagination-btn">5</button>
+            <button class="pagination-btn">
+                <span class="material-icons">chevron_right</span>
+            </button>
+        </div>
+    </main>
+
+    <th:block th:replace="~{layout/common-styles :: footer}"></th:block>
+    <th:block th:replace="~{layout/common-styles :: scripts}"></th:block>
+</body>
+</html>
+

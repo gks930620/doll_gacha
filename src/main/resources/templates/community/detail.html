@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>게시글 상세 - 커뮤니티</title>
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <th:block th:replace="~{layout/common-styles :: styles}"></th:block>
+
+    <style>
+        .post-detail {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .post-detail-header {
+            padding: 24px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .post-category {
+            display: inline-block;
+            padding: 4px 12px;
+            background-color: #e1bee7;
+            color: #6200ea;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .post-detail-title {
+            font-size: 24px;
+            font-weight: 500;
+            color: #212121;
+            margin-bottom: 16px;
+        }
+
+        .post-detail-meta {
+            display: flex;
+            gap: 24px;
+            font-size: 14px;
+            color: #757575;
+            flex-wrap: wrap;
+        }
+
+        .post-meta-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .post-meta-item .material-icons {
+            font-size: 18px;
+        }
+
+        .post-detail-stats {
+            display: flex;
+            gap: 16px;
+            padding: 16px 24px;
+            background-color: #f5f5f5;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .post-stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            color: #757575;
+        }
+
+        .post-stat .material-icons {
+            font-size: 18px;
+        }
+
+        .post-detail-content {
+            padding: 32px 24px;
+            line-height: 1.8;
+            color: #424242;
+            font-size: 15px;
+        }
+
+        .post-detail-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            padding: 24px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .btn {
+            padding: 10px 24px;
+            border-radius: 4px;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-icon {
+            padding: 12px 24px;
+            background-color: #f5f5f5;
+            color: #424242;
+            border: 1px solid #e0e0e0;
+        }
+
+        .btn-icon:hover {
+            background-color: #e0e0e0;
+        }
+
+        .btn-icon.active {
+            background-color: #e1bee7;
+            color: #6200ea;
+            border-color: #6200ea;
+        }
+
+        .btn .material-icons {
+            font-size: 18px;
+        }
+
+        .post-nav-actions {
+            display: flex;
+            justify-content: space-between;
+            padding: 24px;
+            background-color: #fafafa;
+        }
+
+        .btn-secondary {
+            background-color: #f5f5f5;
+            color: #424242;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e0e0e0;
+        }
+
+        .btn-primary {
+            background-color: #6200ea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #5000ca;
+        }
+
+        .btn-danger {
+            background-color: #d32f2f;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #b71c1c;
+        }
+
+        .comments-section {
+            background: white;
+            border-radius: 8px;
+            margin-top: 24px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .comments-header {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #212121;
+        }
+
+        .comments-header .material-icons {
+            color: #6200ea;
+        }
+
+        .comment-write {
+            margin-bottom: 24px;
+        }
+
+        .comment-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 14px;
+            font-family: 'Roboto', sans-serif;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+        }
+
+        .comment-textarea:focus {
+            border-color: #6200ea;
+        }
+
+        .comment-write-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
+
+        .comment-list {
+            border-top: 1px solid #e0e0e0;
+            padding-top: 20px;
+        }
+
+        .comment-item {
+            padding: 16px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .comment-item:last-child {
+            border-bottom: none;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .comment-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #424242;
+        }
+
+        .comment-author .material-icons {
+            font-size: 20px;
+            color: #757575;
+        }
+
+        .comment-date {
+            font-size: 12px;
+            color: #9e9e9e;
+        }
+
+        .comment-content {
+            font-size: 14px;
+            color: #616161;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .comment-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .comment-action-btn {
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            font-size: 12px;
+            color: #757575;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .comment-action-btn:hover {
+            color: #6200ea;
+        }
+
+        .comment-action-btn .material-icons {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <th:block th:replace="~{layout/common-styles :: header}"></th:block>
+
+    <main class="main-content">
+        <article class="post-detail">
+            <div class="post-detail-header">
+                <span class="post-category">후기</span>
+                <h1 class="post-detail-title">강남역 신규 오픈한 인형뽑기방 후기</h1>
+                <div class="post-detail-meta">
+                    <span class="post-meta-item">
+                        <span class="material-icons">person</span>
+                        <span>인형러버123</span>
+                    </span>
+                    <span class="post-meta-item">
+                        <span class="material-icons">schedule</span>
+                        <span>2025년 12월 18일 14:30</span>
+                    </span>
+                </div>
+            </div>
+
+            <div class="post-detail-stats">
+                <span class="post-stat">
+                    <span class="material-icons">visibility</span>
+                    <span>245</span>
+                </span>
+                <span class="post-stat">
+                    <span class="material-icons">thumb_up</span>
+                    <span>32</span>
+                </span>
+                <span class="post-stat">
+                    <span class="material-icons">comment</span>
+                    <span>15</span>
+                </span>
+            </div>
+
+            <div class="post-detail-content">
+                <p>오늘 강남역 근처에 새로 오픈한 인형뽑기방 다녀왔어요! 🎉</p>
+                <p>위치는 강남역 10번 출구에서 도보 5분 거리에 있고, 건물 2층에 위치해있습니다.</p>
+
+                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 18px;">매장 분위기</h3>
+                <p>매장이 굉장히 넓고 깨끗해요. 기계도 최신형으로 갖춰져 있고, 조명도 밝아서 인형을 잘 볼 수 있습니다.
+                특히 각 기계마다 난이도가 표시되어 있어서 초보자들도 쉽게 도전할 수 있을 것 같아요.</p>
+
+                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 18px;">인형 라인업</h3>
+                <p>산리오 캐릭터들이 엄청 많더라구요! 시나모롤, 쿠로미, 마이멜로디 등등...
+                그 외에도 디즈니, 포켓몬, 짱구 인형들도 있었어요. 인형 상태도 좋고 사이즈도 다양했습니다.</p>
+
+                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 18px;">가격</h3>
+                <p>1회 1,000원이고, 10회권은 9,000원에 판매하고 있어요.
+                신규 오픈 이벤트로 지금은 10회권 구매 시 2회 더 서비스로 주더라구요!</p>
+
+                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 18px;">총평</h3>
+                <p>기계 상태도 좋고 인형 퀄리티도 좋아서 만족스러웠습니다.
+                다만 오픈한지 얼마 안 돼서 사람이 좀 많았어요. 평일 오후에 가시면 더 여유롭게 즐기실 수 있을 것 같아요!</p>
+
+                <p style="margin-top: 24px;">추천드립니다! ⭐⭐⭐⭐⭐</p>
+            </div>
+
+            <div class="post-actions">
+                <button class="btn btn-icon" onclick="toggleLike()">
+                    <span class="material-icons">thumb_up</span>
+                    <span>좋아요 32</span>
+                </button>
+                <button class="btn btn-icon">
+                    <span class="material-icons">bookmark_border</span>
+                    <span>북마크</span>
+                </button>
+                <button class="btn btn-icon">
+                    <span class="material-icons">share</span>
+                    <span>공유</span>
+                </button>
+            </div>
+
+            <div class="post-nav-actions">
+                <a href="/community" class="btn btn-secondary">
+                    <span class="material-icons">list</span>
+                    목록
+                </a>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-primary">
+                        <span class="material-icons">edit</span>
+                        수정
+                    </button>
+                    <button class="btn btn-danger" onclick="deletePost()">
+                        <span class="material-icons">delete</span>
+                        삭제
+                    </button>
+                </div>
+            </div>
+        </article>
+
+        <section class="comments-section">
+            <div class="comments-header">
+                <span class="material-icons">comment</span>
+                <span>댓글 15개</span>
+            </div>
+
+            <div class="comment-write">
+                <textarea class="comment-textarea" placeholder="댓글을 입력하세요..." id="commentInput"></textarea>
+                <div class="comment-write-actions">
+                    <button class="btn btn-primary" onclick="submitComment()">
+                        <span class="material-icons">send</span>
+                        댓글 작성
+                    </button>
+                </div>
+            </div>
+
+            <div class="comment-list">
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <div class="comment-author">
+                            <span class="material-icons">account_circle</span>
+                            <span>인형수집가</span>
+                        </div>
+                        <span class="comment-date">1시간 전</span>
+                    </div>
+                    <div class="comment-content">
+                        오! 저도 이번주에 가봐야겠어요! 정보 감사합니다 😊
+                    </div>
+                    <div class="comment-actions">
+                        <button class="comment-action-btn">
+                            <span class="material-icons">thumb_up</span>
+                            <span>5</span>
+                        </button>
+                        <button class="comment-action-btn">
+                            <span class="material-icons">reply</span>
+                            <span>답글</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <div class="comment-author">
+                            <span class="material-icons">account_circle</span>
+                            <span>뽑기고수</span>
+                        </div>
+                        <span class="comment-date">2시간 전</span>
+                    </div>
+                    <div class="comment-content">
+                        여기 진짜 좋아요! 저도 어제 다녀왔는데 시나모롤 3개나 뽑았어요 ㅎㅎ
+                    </div>
+                    <div class="comment-actions">
+                        <button class="comment-action-btn">
+                            <span class="material-icons">thumb_up</span>
+                            <span>8</span>
+                        </button>
+                        <button class="comment-action-btn">
+                            <span class="material-icons">reply</span>
+                            <span>답글</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="comment-item">
+                    <div class="comment-header">
+                        <div class="comment-author">
+                            <span class="material-icons">account_circle</span>
+                            <span>매장탐험가</span>
+                        </div>
+                        <span class="comment-date">3시간 전</span>
+                    </div>
+                    <div class="comment-content">
+                        상세한 후기 감사합니다! 주말에 시간 내서 가봐야겠네요
+                    </div>
+                    <div class="comment-actions">
+                        <button class="comment-action-btn">
+                            <span class="material-icons">thumb_up</span>
+                            <span>3</span>
+                        </button>
+                        <button class="comment-action-btn">
+                            <span class="material-icons">reply</span>
+                            <span>답글</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <th:block th:replace="~{layout/common-styles :: footer}"></th:block>
+    <th:block th:replace="~{layout/common-styles :: scripts}"></th:block>
+
+    <script>
+        function toggleLike() {
+            alert('좋아요를 눌렀습니다!');
+        }
+
+        function deletePost() {
+            if (confirm('정말 삭제하시겠습니까?')) {
+                alert('게시글이 삭제되었습니다.');
+                window.location.href = '/community';
+            }
+        }
+
+        function submitComment() {
+            const comment = document.getElementById('commentInput').value;
+            if (!comment.trim()) {
+                alert('댓글을 입력해주세요.');
+                return;
+            }
+            alert('댓글이 작성되었습니다.');
+            document.getElementById('commentInput').value = '';
+        }
+    </script>
+</body>
+</html>
+
