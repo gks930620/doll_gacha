@@ -254,15 +254,6 @@
             box-shadow: 0 0 0 2px rgba(98, 0, 234, 0.1);
         }
 
-        .shop-count-badge {
-            background: #6200ea;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 16px;
-            font-size: 13px;
-            font-weight: 500;
-            margin-left: auto;
-        }
 
         /* Map specific styles */
         .map-wrapper {
@@ -274,7 +265,7 @@
         .map-container {
             max-width: 1200px;
             margin: 0 auto;
-            height: 600px; /* 고정 높이 */
+            height: 540px; /* 고정 높이 (600px에서 10% 감소) */
             position: relative;
             border-radius: 8px;
             overflow: hidden;
@@ -573,18 +564,13 @@
                 flex: 1;
             }
 
-            .shop-count-badge {
-                width: 100%;
-                text-align: center;
-                margin-left: 0;
-            }
 
             .map-wrapper {
                 padding: 16px;
             }
 
             .map-container {
-                height: 500px;
+                height: 450px;
                 border-radius: 4px;
             }
         }
@@ -658,10 +644,6 @@
                         <option value="">전체</option>
                     </select>
                 </div>
-
-                <div class="shop-count-badge" id="shopCount">
-                    지도 로딩 중...
-                </div>
             </div>
         </div>
 
@@ -706,7 +688,6 @@
             };
             script.onerror = function() {
                 console.error('❌ 카카오맵 스크립트 로드 실패');
-                document.getElementById('shopCount').textContent = '카카오맵 API 로드 실패. 네트워크를 확인해주세요.';
             };
             document.head.appendChild(script);
         })();
@@ -972,10 +953,6 @@
                 }]
             });
 
-            // 지도 이동/확대/축소 이벤트 등록
-            kakao.maps.event.addListener(map, 'idle', function() {
-                updateShopCount();
-            });
 
             // 기본 지역(서울) 시군구 목록 초기화
             updateSigunguSelect('서울특별시');
@@ -987,41 +964,25 @@
         // 검색 상태 변수
         let searchState = {
             sido: '',
-            sigungu: null,
-            searchedCount: 0,
-            totalRegions: 0,
-            totalApiCalls: 0
+            sigungu: null
         };
 
-        // 인형뽑기 가게 검색 (지역별)
+        // 인형뽑기 가게 검색 (DB에서 가져오기)
         function searchDollCatcherShops(region, sigungu = null) {
             currentRegion = sigungu ? `${region} ${sigungu}` : region;
             const displayText = sigungu ? `${region} ${sigungu}` : region;
-            document.getElementById('shopCount').textContent = `${displayText} 검색 중...`;
+            console.log(`🔍 ${displayText} 데이터 로딩 중...`);
 
-            // 검색 상태 초기화
+            // 검색 상태 설정
             searchState = {
                 sido: region,
-                sigungu: sigungu,
-                searchedCount: 0,
-                totalRegions: 0,
-                totalApiCalls: 0
+                sigungu: sigungu
             };
 
             // 기존 마커 제거
             clusterer.clear();
             markers = [];
             allShops = [];
-
-            // 선택된 지역의 검색 지점 가져오기
-            const regions = regionSearchPoints[region] || [];
-
-            if (regions.length === 0) {
-                document.getElementById('shopCount').textContent = `${displayText} 검색 지점이 없습니다.`;
-                return;
-            }
-
-            searchState.totalRegions = regions.length;
 
             // 지도 중심 이동
             let centerCoords;
@@ -1039,157 +1000,66 @@
                 map.setLevel(centerCoords.level);
             }
 
-            // 검색할 키워드 목록
-            const keywords = ['인형뽑기', '인형', '뽑기'];  //
+            // 서버에서 데이터 가져오기
+            let apiUrl;
+            if (sigungu) {
+                // 시군구까지 지정된 경우
+                apiUrl = `/api/doll-shops/by-region?gubun1=${encodeURIComponent(region)}&gubun2=${encodeURIComponent(sigungu)}`;
+            } else {
+                // 시도만 지정된 경우
+                apiUrl = `/api/doll-shops/by-gubun1?gubun1=${encodeURIComponent(region)}`;
+            }
 
-            // 각 지역별로 여러 키워드로 검색
-            let searchIndex = 0;
-            regions.forEach((point, regionIndex) => {
-                keywords.forEach((keyword, kwIndex) => {
-                    setTimeout(() => {
-                        const center = new kakao.maps.LatLng(point.lat, point.lng);
-                        searchWithPagination(center, point.name, keyword, 1);
-                    }, searchIndex * 120); // API 호출 간격 120ms
-                    searchIndex++;
-                });
-            });
+            console.log(`🔍 서버에서 데이터 로딩: ${displayText}`);
 
-            // 총 검색 수 업데이트
-            searchState.totalRegions = regions.length * keywords.length;
-        }
+            fetch(apiUrl)
+                .then(response => response.json())
+                .then(shops => {
+                    console.log(`✅ ${shops.length}개 가게 로드 완료`);
 
-        // 페이지네이션을 포함한 검색 함수
-        function searchWithPagination(center, regionName, keyword, pageNum) {
-            ps.keywordSearch(keyword, function(data, status, pagination) {
-                searchState.totalApiCalls++;
+                    // 데이터를 allShops에 저장하고 마커 생성
+                    shops.forEach(shop => {
+                        // DB 형식을 카카오맵 API 형식으로 변환
+                        const place = {
+                            id: shop.id,
+                            place_name: shop.businessName,
+                            address_name: shop.address,
+                            road_address_name: shop.address,
+                            phone: shop.phone || '',
+                            x: shop.longitude,
+                            y: shop.latitude,
+                            totalGameMachines: shop.totalGameMachines,
+                            approvalDate: shop.approvalDate,
+                            isOperating: shop.isOperating
+                        };
 
-                if (status === kakao.maps.services.Status.OK) {
-                    // 검색 결과 로그
-                    if (data.length > 0) {
-                        console.log(`🔍 [${regionName}] "${keyword}" 검색: ${data.length}개 발견`);
-                    }
+                        allShops.push(place);
 
-                    data.forEach(place => {
-                        // 중복 체크 (ID로 확실하게)
-                        const isDuplicate = allShops.some(shop => shop.id === place.id);
-
-                        if (!isDuplicate) {
-                            // 시군구 필터링이 활성화된 경우 주소 체크
-                            let shouldAdd = true;
-                            if (searchState.sigungu) {
-                                const addressMatch = place.address_name?.includes(searchState.sigungu) ||
-                                                    place.road_address_name?.includes(searchState.sigungu);
-                                shouldAdd = addressMatch;
-
-                                // 필터링 로그 (유성구 검색 시만)
-                                if (searchState.sido === '대전광역시' && searchState.sigungu === '유성구') {
-                                    if (addressMatch) {
-                                        console.log(`  ✅ 추가: ${place.place_name} (${place.address_name || place.road_address_name})`);
-                                    } else {
-                                        console.log(`  ❌ 제외: ${place.place_name} (${place.address_name || place.road_address_name})`);
-                                    }
-                                }
-                            }
-
-                            if (shouldAdd) {
-                                allShops.push(place);
-
-                                const position = new kakao.maps.LatLng(place.y, place.x);
-                                const marker = new kakao.maps.Marker({
-                                    position: position,
-                                    title: place.place_name
-                                });
-
-                                // 마커 클릭 이벤트
-                                kakao.maps.event.addListener(marker, 'click', function() {
-                                    displayKakaoPlaceInfo(place, marker);
-                                });
-
-                                markers.push(marker);
-                            }
-                        }
-                    });
-
-                    // 다음 페이지가 있고 3페이지(45개) 미만이면 계속 검색
-                    if (pagination.hasNextPage && pageNum < 3) {
-                        setTimeout(() => {
-                            pagination.nextPage();
-                        }, 100);
-                    } else {
-                        searchState.searchedCount++;
-                        updateProgress();
-                    }
-                } else {
-                    searchState.searchedCount++;
-                    updateProgress();
-                }
-            }, {
-                location: center,
-                radius: 20000, // 20km 반경    스펙상 0~20000까지 가능
-                size: 15
-            });
-        }
-
-        // 검색 진행 상황 업데이트
-        function updateProgress() {
-            const displayText = searchState.sigungu ?
-                `${searchState.sido} ${searchState.sigungu}` : searchState.sido;
-
-            document.getElementById('shopCount').textContent =
-                `${displayText} 검색 중... ${searchState.searchedCount}/${searchState.totalRegions} (${allShops.length}개)`;
-
-            // 모든 지역 검색 완료 시
-            if (searchState.searchedCount === searchState.totalRegions) {
-                setTimeout(() => {
-                    let filteredMarkers = markers;
-
-                    // 시군구 필터링
-                    if (searchState.sigungu) {
-                        const filteredIndices = [];
-                        allShops.forEach((shop, idx) => {
-                            if (shop.address_name?.includes(searchState.sigungu) ||
-                                shop.road_address_name?.includes(searchState.sigungu)) {
-                                filteredIndices.push(idx);
-                            }
+                        const position = new kakao.maps.LatLng(place.y, place.x);
+                        const marker = new kakao.maps.Marker({
+                            position: position,
+                            title: place.place_name
                         });
 
-                        filteredMarkers = filteredIndices.map(idx => markers[idx]);
-                        console.log(`✅ ${searchState.sigungu} 필터링: ${filteredMarkers.length}개`);
-                    }
+                        // 마커 클릭 이벤트
+                        kakao.maps.event.addListener(marker, 'click', function() {
+                            displayKakaoPlaceInfo(place, marker);
+                        });
 
-                    clusterer.addMarkers(filteredMarkers);
-                    updateShopCount();
+                        markers.push(marker);
+                    });
+
+                    // 마커를 클러스터러에 추가
+                    clusterer.addMarkers(markers);
 
                     console.log(`✅ 검색 완료!`);
-                    console.log(`- 총 ${allShops.length}개의 인형뽑기 가게 발견`);
-                    console.log(`- ${searchState.totalRegions}개 지역 검색`);
-                    console.log(`- ${searchState.totalApiCalls}회 API 호출`);
-                }, 500);
-            }
+                    console.log(`- 총 ${allShops.length}개의 인형뽑기 가게 표시`);
+                })
+                .catch(error => {
+                    console.error('❌ 데이터 로드 실패:', error);
+                });
         }
 
-        // 현재 지도 범위 내 가게 수 업데이트
-        function updateShopCount() {
-            const bounds = map.getBounds();
-            let filteredShops = allShops;
-
-            // 시군구 필터링
-            if (searchState.sigungu) {
-                filteredShops = allShops.filter(shop =>
-                    shop.address_name?.includes(searchState.sigungu) ||
-                    shop.road_address_name?.includes(searchState.sigungu)
-                );
-            }
-
-            const shopsInView = filteredShops.filter(shop => {
-                const position = new kakao.maps.LatLng(shop.y, shop.x);
-                return bounds.contain(position);
-            });
-
-            const countElement = document.getElementById('shopCount');
-            const regionText = currentRegion;
-            countElement.textContent = `${regionText}: ${shopsInView.length}개 (전체: ${filteredShops.length}개)`;
-        }
 
         // 카카오 Places API 장소 정보 표시
         function displayKakaoPlaceInfo(place, marker) {
@@ -1292,14 +1162,12 @@
             }
         }
 
-        // 시군구별 검색 (추후 DB 연동 시 사용)
+        // 시군구별 검색
         function searchDollCatcherShopsBySigungu(sido, sigungu) {
-            // 현재는 시도별 검색 후 클라이언트에서 필터링
-            // 추후 서버 API에서 시군구별 필터링 지원 시 수정
             currentRegion = `${sido} ${sigungu}`;
-            document.getElementById('shopCount').textContent = `${sido} ${sigungu} 검색 중...`;
+            console.log(`🔍 ${sido} ${sigungu} 검색 시작`);
 
-            // 일단 시도 전체 검색 후 필터링
+            // 시군구까지 지정하여 검색
             searchDollCatcherShops(sido, sigungu);
         }
 
