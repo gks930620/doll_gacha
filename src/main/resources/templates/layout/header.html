@@ -155,6 +155,10 @@
                     <span class="material-icons">map</span>
                     <span>지도</span>
                 </a>
+                <a href="/review/list" class="nav-item" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/review')} ? 'active' : ''">
+                    <span class="material-icons">rate_review</span>
+                    <span>내 리뷰</span>
+                </a>
                 <a href="/community" class="nav-item" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/community')} ? 'active' : ''">
                     <span class="material-icons">forum</span>
                     <span>커뮤니티</span>

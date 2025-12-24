@@ -8,9 +8,6 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Kakao Map API -->
-    <script type="text/javascript" src="//dapi.kakao.com/v2/maps/sdk.js?appkey=719ae502dd3351fab0a5fa57689ef5cd&libraries=services,clusterer"></script>
-
     <style>
         * {
             margin: 0;
@@ -136,105 +133,56 @@
         /* Main Content */
         .main-content {
             flex: 1;
-            max-width: 1200px;
             width: 100%;
-            margin: 0 auto;
-            padding: 24px 16px;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Footer Styles */
         .app-footer {
             background-color: #424242;
             color: #e0e0e0;
-            margin-top: auto;
             border-top: 1px solid #616161;
+            height: 80px;
+            display: flex;
+            align-items: center;
         }
 
         .footer-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 32px 16px;
+            padding: 0 24px;
+            width: 100%;
         }
 
         .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 32px;
-            margin-bottom: 24px;
-        }
-
-        .footer-section h3 {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 16px;
-            color: white;
-        }
-
-        .footer-section p,
-        .footer-section a {
-            font-size: 14px;
-            color: #e0e0e0;
-            line-height: 1.6;
-            text-decoration: none;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .footer-section a:hover {
-            color: #bb86fc;
-        }
-
-        .footer-social {
-            display: flex;
-            gap: 12px;
-            margin-top: 12px;
-        }
-
-        .social-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #616161;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            transition: background-color 0.2s;
-        }
-
-        .social-icon:hover {
-            background-color: #bb86fc;
-        }
-
-        .social-icon .material-icons {
-            font-size: 20px;
-        }
-
-        .footer-divider {
-            height: 1px;
-            background-color: #616161;
-            margin: 24px 0;
-        }
-
-        .footer-bottom {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            font-size: 14px;
+            font-size: 13px;
+        }
+
+        .footer-company {
+            color: #e0e0e0;
+        }
+
+        .footer-company strong {
+            color: white;
+            margin-right: 8px;
         }
 
         .footer-links {
             display: flex;
             gap: 16px;
-            flex-wrap: wrap;
         }
 
         .footer-links a {
             color: #e0e0e0;
             text-decoration: none;
+            font-size: 13px;
+            transition: color 0.2s;
         }
 
         .footer-links a:hover {
@@ -242,26 +190,101 @@
         }
 
         @media (max-width: 768px) {
-            .footer-bottom {
+            .app-footer {
+                height: auto;
+                padding: 20px 0;
+            }
+
+            .footer-content {
                 flex-direction: column;
+                gap: 12px;
                 text-align: center;
             }
         }
 
+        /* Region Filter Section */
+        .region-filter-section {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .filter-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #424242;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .filter-select {
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+            background: white;
+            min-width: 150px;
+            transition: border-color 0.2s;
+        }
+
+        .filter-select:hover {
+            border-color: #6200ea;
+        }
+
+        .filter-select:focus {
+            border-color: #6200ea;
+            box-shadow: 0 0 0 2px rgba(98, 0, 234, 0.1);
+        }
+
+        .shop-count-badge {
+            background: #6200ea;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 500;
+            margin-left: auto;
+        }
+
         /* Map specific styles */
-        .map-container {
+        .map-wrapper {
             width: 100%;
-            height: calc(100vh - 64px - 200px); /* viewport - header - footer */
-            min-height: 600px;
+            padding: 24px;
+            background-color: #fafafa;
+        }
+
+        .map-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            height: 600px; /* 고정 높이 */
+            position: relative;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         #map {
             width: 100%;
             height: 100%;
+            background-color: #f0f0f0;
         }
 
         .map-controls {
@@ -270,7 +293,7 @@
             left: 16px;
             right: 16px;
             z-index: 100;
-            display: flex;
+            display: none; /* 필터가 위로 이동했으므로 숨김 */
             gap: 12px;
             flex-wrap: wrap;
         }
@@ -537,17 +560,32 @@
         }
 
         @media (max-width: 768px) {
-            .map-container {
-                height: calc(100vh - 64px - 100px);
-                min-height: 400px;
+            .filter-container {
+                padding: 12px 16px;
             }
 
-            .map-controls {
-                flex-direction: column;
+            .filter-group {
+                flex: 1 1 auto;
             }
 
-            .search-box {
+            .filter-select {
                 min-width: auto;
+                flex: 1;
+            }
+
+            .shop-count-badge {
+                width: 100%;
+                text-align: center;
+                margin-left: 0;
+            }
+
+            .map-wrapper {
+                padding: 16px;
+            }
+
+            .map-container {
+                height: 500px;
+                border-radius: 4px;
             }
         }
     </style>
@@ -582,81 +620,55 @@
     </header>
 
     <main class="main-content">
-        <div class="map-container">
-            <div id="map"></div>
-
-            <div class="map-controls">
-                <div class="search-box">
-                    <span class="material-icons">search</span>
-                    <input type="text" id="searchInput" placeholder="매장 또는 지역 검색" onkeypress="if(event.key === 'Enter') searchPlaces()">
-                    <button onclick="getCurrentLocation()">
-                        <span class="material-icons">my_location</span>
-                    </button>
-                    <button onclick="searchPlaces()">
-                        <span class="material-icons">search</span>
-                    </button>
+        <!-- 지역 필터 섹션 -->
+        <div class="region-filter-section">
+            <div class="filter-container">
+                <div class="filter-group">
+                    <label for="sidoSelect">
+                        <span class="material-icons" style="font-size: 18px;">location_city</span>
+                        시/도
+                    </label>
+                    <select id="sidoSelect" class="filter-select" onchange="onSidoChange()">
+                        <option value="서울특별시">서울특별시</option>
+                        <option value="부산광역시">부산광역시</option>
+                        <option value="대구광역시">대구광역시</option>
+                        <option value="인천광역시">인천광역시</option>
+                        <option value="광주광역시">광주광역시</option>
+                        <option value="대전광역시">대전광역시</option>
+                        <option value="울산광역시">울산광역시</option>
+                        <option value="세종특별자치시">세종특별자치시</option>
+                        <option value="경기도">경기도</option>
+                        <option value="강원특별자치도">강원특별자치도</option>
+                        <option value="충청북도">충청북도</option>
+                        <option value="충청남도">충청남도</option>
+                        <option value="전북특별자치도">전북특별자치도</option>
+                        <option value="전라남도">전라남도</option>
+                        <option value="경상북도">경상북도</option>
+                        <option value="경상남도">경상남도</option>
+                        <option value="제주특별자치도">제주특별자치도</option>
+                    </select>
                 </div>
-                <button class="filter-btn" onclick="toggleClustering()">
-                    <span class="material-icons">filter_list</span>
-                    <span>클러스터</span>
-                </button>
-            </div>
 
-            <div class="loading" id="loading">
-                <span class="material-icons" style="font-size: 32px; color: #6200ea;">sync</span>
+                <div class="filter-group">
+                    <label for="sigunguSelect">
+                        <span class="material-icons" style="font-size: 18px;">place</span>
+                        시/군/구
+                    </label>
+                    <select id="sigunguSelect" class="filter-select" onchange="onSigunguChange()">
+                        <option value="">전체</option>
+                    </select>
+                </div>
+
+                <div class="shop-count-badge" id="shopCount">
+                    지도 로딩 중...
+                </div>
             </div>
         </div>
 
-        <div class="map-info">
-            <h3>인기 매장</h3>
-            <div class="info-grid">
-                <div class="info-card">
-                    <div class="info-card-header">
-                        <div class="info-card-icon">
-                            <span class="material-icons">store</span>
-                        </div>
-                        <div>
-                            <h4>강남 인형뽑기 타운</h4>
-                        </div>
-                    </div>
-                    <p>서울 강남구 테헤란로 123<br>평점: ★★★★☆ 4.5</p>
-                </div>
-
-                <div class="info-card">
-                    <div class="info-card-header">
-                        <div class="info-card-icon">
-                            <span class="material-icons">store</span>
-                        </div>
-                        <div>
-                            <h4>홍대 UFO 캐처존</h4>
-                        </div>
-                    </div>
-                    <p>서울 마포구 홍익로 456<br>평점: ★★★★★ 4.8</p>
-                </div>
-
-                <div class="info-card">
-                    <div class="info-card-header">
-                        <div class="info-card-icon">
-                            <span class="material-icons">store</span>
-                        </div>
-                        <div>
-                            <h4>신촌 토이파크</h4>
-                        </div>
-                    </div>
-                    <p>서울 서대문구 신촌로 789<br>평점: ★★★★☆ 4.3</p>
-                </div>
-
-                <div class="info-card">
-                    <div class="info-card-header">
-                        <div class="info-card-icon">
-                            <span class="material-icons">store</span>
-                        </div>
-                        <div>
-                            <h4>명동 캐릭터  월드zzz</h4>
-                        </div>
-                    </div>
-                    <p>서울 중구 명동길 321<br>평점: ★★★★☆ 4.6</p>
-                </div>
+        <!-- 지도 영역 -->
+        <div class="map-wrapper">
+            <div class="map-container">
+                <div id="map"></div>
             </div>
         </div>
     </main>
@@ -664,57 +676,14 @@
     <footer class="app-footer">
         <div class="footer-container">
             <div class="footer-content">
-                <div class="footer-section">
-                    <h3>인형뽑기방 정보</h3>
-                    <p>전국의 인형뽑기방 정보를 한눈에!</p>
-                    <p>매장 위치, 후기, 인형 정보까지<br>다양한 정보를 제공합니다.</p>
-                    <div class="footer-social">
-                        <a href="#" class="social-icon" title="Facebook">
-                            <span class="material-icons">facebook</span>
-                        </a>
-                        <a href="#" class="social-icon" title="Instagram">
-                            <span class="material-icons">camera_alt</span>
-                        </a>
-                        <a href="#" class="social-icon" title="Twitter">
-                            <span class="material-icons">tag</span>
-                        </a>
-                    </div>
+                <div class="footer-company">
+                    <strong>인형뽑기방</strong>
+                    © 2025 All rights reserved.
                 </div>
-
-                <div class="footer-section">
-                    <h3>서비스</h3>
-                    <a href="/map">매장 찾기</a>
-                    <a href="/community">커뮤니티</a>
-                    <a href="/doll">인형 정보</a>
-                </div>
-
-                <div class="footer-section">
-                    <h3>고객지원</h3>
-                    <a href="#">공지사항</a>
-                    <a href="#">FAQ</a>
-                    <a href="#">1:1 문의</a>
-                    <a href="#">매장 등록 요청</a>
-                </div>
-
-                <div class="footer-section">
-                    <h3>회사정보</h3>
-                    <p>상호명: (주)인형뽑기방</p>
-                    <p>대표자: 홍길동</p>
-                    <p>사업자등록번호: 123-45-67890</p>
-                    <p>주소: 서울특별시 강남구 테헤란로 123</p>
-                    <p>이메일: info@dollcatcher.com</p>
-                    <p>전화: 02-1234-5678</p>
-                </div>
-            </div>
-
-            <div class="footer-divider"></div>
-
-            <div class="footer-bottom">
-                <div>© 2025 인형뽑기방. All rights reserved.</div>
                 <div class="footer-links">
                     <a href="#">이용약관</a>
                     <a href="#">개인정보처리방침</a>
-                    <a href="#">위치기반서비스 이용약관</a>
+                    <a href="#">고객센터</a>
                 </div>
             </div>
         </div>
@@ -727,149 +696,510 @@
             nav.classList.toggle('mobile-open');
         });
 
+        // 카카오맵 API 동적 로드
+        (function() {
+            const script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=719ae502dd3351fab0a5fa57689ef5cd&libraries=services,clusterer&autoload=false';
+            script.onload = function() {
+                console.log('✅ 카카오맵 스크립트 로드 성공');
+            };
+            script.onerror = function() {
+                console.error('❌ 카카오맵 스크립트 로드 실패');
+                document.getElementById('shopCount').textContent = '카카오맵 API 로드 실패. 네트워크를 확인해주세요.';
+            };
+            document.head.appendChild(script);
+        })();
+
         // 카카오맵 관련 변수
         let map;
         let clusterer;
         let markers = [];
         let infowindow;
-        let isClusteringEnabled = true;
+        let ps; // Places 서비스 객체
+        let allShops = []; // 검색된 모든 가게 정보
+        let currentRegion = '서울특별시'; // 현재 선택된 지역
 
-        // 전국 주요 인형뽑기방 데이터 (샘플 데이터)
-        const dollShops = [
-            // 서울
-            { name: '강남 인형뽑기 타운', lat: 37.4979, lng: 127.0276, address: '서울 강남구 테헤란로 123', rating: 4.5, machines: 50 },
-            { name: '홍대 UFO 캐처존', lat: 37.5563, lng: 126.9244, address: '서울 마포구 홍익로 456', rating: 4.8, machines: 40 },
-            { name: '신촌 토이파크', lat: 37.5564, lng: 126.9369, address: '서울 서대문구 신촌로 789', rating: 4.3, machines: 35 },
-            { name: '명동 캐릭터 월드', lat: 37.5636, lng: 126.9834, address: '서울 중구 명동길 321', rating: 4.6, machines: 45 },
-            { name: '잠실 돌캐쳐', lat: 37.5133, lng: 127.1000, address: '서울 송파구 올림픽로 240', rating: 4.4, machines: 55 },
-            { name: '건대입구 인형천국', lat: 37.5402, lng: 127.0695, address: '서울 광진구 능동로 120', rating: 4.2, machines: 30 },
-            { name: '이태원 글로벌캐쳐', lat: 37.5345, lng: 126.9949, address: '서울 용산구 이태원로 55', rating: 4.7, machines: 38 },
-            { name: '종로 레트로존', lat: 37.5704, lng: 126.9910, address: '서울 종로구 종로 88', rating: 4.1, machines: 25 },
+        // 지역별 검색 지점 매핑
+        const regionSearchPoints = {
+            '서울특별시': [
+                { name: '강남1', lat: 37.4979, lng: 127.0276 },
+                { name: '강남2', lat: 37.5172, lng: 127.0473 },
+                { name: '강남3', lat: 37.4846, lng: 127.0325 },
+                { name: '홍대', lat: 37.5563, lng: 126.9244 },
+                { name: '신촌', lat: 37.5564, lng: 126.9369 },
+                { name: '명동', lat: 37.5636, lng: 126.9834 },
+                { name: '잠실', lat: 37.5133, lng: 127.1000 },
+                { name: '건대', lat: 37.5402, lng: 127.0695 },
+                { name: '이태원', lat: 37.5345, lng: 126.9949 },
+                { name: '종로', lat: 37.5704, lng: 126.9910 },
+                { name: '강북', lat: 37.6396, lng: 127.0255 },
+                { name: '영등포', lat: 37.5264, lng: 126.8962 },
+                { name: '구로', lat: 37.4954, lng: 126.8876 },
+                { name: '노원', lat: 37.6542, lng: 127.0568 },
+                { name: '송파', lat: 37.5145, lng: 127.1059 },
+                { name: '강동', lat: 37.5301, lng: 127.1238 },
+                { name: '마포', lat: 37.5663, lng: 126.9019 },
+                { name: '용산', lat: 37.5326, lng: 126.9900 },
+                { name: '성북', lat: 37.5894, lng: 127.0167 },
+                { name: '동대문', lat: 37.5744, lng: 127.0395 }
+            ],
+            '부산광역시': [
+                { name: '해운대', lat: 35.1587, lng: 129.1603 },
+                { name: '서면1', lat: 35.1577, lng: 129.0595 },
+                { name: '서면2', lat: 35.1541, lng: 129.0631 },
+                { name: '광안리', lat: 35.1532, lng: 129.1189 },
+                { name: '남포동', lat: 35.0971, lng: 129.0287 },
+                { name: '부산역', lat: 35.1156, lng: 129.0403 },
+                { name: '센텀', lat: 35.1691, lng: 129.1311 },
+                { name: '동래', lat: 35.2048, lng: 129.0785 },
+                { name: '사상', lat: 35.1508, lng: 128.9907 }
+            ],
+            '대구광역시': [
+                { name: '동성로', lat: 35.8695, lng: 128.5934 },
+                { name: '수성구', lat: 35.8242, lng: 128.6308 },
+                { name: '두류', lat: 35.8532, lng: 128.5657 },
+                { name: '칠성', lat: 35.8854, lng: 128.5905 }
+            ],
+            '인천광역시': [
+                { name: '송도', lat: 37.3786, lng: 126.6562 },
+                { name: '부평', lat: 37.5077, lng: 126.7236 },
+                { name: '구월동', lat: 37.4454, lng: 126.7052 },
+                { name: '주안', lat: 37.4638, lng: 126.6791 }
+            ],
+            '대전광역시': [
+                // 유성구
+                { name: '유성온천', lat: 36.3566, lng: 127.3423 },
+                { name: '봉명동', lat: 36.3689, lng: 127.3445 },
+                { name: '노은동', lat: 36.3686, lng: 127.3384 },
+                { name: '전민동', lat: 36.3450, lng: 127.3680 },  // 전민점 근처 추가
+                { name: '도룡동', lat: 36.3641, lng: 127.3490 },
+                { name: '궁동', lat: 36.3729, lng: 127.3634 },
+                // 서구
+                { name: '둔산', lat: 36.3504, lng: 127.3845 },
+                { name: '탄방동', lat: 36.3450, lng: 127.3748 },
+                { name: '월평동', lat: 36.3628, lng: 127.3597 },
+                // 중구
+                { name: '은행동', lat: 36.3273, lng: 127.4295 },
+                { name: '대흥동', lat: 36.3262, lng: 127.4237 },
+                // 동구
+                { name: '신안동', lat: 36.3561, lng: 127.4369 },
+                // 대덕구
+                { name: '중리동', lat: 36.3693, lng: 127.4147 }
+            ],
+            '광주광역시': [
+                { name: '충장로', lat: 35.1492, lng: 126.9172 },
+                { name: '상무', lat: 35.1520, lng: 126.8533 }
+            ],
+            '울산광역시': [
+                { name: '삼산', lat: 35.5372, lng: 129.3390 },
+                { name: '울산역', lat: 35.5379, lng: 129.3314 }
+            ],
+            '세종특별자치시': [
+                { name: '세종', lat: 36.4800, lng: 127.2890 }
+            ],
+            '경기도': [
+                { name: '수원1', lat: 37.2661, lng: 127.0015 },
+                { name: '수원2', lat: 37.2636, lng: 126.9910 },
+                { name: '성남분당', lat: 37.3941, lng: 127.1111 },
+                { name: '성남중원', lat: 37.4201, lng: 127.1262 },
+                { name: '고양일산', lat: 37.6638, lng: 126.7684 },
+                { name: '고양덕양', lat: 37.6584, lng: 126.8320 },
+                { name: '용인기흥', lat: 37.2767, lng: 127.1163 },
+                { name: '용인수지', lat: 37.3218, lng: 127.0931 },
+                { name: '부천', lat: 37.5035, lng: 126.7660 },
+                { name: '안산', lat: 37.3219, lng: 126.8309 },
+                { name: '안양평촌', lat: 37.3896, lng: 126.9515 },
+                { name: '안양만안', lat: 37.3838, lng: 126.9227 },
+                { name: '평택', lat: 36.9921, lng: 127.1129 },
+                { name: '의정부', lat: 37.7382, lng: 127.0336 },
+                { name: '시흥', lat: 37.3800, lng: 126.8028 },
+                { name: '파주', lat: 37.7608, lng: 126.7800 },
+                { name: '김포', lat: 37.6152, lng: 126.7157 },
+                { name: '광명', lat: 37.4786, lng: 126.8644 },
+                { name: '하남', lat: 37.5393, lng: 127.2147 }
+            ],
+            '강원특별자치도': [
+                { name: '춘천', lat: 37.8813, lng: 127.7298 },
+                { name: '원주', lat: 37.3422, lng: 127.9202 },
+                { name: '강릉', lat: 37.7519, lng: 128.8761 }
+            ],
+            '충청북도': [
+                { name: '청주', lat: 36.6424, lng: 127.4890 }
+            ],
+            '충청남도': [
+                { name: '천안', lat: 36.8151, lng: 127.1139 },
+                { name: '아산', lat: 36.7898, lng: 127.0018 }
+            ],
+            '전북특별자치도': [
+                { name: '전주', lat: 35.8242, lng: 127.1480 },
+                { name: '익산', lat: 35.9483, lng: 126.9575 }
+            ],
+            '전라남도': [
+                { name: '목포', lat: 34.8118, lng: 126.3922 },
+                { name: '순천', lat: 34.9507, lng: 127.4872 },
+                { name: '여수', lat: 34.7604, lng: 127.6622 }
+            ],
+            '경상북도': [
+                { name: '포항', lat: 36.0190, lng: 129.3435 },
+                { name: '경주', lat: 35.8562, lng: 129.2247 }
+            ],
+            '경상남도': [
+                { name: '창원', lat: 35.2278, lng: 128.6811 },
+                { name: '진주', lat: 35.1800, lng: 128.1076 },
+                { name: '김해', lat: 35.2285, lng: 128.8894 },
+                { name: '거제', lat: 34.8806, lng: 128.6211 }
+            ],
+            '제주특별자치도': [
+                { name: '제주시', lat: 33.4996, lng: 126.5312 },
+                { name: '서귀포', lat: 33.2541, lng: 126.5601 }
+            ]
+        };
 
-            // 부산
-            { name: '해운대 비치캐쳐', lat: 35.1587, lng: 129.1603, address: '부산 해운대구 해운대해변로 264', rating: 4.5, machines: 42 },
-            { name: '서면 인형광장', lat: 35.1577, lng: 129.0595, address: '부산 부산진구 중앙대로 123', rating: 4.3, machines: 38 },
-            { name: '광안리 씨뷰캐쳐', lat: 35.1532, lng: 129.1189, address: '부산 수영구 광안해변로 200', rating: 4.6, machines: 40 },
-            { name: '남포동 토이월드', lat: 35.0971, lng: 129.0287, address: '부산 중구 광복로 45', rating: 4.2, machines: 35 },
+        // 지역별 지도 중심 좌표
+        const regionCenters = {
+            '서울특별시': { lat: 37.5665, lng: 126.9780, level: 8 },
+            '부산광역시': { lat: 35.1796, lng: 129.0756, level: 8 },
+            '대구광역시': { lat: 35.8714, lng: 128.6014, level: 8 },
+            '인천광역시': { lat: 37.4563, lng: 126.7052, level: 9 },
+            '광주광역시': { lat: 35.1595, lng: 126.8526, level: 8 },
+            '대전광역시': { lat: 36.3504, lng: 127.3845, level: 8 },
+            '울산광역시': { lat: 35.5384, lng: 129.3114, level: 8 },
+            '세종특별자치시': { lat: 36.4800, lng: 127.2890, level: 9 },
+            '경기도': { lat: 37.4138, lng: 127.5183, level: 10 },
+            '강원특별자치도': { lat: 37.8228, lng: 128.1555, level: 11 },
+            '충청북도': { lat: 36.6424, lng: 127.4890, level: 10 },
+            '충청남도': { lat: 36.5184, lng: 126.8000, level: 10 },
+            '전북특별자치도': { lat: 35.7175, lng: 127.1530, level: 10 },
+            '전라남도': { lat: 34.8679, lng: 126.9910, level: 10 },
+            '경상북도': { lat: 36.4919, lng: 128.8889, level: 11 },
+            '경상남도': { lat: 35.4606, lng: 128.2132, level: 10 },
+            '제주특별자치도': { lat: 33.4890, lng: 126.4983, level: 10 }
+        };
 
-            // 대구
-            { name: '동성로 캐쳐스트리트', lat: 35.8695, lng: 128.5934, address: '대구 중구 동성로2가 81', rating: 4.4, machines: 36 },
-            { name: '수성못 인형나라', lat: 35.8242, lng: 128.6308, address: '대구 수성구 두산동 180', rating: 4.5, machines: 32 },
+        // 시도별 시군구 데이터
+        const sigunguData = {
+            '서울특별시': ['강남구', '강동구', '강북구', '강서구', '관악구', '광진구', '구로구', '금천구', '노원구', '도봉구', '동대문구', '동작구', '마포구', '서대문구', '서초구', '성동구', '성북구', '송파구', '양천구', '영등포구', '용산구', '은평구', '종로구', '중구', '중랑구'],
+            '부산광역시': ['강서구', '금정구', '기장군', '남구', '동구', '동래구', '부산진구', '북구', '사상구', '사하구', '서구', '수영구', '연제구', '영도구', '중구', '해운대구'],
+            '대구광역시': ['남구', '달서구', '달성군', '동구', '북구', '서구', '수성구', '중구'],
+            '인천광역시': ['강화군', '계양구', '남동구', '동구', '미추홀구', '부평구', '서구', '연수구', '옹진군', '중구'],
+            '광주광역시': ['광산구', '남구', '동구', '북구', '서구'],
+            '대전광역시': ['대덕구', '동구', '서구', '유성구', '중구'],
+            '울산광역시': ['남구', '동구', '북구', '울주군', '중구'],
+            '세종특별자치시': ['세종시'],
+            '경기도': ['가평군', '고양시', '과천시', '광명시', '광주시', '구리시', '군포시', '김포시', '남양주시', '동두천시', '부천시', '성남시', '수원시', '시흥시', '안산시', '안성시', '안양시', '양주시', '양평군', '여주시', '연천군', '오산시', '용인시', '의왕시', '의정부시', '이천시', '파주시', '평택시', '포천시', '하남시', '화성시'],
+            '강원특별자치도': ['강릉시', '고성군', '동해시', '삼척시', '속초시', '양구군', '양양군', '영월군', '원주시', '인제군', '정선군', '철원군', '춘천시', '태백시', '평창군', '홍천군', '화천군', '횡성군'],
+            '충청북도': ['괴산군', '단양군', '보은군', '영동군', '옥천군', '음성군', '제천시', '증평군', '진천군', '청주시', '충주시'],
+            '충청남도': ['계룡시', '공주시', '금산군', '논산시', '당진시', '보령시', '부여군', '서산시', '서천군', '아산시', '예산군', '천안시', '청양군', '태안군', '홍성군'],
+            '전북특별자치도': ['고창군', '군산시', '김제시', '남원시', '무주군', '부안군', '순창군', '완주군', '익산시', '임실군', '장수군', '전주시', '정읍시', '진안군'],
+            '전라남도': ['강진군', '고흥군', '곡성군', '광양시', '구례군', '나주시', '담양군', '목포시', '무안군', '보성군', '순천시', '신안군', '여수시', '영광군', '영암군', '완도군', '장성군', '장흥군', '진도군', '함평군', '해남군', '화순군'],
+            '경상북도': ['경산시', '경주시', '고령군', '구미시', '군위군', '김천시', '문경시', '봉화군', '상주시', '성주군', '안동시', '영덕군', '영양군', '영주시', '영천시', '예천군', '울릉군', '울진군', '의성군', '청도군', '청송군', '칠곡군', '포항시'],
+            '경상남도': ['거제시', '거창군', '고성군', '김해시', '남해군', '밀양시', '사천시', '산청군', '양산시', '의령군', '진주시', '창녕군', '창원시', '통영시', '하동군', '함안군', '함양군', '합천군'],
+            '제주특별자치도': ['서귀포시', '제주시']
+        };
 
-            // 인천
-            { name: '송도 스마트캐쳐', lat: 37.3786, lng: 126.6562, address: '인천 연수구 센트럴로 123', rating: 4.6, machines: 45 },
-            { name: '부평 인형타운', lat: 37.5077, lng: 126.7236, address: '인천 부평구 부평대로 55', rating: 4.3, machines: 33 },
-
-            // 대전
-            { name: '둔산동 캐쳐존', lat: 36.3504, lng: 127.3845, address: '대전 서구 둔산로 123', rating: 4.4, machines: 35 },
-            { name: '유성 온천캐쳐', lat: 36.3566, lng: 127.3423, address: '대전 유성구 온천로 88', rating: 4.2, machines: 28 },
-
-            // 광주
-            { name: '충장로 돌캐쳐', lat: 35.1492, lng: 126.9172, address: '광주 동구 충장로 50', rating: 4.5, machines: 34 },
-            { name: '상무지구 인형월드', lat: 35.1520, lng: 126.8533, address: '광주 서구 상무대로 777', rating: 4.3, machines: 30 },
-
-            // 울산
-            { name: '삼산동 캐쳐파크', lat: 35.5372, lng: 129.3390, address: '울산 남구 삼산로 123', rating: 4.4, machines: 32 },
-
-            // 경기도
-            { name: '수원역 인형천국', lat: 37.2661, lng: 127.0015, address: '경기 수원시 팔달구 덕영대로 924', rating: 4.3, machines: 38 },
-            { name: '분당 판교캐쳐', lat: 37.3941, lng: 127.1111, address: '경기 성남시 분당구 판교역로 166', rating: 4.7, machines: 48 },
-            { name: '일산 호수공원캐쳐', lat: 37.6638, lng: 126.7684, address: '경기 고양시 일산동구 호수로 731', rating: 4.5, machines: 40 },
-            { name: '안양 평촌캐쳐', lat: 37.3896, lng: 126.9515, address: '경기 안양시 동안구 관평로 182', rating: 4.2, machines: 30 },
-            { name: '용인 기흥캐쳐', lat: 37.2767, lng: 127.1163, address: '경기 용인시 기흥구 강남로 56', rating: 4.4, machines: 35 },
-        ];
+        // 시군구별 중심 좌표 (주요 광역시)
+        const sigunguCenters = {
+            // 대전광역시
+            '대전광역시-대덕구': { lat: 36.3693, lng: 127.4147, level: 7 },
+            '대전광역시-동구': { lat: 36.3393, lng: 127.4458, level: 7 },
+            '대전광역시-서구': { lat: 36.3504, lng: 127.3845, level: 7 },
+            '대전광역시-유성구': { lat: 36.3566, lng: 127.3423, level: 7 },
+            '대전광역시-중구': { lat: 36.3273, lng: 127.4295, level: 7 },
+            // 서울특별시 (주요 구)
+            '서울특별시-강남구': { lat: 37.5172, lng: 127.0473, level: 7 },
+            '서울특별시-강서구': { lat: 37.5509, lng: 126.8495, level: 7 },
+            '서울특별시-송파구': { lat: 37.5145, lng: 127.1059, level: 7 },
+            '서울특별시-마포구': { lat: 37.5663, lng: 126.9019, level: 7 },
+            // 부산광역시
+            '부산광역시-해운대구': { lat: 35.1587, lng: 129.1603, level: 7 },
+            '부산광역시-부산진구': { lat: 35.1577, lng: 129.0595, level: 7 },
+            '부산광역시-남구': { lat: 35.1363, lng: 129.0847, level: 7 },
+            '부산광역시-동래구': { lat: 35.2048, lng: 129.0785, level: 7 }
+        };
 
         // 지도 초기화
         function initMap() {
             const container = document.getElementById('map');
             const options = {
-                center: new kakao.maps.LatLng(36.5, 127.5), // 한국 중심부
-                level: 13 // 전국이 보이는 레벨
+                center: new kakao.maps.LatLng(37.5665, 126.9780), // 서울 중심
+                level: 8 // 서울 전체가 보이는 레벨
             };
 
             map = new kakao.maps.Map(container, options);
             infowindow = new kakao.maps.InfoWindow({zIndex: 1});
+            ps = new kakao.maps.services.Places();
 
             // 마커 클러스터러 초기화
             clusterer = new kakao.maps.MarkerClusterer({
                 map: map,
                 averageCenter: true,
-                minLevel: 8,
+                minLevel: 5,
                 calculator: [10, 30, 50],
                 styles: [{
-                    width: '40px',
-                    height: '40px',
-                    background: '#6200ea',
-                    borderRadius: '20px',
-                    color: '#fff',
-                    textAlign: 'center',
-                    lineHeight: '40px',
-                    fontSize: '14px',
-                    fontWeight: 'bold'
-                }, {
                     width: '50px',
                     height: '50px',
-                    background: '#3700b3',
+                    background: '#6200ea',
                     borderRadius: '25px',
                     color: '#fff',
                     textAlign: 'center',
                     lineHeight: '50px',
-                    fontSize: '15px',
-                    fontWeight: 'bold'
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.3)'
                 }, {
                     width: '60px',
                     height: '60px',
-                    background: '#1a0052',
+                    background: '#3700b3',
                     borderRadius: '30px',
                     color: '#fff',
                     textAlign: 'center',
                     lineHeight: '60px',
                     fontSize: '16px',
-                    fontWeight: 'bold'
+                    fontWeight: 'bold',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.3)'
+                }, {
+                    width: '70px',
+                    height: '70px',
+                    background: '#1a0052',
+                    borderRadius: '35px',
+                    color: '#fff',
+                    textAlign: 'center',
+                    lineHeight: '70px',
+                    fontSize: '18px',
+                    fontWeight: 'bold',
+                    boxShadow: '0 3px 8px rgba(0,0,0,0.3)'
                 }]
             });
 
-            // 마커 생성
-            createMarkers();
-        }
-
-        // 마커 생성
-        function createMarkers() {
-            markers = dollShops.map(shop => {
-                const position = new kakao.maps.LatLng(shop.lat, shop.lng);
-
-                const marker = new kakao.maps.Marker({
-                    position: position,
-                    title: shop.name
-                });
-
-                // 마커 클릭 이벤트
-                kakao.maps.event.addListener(marker, 'click', function() {
-                    displayShopInfo(shop, marker);
-                });
-
-                return marker;
+            // 지도 이동/확대/축소 이벤트 등록
+            kakao.maps.event.addListener(map, 'idle', function() {
+                updateShopCount();
             });
 
-            // 클러스터러에 마커 추가
-            if (isClusteringEnabled) {
-                clusterer.addMarkers(markers);
+            // 기본 지역(서울) 시군구 목록 초기화
+            updateSigunguSelect('서울특별시');
+
+            // 기본 지역(서울) 인형뽑기 가게 검색
+            searchDollCatcherShops('서울특별시');
+        }
+
+        // 검색 상태 변수
+        let searchState = {
+            sido: '',
+            sigungu: null,
+            searchedCount: 0,
+            totalRegions: 0,
+            totalApiCalls: 0
+        };
+
+        // 인형뽑기 가게 검색 (지역별)
+        function searchDollCatcherShops(region, sigungu = null) {
+            currentRegion = sigungu ? `${region} ${sigungu}` : region;
+            const displayText = sigungu ? `${region} ${sigungu}` : region;
+            document.getElementById('shopCount').textContent = `${displayText} 검색 중...`;
+
+            // 검색 상태 초기화
+            searchState = {
+                sido: region,
+                sigungu: sigungu,
+                searchedCount: 0,
+                totalRegions: 0,
+                totalApiCalls: 0
+            };
+
+            // 기존 마커 제거
+            clusterer.clear();
+            markers = [];
+            allShops = [];
+
+            // 선택된 지역의 검색 지점 가져오기
+            const regions = regionSearchPoints[region] || [];
+
+            if (regions.length === 0) {
+                document.getElementById('shopCount').textContent = `${displayText} 검색 지점이 없습니다.`;
+                return;
+            }
+
+            searchState.totalRegions = regions.length;
+
+            // 지도 중심 이동
+            let centerCoords;
+            if (sigungu) {
+                // 시군구 선택 시 해당 구의 중심좌표 사용
+                const sigunguKey = `${region}-${sigungu}`;
+                centerCoords = sigunguCenters[sigunguKey] || regionCenters[region];
             } else {
-                markers.forEach(marker => marker.setMap(map));
+                // 시도만 선택 시 시도 중심좌표 사용
+                centerCoords = regionCenters[region];
+            }
+
+            if (centerCoords) {
+                map.setCenter(new kakao.maps.LatLng(centerCoords.lat, centerCoords.lng));
+                map.setLevel(centerCoords.level);
+            }
+
+            // 검색할 키워드 목록
+            const keywords = ['인형뽑기', '인형', '뽑기'];  //
+
+            // 각 지역별로 여러 키워드로 검색
+            let searchIndex = 0;
+            regions.forEach((point, regionIndex) => {
+                keywords.forEach((keyword, kwIndex) => {
+                    setTimeout(() => {
+                        const center = new kakao.maps.LatLng(point.lat, point.lng);
+                        searchWithPagination(center, point.name, keyword, 1);
+                    }, searchIndex * 120); // API 호출 간격 120ms
+                    searchIndex++;
+                });
+            });
+
+            // 총 검색 수 업데이트
+            searchState.totalRegions = regions.length * keywords.length;
+        }
+
+        // 페이지네이션을 포함한 검색 함수
+        function searchWithPagination(center, regionName, keyword, pageNum) {
+            ps.keywordSearch(keyword, function(data, status, pagination) {
+                searchState.totalApiCalls++;
+
+                if (status === kakao.maps.services.Status.OK) {
+                    // 검색 결과 로그
+                    if (data.length > 0) {
+                        console.log(`🔍 [${regionName}] "${keyword}" 검색: ${data.length}개 발견`);
+                    }
+
+                    data.forEach(place => {
+                        // 중복 체크 (ID로 확실하게)
+                        const isDuplicate = allShops.some(shop => shop.id === place.id);
+
+                        if (!isDuplicate) {
+                            // 시군구 필터링이 활성화된 경우 주소 체크
+                            let shouldAdd = true;
+                            if (searchState.sigungu) {
+                                const addressMatch = place.address_name?.includes(searchState.sigungu) ||
+                                                    place.road_address_name?.includes(searchState.sigungu);
+                                shouldAdd = addressMatch;
+
+                                // 필터링 로그 (유성구 검색 시만)
+                                if (searchState.sido === '대전광역시' && searchState.sigungu === '유성구') {
+                                    if (addressMatch) {
+                                        console.log(`  ✅ 추가: ${place.place_name} (${place.address_name || place.road_address_name})`);
+                                    } else {
+                                        console.log(`  ❌ 제외: ${place.place_name} (${place.address_name || place.road_address_name})`);
+                                    }
+                                }
+                            }
+
+                            if (shouldAdd) {
+                                allShops.push(place);
+
+                                const position = new kakao.maps.LatLng(place.y, place.x);
+                                const marker = new kakao.maps.Marker({
+                                    position: position,
+                                    title: place.place_name
+                                });
+
+                                // 마커 클릭 이벤트
+                                kakao.maps.event.addListener(marker, 'click', function() {
+                                    displayKakaoPlaceInfo(place, marker);
+                                });
+
+                                markers.push(marker);
+                            }
+                        }
+                    });
+
+                    // 다음 페이지가 있고 3페이지(45개) 미만이면 계속 검색
+                    if (pagination.hasNextPage && pageNum < 3) {
+                        setTimeout(() => {
+                            pagination.nextPage();
+                        }, 100);
+                    } else {
+                        searchState.searchedCount++;
+                        updateProgress();
+                    }
+                } else {
+                    searchState.searchedCount++;
+                    updateProgress();
+                }
+            }, {
+                location: center,
+                radius: 20000, // 20km 반경    스펙상 0~20000까지 가능
+                size: 15
+            });
+        }
+
+        // 검색 진행 상황 업데이트
+        function updateProgress() {
+            const displayText = searchState.sigungu ?
+                `${searchState.sido} ${searchState.sigungu}` : searchState.sido;
+
+            document.getElementById('shopCount').textContent =
+                `${displayText} 검색 중... ${searchState.searchedCount}/${searchState.totalRegions} (${allShops.length}개)`;
+
+            // 모든 지역 검색 완료 시
+            if (searchState.searchedCount === searchState.totalRegions) {
+                setTimeout(() => {
+                    let filteredMarkers = markers;
+
+                    // 시군구 필터링
+                    if (searchState.sigungu) {
+                        const filteredIndices = [];
+                        allShops.forEach((shop, idx) => {
+                            if (shop.address_name?.includes(searchState.sigungu) ||
+                                shop.road_address_name?.includes(searchState.sigungu)) {
+                                filteredIndices.push(idx);
+                            }
+                        });
+
+                        filteredMarkers = filteredIndices.map(idx => markers[idx]);
+                        console.log(`✅ ${searchState.sigungu} 필터링: ${filteredMarkers.length}개`);
+                    }
+
+                    clusterer.addMarkers(filteredMarkers);
+                    updateShopCount();
+
+                    console.log(`✅ 검색 완료!`);
+                    console.log(`- 총 ${allShops.length}개의 인형뽑기 가게 발견`);
+                    console.log(`- ${searchState.totalRegions}개 지역 검색`);
+                    console.log(`- ${searchState.totalApiCalls}회 API 호출`);
+                }, 500);
             }
         }
 
-        // 매장 정보 표시
-        function displayShopInfo(shop, marker) {
-            const stars = '★'.repeat(Math.floor(shop.rating)) + '☆'.repeat(5 - Math.floor(shop.rating));
+        // 현재 지도 범위 내 가게 수 업데이트
+        function updateShopCount() {
+            const bounds = map.getBounds();
+            let filteredShops = allShops;
 
+            // 시군구 필터링
+            if (searchState.sigungu) {
+                filteredShops = allShops.filter(shop =>
+                    shop.address_name?.includes(searchState.sigungu) ||
+                    shop.road_address_name?.includes(searchState.sigungu)
+                );
+            }
+
+            const shopsInView = filteredShops.filter(shop => {
+                const position = new kakao.maps.LatLng(shop.y, shop.x);
+                return bounds.contain(position);
+            });
+
+            const countElement = document.getElementById('shopCount');
+            const regionText = currentRegion;
+            countElement.textContent = `${regionText}: ${shopsInView.length}개 (전체: ${filteredShops.length}개)`;
+        }
+
+        // 카카오 Places API 장소 정보 표시
+        function displayKakaoPlaceInfo(place, marker) {
             const content = `
                 <div class="custom-infowindow">
                     <div class="infowindow-header">
                         <div>
-                            <div class="infowindow-title">${shop.name}</div>
-                            <div class="infowindow-rating">
-                                ${stars} ${shop.rating}
+                            <div class="infowindow-title">${place.place_name}</div>
+                            <div class="infowindow-rating" style="color: #757575; font-size: 13px;">
+                                ${place.category_name || ''}
                             </div>
                         </div>
                         <button class="infowindow-close" onclick="closeInfowindow()">
@@ -879,19 +1209,21 @@
                     <div class="infowindow-body">
                         <p>
                             <span class="material-icons">location_on</span>
-                            ${shop.address}
+                            ${place.address_name || place.road_address_name}
                         </p>
+                        ${place.phone ? `
                         <p>
-                            <span class="material-icons">toys</span>
-                            기계 ${shop.machines}대
+                            <span class="material-icons">phone</span>
+                            ${place.phone}
                         </p>
+                        ` : ''}
                     </div>
                     <div class="infowindow-footer">
-                        <button class="infowindow-btn infowindow-btn-primary" onclick="viewShopDetail('${shop.name}')">
+                        <button class="infowindow-btn infowindow-btn-primary" onclick="openKakaoPlace('${place.place_url}')">
                             <span class="material-icons">info</span>
                             상세보기
                         </button>
-                        <button class="infowindow-btn infowindow-btn-secondary" onclick="getDirections(${shop.lat}, ${shop.lng})">
+                        <button class="infowindow-btn infowindow-btn-secondary" onclick="getDirections(${place.y}, ${place.x})">
                             <span class="material-icons">directions</span>
                             길찾기
                         </button>
@@ -908,86 +1240,9 @@
             infowindow.close();
         }
 
-        // 클러스터링 토글
-        function toggleClustering() {
-            isClusteringEnabled = !isClusteringEnabled;
-
-            if (isClusteringEnabled) {
-                // 개별 마커 제거
-                markers.forEach(marker => marker.setMap(null));
-                // 클러스터러에 마커 추가
-                clusterer.addMarkers(markers);
-            } else {
-                // 클러스터 제거
-                clusterer.clear();
-                // 개별 마커 표시
-                markers.forEach(marker => marker.setMap(map));
-            }
-        }
-
-        // 현재 위치로 이동
-        function getCurrentLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const locPosition = new kakao.maps.LatLng(lat, lng);
-
-                    map.setCenter(locPosition);
-                    map.setLevel(5);
-
-                    // 현재 위치 마커 표시
-                    const marker = new kakao.maps.Marker({
-                        position: locPosition,
-                        map: map
-                    });
-
-                    const content = '<div style="padding:10px;background:white;border-radius:5px;box-shadow:0 2px 6px rgba(0,0,0,0.3);">현재 위치</div>';
-                    const customOverlay = new kakao.maps.CustomOverlay({
-                        position: locPosition,
-                        content: content,
-                        yAnchor: 2.5
-                    });
-                    customOverlay.setMap(map);
-                }, function(error) {
-                    alert('현재 위치를 가져올 수 없습니다.');
-                });
-            } else {
-                alert('이 브라우저는 Geolocation을 지원하지 않습니다.');
-            }
-        }
-
-        // 장소 검색
-        function searchPlaces() {
-            const keyword = document.getElementById('searchInput').value.trim();
-
-            if (!keyword) {
-                alert('검색어를 입력해주세요.');
-                return;
-            }
-
-            // 샘플 데이터에서 검색
-            const results = dollShops.filter(shop =>
-                shop.name.includes(keyword) || shop.address.includes(keyword)
-            );
-
-            if (results.length > 0) {
-                const firstResult = results[0];
-                const position = new kakao.maps.LatLng(firstResult.lat, firstResult.lng);
-                map.setCenter(position);
-                map.setLevel(3);
-
-                // 해당 매장의 마커 찾아서 정보 표시
-                const marker = markers[dollShops.indexOf(firstResult)];
-                displayShopInfo(firstResult, marker);
-            } else {
-                alert('검색 결과가 없습니다.');
-            }
-        }
-
-        // 매장 상세보기
-        function viewShopDetail(shopName) {
-            alert(`${shopName} 상세 페이지로 이동합니다.\n(추후 구현 예정)`);
+        // 카카오맵 상세보기 열기
+        function openKakaoPlace(url) {
+            window.open(url, '_blank');
         }
 
         // 길찾기
@@ -996,10 +1251,91 @@
             window.open(kakaoMapUrl, '_blank');
         }
 
-        // 페이지 로드 시 지도 초기화
-        window.onload = function() {
-            initMap();
-        };
+        // 시도 변경 이벤트 핸들러
+        function onSidoChange() {
+            const selectedSido = document.getElementById('sidoSelect').value;
+            console.log(`🗺️ 시도 변경: ${selectedSido}`);
+
+            // 시군구 셀렉트박스 업데이트
+            updateSigunguSelect(selectedSido);
+
+            // 전체 시도 검색
+            searchDollCatcherShops(selectedSido);
+        }
+
+        // 시군구 셀렉트박스 업데이트
+        function updateSigunguSelect(sido) {
+            const sigunguSelect = document.getElementById('sigunguSelect');
+            sigunguSelect.innerHTML = '<option value="">전체</option>';
+
+            const sigungus = sigunguData[sido] || [];
+            sigungus.forEach(sigungu => {
+                const option = document.createElement('option');
+                option.value = sigungu;
+                option.textContent = sigungu;
+                sigunguSelect.appendChild(option);
+            });
+        }
+
+        // 시군구 변경 이벤트 핸들러
+        function onSigunguChange() {
+            const selectedSido = document.getElementById('sidoSelect').value;
+            const selectedSigungu = document.getElementById('sigunguSelect').value;
+
+            if (selectedSigungu) {
+                console.log(`🗺️ 시군구 변경: ${selectedSido} ${selectedSigungu}`);
+                // TODO: 시군구별 필터링 (추후 구현)
+                searchDollCatcherShopsBySigungu(selectedSido, selectedSigungu);
+            } else {
+                console.log(`🗺️ 전체 선택: ${selectedSido}`);
+                searchDollCatcherShops(selectedSido);
+            }
+        }
+
+        // 시군구별 검색 (추후 DB 연동 시 사용)
+        function searchDollCatcherShopsBySigungu(sido, sigungu) {
+            // 현재는 시도별 검색 후 클라이언트에서 필터링
+            // 추후 서버 API에서 시군구별 필터링 지원 시 수정
+            currentRegion = `${sido} ${sigungu}`;
+            document.getElementById('shopCount').textContent = `${sido} ${sigungu} 검색 중...`;
+
+            // 일단 시도 전체 검색 후 필터링
+            searchDollCatcherShops(sido, sigungu);
+        }
+
+        // 카카오맵 API 로드 확인 및 초기화
+        let kakaoLoadAttempts = 0;
+        const maxAttempts = 100; // 최대 10초 대기
+
+        function waitForKakao() {
+            kakaoLoadAttempts++;
+
+            if (window.kakao && window.kakao.maps) {
+                console.log('✅ 카카오맵 API 객체 확인 완료');
+                try {
+                    // autoload=false를 사용했으므로 명시적으로 load 호출
+                    kakao.maps.load(() => {
+                        console.log('✅ 카카오맵 초기화 시작');
+                        initMap();
+                    });
+                } catch(e) {
+                    console.error('❌ 카카오맵 초기화 오류:', e);
+                    document.getElementById('shopCount').textContent = '지도 로딩 실패: ' + e.message;
+                }
+            } else if (kakaoLoadAttempts >= maxAttempts) {
+                console.error('❌ 카카오맵 API 로드 실패 (타임아웃)');
+                console.log('window.kakao:', window.kakao);
+                document.getElementById('shopCount').textContent = '카카오맵 API 타임아웃. 키를 확인해주세요.';
+            } else {
+                if (kakaoLoadAttempts % 10 === 0) {
+                    console.log(`⏳ 카카오맵 API 대기 중... (${kakaoLoadAttempts}/${maxAttempts})`);
+                }
+                setTimeout(waitForKakao, 100);
+            }
+        }
+
+        // 페이지 로드 시 실행
+        setTimeout(waitForKakao, 500); // 0.5초 후 시작
     </script>
 </body>
 </html>
