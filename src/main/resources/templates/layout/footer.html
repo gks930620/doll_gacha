@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
+<head th:fragment="footerStyle">
     <style>
         /* Footer Styles */
         .app-footer {
@@ -8,164 +8,22 @@
             color: #e0e0e0;
             margin-top: auto;
             border-top: 1px solid #616161;
+            padding: 24px 0;
         }
 
         .footer-container {
             max-width: 1200px;
             margin: 0 auto;
-            padding: 32px 16px;
-        }
-
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 32px;
-            margin-bottom: 24px;
-        }
-
-        .footer-section h3 {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 16px;
-            color: white;
-        }
-
-        .footer-section p,
-        .footer-section a {
+            padding: 0 16px;
+            text-align: center;
             font-size: 14px;
-            color: #e0e0e0;
-            line-height: 1.6;
-            text-decoration: none;
-            display: block;
-            margin-bottom: 8px;
-        }
-
-        .footer-section a:hover {
-            color: #bb86fc;
-        }
-
-        .footer-social {
-            display: flex;
-            gap: 12px;
-            margin-top: 12px;
-        }
-
-        .social-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background-color: #616161;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            text-decoration: none;
-            transition: background-color 0.2s;
-        }
-
-        .social-icon:hover {
-            background-color: #bb86fc;
-        }
-
-        .social-icon .material-icons {
-            font-size: 20px;
-        }
-
-        .footer-divider {
-            height: 1px;
-            background-color: #616161;
-            margin: 24px 0;
-        }
-
-        .footer-bottom {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            font-size: 14px;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .footer-links a {
-            color: #e0e0e0;
-            text-decoration: none;
-        }
-
-        .footer-links a:hover {
-            color: #bb86fc;
-        }
-
-        @media (max-width: 768px) {
-            .footer-bottom {
-                flex-direction: column;
-                text-align: center;
-            }
         }
     </style>
 </head>
 <body>
-    <footer class="app-footer">
+    <footer class="app-footer" th:fragment="footer">
         <div class="footer-container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>인형뽑기방 정보</h3>
-                    <p>전국의 인형뽑기방 정보를 한눈에!</p>
-                    <p>매장 위치, 후기, 인형 정보까지<br>다양한 정보를 제공합니다.</p>
-                    <div class="footer-social">
-                        <a href="#" class="social-icon" title="Facebook">
-                            <span class="material-icons">facebook</span>
-                        </a>
-                        <a href="#" class="social-icon" title="Instagram">
-                            <span class="material-icons">camera_alt</span>
-                        </a>
-                        <a href="#" class="social-icon" title="Twitter">
-                            <span class="material-icons">tag</span>
-                        </a>
-                    </div>
-                </div>
-
-                <div class="footer-section">
-                    <h3>서비스</h3>
-                    <a href="/map">매장 찾기</a>
-                    <a href="/community">커뮤니티</a>
-                    <a href="/doll">인형 정보</a>
-                </div>
-
-                <div class="footer-section">
-                    <h3>고객지원</h3>
-                    <a href="#">공지사항</a>
-                    <a href="#">FAQ</a>
-                    <a href="#">1:1 문의</a>
-                    <a href="#">매장 등록 요청</a>
-                </div>
-
-                <div class="footer-section">
-                    <h3>회사정보</h3>
-                    <p>상호명: (주)인형뽑기방</p>
-                    <p>대표자: 홍길동</p>
-                    <p>사업자등록번호: 123-45-67890</p>
-                    <p>주소: 서울특별시 강남구 테헤란로 123</p>
-                    <p>이메일: info@dollcatcher.com</p>
-                    <p>전화: 02-1234-5678</p>
-                </div>
-            </div>
-
-            <div class="footer-divider"></div>
-
-            <div class="footer-bottom">
-                <div>© 2025 인형뽑기방. All rights reserved.</div>
-                <div class="footer-links">
-                    <a href="#">이용약관</a>
-                    <a href="#">개인정보처리방침</a>
-                    <a href="#">위치기반서비스 이용약관</a>
-                </div>
-            </div>
+            <p>© 2025 Dollcatcher. All rights reserved.</p>
         </div>
     </footer>
 </body>

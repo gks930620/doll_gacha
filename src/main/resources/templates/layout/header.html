@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>인형뽑기방 정보</title>
-
+<head th:fragment="headerStyle">
     <!-- Material Icons -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!-- Material Design CSS -->
@@ -91,6 +87,63 @@
             font-size: 20px;
         }
 
+        /* User Menu */
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .user-info .material-icons {
+            font-size: 20px;
+        }
+
+        .login-btn {
+            padding: 8px 16px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .login-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .logout-btn {
+            padding: 6px 12px;
+            background: none;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 16px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
         /* Mobile Menu */
         .mobile-menu-btn {
             display: none;
@@ -143,31 +196,52 @@
     </style>
 </head>
 <body>
-    <header class="app-header">
+    <header class="app-header" th:fragment="header">
         <div class="header-container">
             <a href="/" class="header-logo">
                 <span class="material-icons">toys</span>
-                <span>인형뽑기방</span>
+                <span>인형뽑기방ㅋㅋㅋ</span>
             </a>
 
             <nav class="header-nav" id="headerNav">
-                <a href="/map" class="nav-item" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/map')} ? 'active' : ''">
+                <a href="/map" class="nav-item" data-path="/map">
                     <span class="material-icons">map</span>
                     <span>지도</span>
                 </a>
-                <a href="/review/list" class="nav-item" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/review')} ? 'active' : ''">
+<a href="/review/list" class="nav-item" data-path="/review">
                     <span class="material-icons">rate_review</span>
-                    <span>내 리뷰</span>
+                    <span>리뷰</span>
                 </a>
-                <a href="/community" class="nav-item" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/community')} ? 'active' : ''">
+                <a href="/community" class="nav-item" data-path="/community">
                     <span class="material-icons">forum</span>
                     <span>커뮤니티</span>
                 </a>
-                <a href="/doll" class="nav-item" th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/doll')} ? 'active' : ''">
+                <a href="/doll" class="nav-item" data-path="/doll">
                     <span class="material-icons">smart_toy</span>
                     <span>인형정보</span>
                 </a>
             </nav>
+
+            <div class="user-menu" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+                <!-- 로그인 전 -->
+                <a href="/login" class="login-btn" sec:authorize="!isAuthenticated()">
+                    <span class="material-icons">login</span>
+                    <span>로그인</span>
+                </a>
+
+                <!-- 로그인 후 -->
+                <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 8px;">
+                    <a href="/mypage" class="nav-item">
+                        <span class="material-icons">person</span>
+                        <span>마이페이지</span>
+                    </a>
+                    <div class="user-info">
+                        <span class="material-icons">account_circle</span>
+                        <span sec:authentication="principal.userDTO.nickname"></span>
+                    </div>
+                    <button type="button" class="logout-btn" onclick="handleLogout()">로그아웃</button>
+                </div>
+            </div>
 
             <button class="mobile-menu-btn" id="mobileMenuBtn">
                 <span class="material-icons">menu</span>
@@ -175,11 +249,56 @@
         </div>
     </header>
 
-    <script>
+    <script th:fragment="headerScript">
+        // Set active nav item based on current path
+        function setActiveNavItem() {
+            const currentPath = window.location.pathname;
+            const navItems = document.querySelectorAll('.nav-item[data-path]');
+
+            navItems.forEach(item => {
+                const itemPath = item.getAttribute('data-path');
+                if (currentPath.startsWith(itemPath)) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+        }
+
         // Mobile menu toggle
         document.getElementById('mobileMenuBtn')?.addEventListener('click', function() {
             const nav = document.getElementById('headerNav');
             nav.classList.toggle('mobile-open');
+        });
+
+        // Logout handler
+        async function handleLogout() {
+            try {
+                const response = await fetch('/api/logout', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include' // 쿠키 포함
+                });
+
+                if (response.ok) {
+                    // 서버에서 쿠키를 만료시켰으므로, 클라이언트는 홈으로 이동
+                    window.location.href = '/';
+                } else {
+                    const error = await response.json();
+                    console.log('Logout failed:', error);
+                    alert('로그아웃에 실패했습니다.');
+                }
+            } catch (error) {
+                console.log('Logout error:', error);
+                alert('로그아웃 중 오류가 발생했습니다.');
+            }
+        }
+
+        // 페이지 로드시 active 메뉴 설정
+        document.addEventListener('DOMContentLoaded', () => {
+            setActiveNavItem();
         });
     </script>
 

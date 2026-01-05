@@ -8,7 +8,8 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-    <th:block th:replace="~{layout/common-styles :: styles}"></th:block>
+    <th:block th:replace="~{layout/header :: headerStyle}"></th:block>
+    <th:block th:replace="~{layout/footer :: footerStyle}"></th:block>
 
     <style>
         .page-header {
@@ -249,7 +250,7 @@
     </style>
 </head>
 <body>
-    <th:block th:replace="~{layout/common-styles :: header}"></th:block>
+    <th:block th:replace="~{layout/header :: header}"></th:block>
 
     <main class="main-content">
         <div class="page-header">
@@ -473,8 +474,8 @@
         </div>
     </main>
 
-    <th:block th:replace="~{layout/common-styles :: footer}"></th:block>
-    <th:block th:replace="~{layout/common-styles :: scripts}"></th:block>
+    <th:block th:replace="~{layout/footer :: footer}"></th:block>
+    <th:block th:replace="~{layout/header :: headerScript}"></th:block>
 </body>
 </html>
 

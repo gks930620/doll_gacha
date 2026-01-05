@@ -5,202 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>인형뽑기방 정보 - 지도</title>
 
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <th:block th:replace="~{layout/header :: headerStyle}"></th:block>
+    <th:block th:replace="~{layout/footer :: footerStyle}"></th:block>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #fafafa;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Header Styles */
-        .app-header {
-            background-color: #6200ea;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .header-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 16px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            height: 64px;
-        }
-
-        .header-logo {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 20px;
-            font-weight: 500;
-            text-decoration: none;
-            color: white;
-            cursor: pointer;
-        }
-
-        .header-logo .material-icons {
-            font-size: 28px;
-        }
-
-        .header-nav {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .nav-item {
-            padding: 8px 16px;
-            border-radius: 4px;
-            text-decoration: none;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-            transition: background-color 0.2s;
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .nav-item:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .nav-item.active {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .nav-item .material-icons {
-            font-size: 20px;
-        }
-
-        /* Mobile Menu */
-        .mobile-menu-btn {
-            display: none;
-            background: none;
-            border: none;
-            color: white;
-            cursor: pointer;
-            padding: 8px;
-        }
-
-        .mobile-menu-btn .material-icons {
-            font-size: 24px;
-        }
-
-        @media (max-width: 768px) {
-            .header-nav {
-                display: none;
-                position: absolute;
-                top: 64px;
-                left: 0;
-                right: 0;
-                background-color: #6200ea;
-                flex-direction: column;
-                padding: 8px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            }
-
-            .header-nav.mobile-open {
-                display: flex;
-            }
-
-            .nav-item {
-                width: 100%;
-                justify-content: flex-start;
-            }
-
-            .mobile-menu-btn {
-                display: block;
-            }
-        }
-
-        /* Main Content */
-        .main-content {
-            flex: 1;
-            width: 100%;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Footer Styles */
-        .app-footer {
-            background-color: #424242;
-            color: #e0e0e0;
-            border-top: 1px solid #616161;
-            height: 80px;
-            display: flex;
-            align-items: center;
-        }
-
-        .footer-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 24px;
-            width: 100%;
-        }
-
-        .footer-content {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-
-        .footer-company {
-            color: #e0e0e0;
-        }
-
-        .footer-company strong {
-            color: white;
-            margin-right: 8px;
-        }
-
-        .footer-links {
-            display: flex;
-            gap: 16px;
-        }
-
-        .footer-links a {
-            color: #e0e0e0;
-            text-decoration: none;
-            font-size: 13px;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: #bb86fc;
-        }
-
-        @media (max-width: 768px) {
-            .app-footer {
-                height: auto;
-                padding: 20px 0;
-            }
-
-            .footer-content {
-                flex-direction: column;
-                gap: 12px;
-                text-align: center;
-            }
-        }
 
         /* Region Filter Section */
         .region-filter-section {
@@ -577,33 +385,8 @@
     </style>
 </head>
 <body>
-    <header class="app-header">
-        <div class="header-container">
-            <a href="/" class="header-logo">
-                <span class="material-icons">toys</span>
-                <span>인형뽑기방</span>
-            </a>
-
-            <nav class="header-nav" id="headerNav">
-                <a href="/map" class="nav-item active">
-                    <span class="material-icons">map</span>
-                    <span>지도</span>
-                </a>
-                <a href="/community" class="nav-item">
-                    <span class="material-icons">forum</span>
-                    <span>커뮤니티</span>
-                </a>
-                <a href="/doll" class="nav-item">
-                    <span class="material-icons">smart_toy</span>
-                    <span>인형정보</span>
-                </a>
-            </nav>
-
-            <button class="mobile-menu-btn" id="mobileMenuBtn">
-                <span class="material-icons">menu</span>
-            </button>
-        </div>
-    </header>
+    <!-- Header Include -->
+    <th:block th:replace="~{layout/header :: header}"></th:block>
 
     <main class="main-content">
         <!-- 지역 필터 섹션 -->
@@ -655,21 +438,8 @@
         </div>
     </main>
 
-    <footer class="app-footer">
-        <div class="footer-container">
-            <div class="footer-content">
-                <div class="footer-company">
-                    <strong>인형뽑기방</strong>
-                    © 2025 All rights reserved.
-                </div>
-                <div class="footer-links">
-                    <a href="#">이용약관</a>
-                    <a href="#">개인정보처리방침</a>
-                    <a href="#">고객센터</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+<th:block th:replace="~{layout/header :: headerScript}"></th:block>
+
 
     <script>
         // Mobile menu toggle
@@ -1205,6 +975,8 @@
         // 페이지 로드 시 실행
         setTimeout(waitForKakao, 500); // 0.5초 후 시작
     </script>
+
+    <th:block th:replace="~{layout/footer :: footer}"></th:block>
 </body>
 </html>
 
