@@ -2,82 +2,81 @@
 
 ## 1. 로그인 시작 (요청 단계)
 **파일:** `Oauth2LoginController.java`
-**URL:** `/custom-oauth2/login/{web|app}/{provider}`
+**URL:** 
+- Web: `/custom-oauth2/login/web/{provider}`
+- App: `/custom-oauth2/login/app/{provider}`
 
-1.  **요청 수신:** 사용자가 로그인 버튼을 누르면 컨트롤러가 요청을 받습니다.
-2.  **정보 생성:**
-    *   `state`: 랜덤한 UUID 생성 (예: `abc-123`) -> **이게 티켓 번호입니다.**
-    *   `target`: URL 경로에 따라 "app" 또는 "web"으로 설정.
-3.  **저장 (`saveAuthorizationRequest`):**
-    *   `InMemoryAuthorizationRequestRepository`의 `authorizationRequests` 맵에 저장합니다.
-    *   Key: `abc-123` (state)
-    *   Value: `{ target: "app", ... }` (요청 정보)
-4.  **리다이렉트:**
-    *   사용자를 카카오/구글 로그인 페이지로 보냅니다.
-    *   이때 URL 뒤에 `&state=abc-123`을 붙여서 보냅니다.
-
----
-
-## 2. 인증 진행 (외부 서버)
-*   사용자가 카카오/구글 화면에서 로그인을 승인합니다.
-*   카카오/구글은 사전에 등록된 우리 서버 주소(`redirect-uri`)로 사용자를 다시 보내줍니다.
-*   **중요:** 이때 아까 보냈던 `state=abc-123`을 그대로 다시 돌려줍니다.
-*   URL 예시: `http://localhost:8080/login/oauth2/code/kakao?code=인가코드&state=abc-123`
+1.  **클라이언트 요청:**
+    *   사용자가 카카오/구글 로그인 버튼을 클릭하면 위 URL로 요청을 보냅니다.
+2.  **ClientRegistration 조회:**
+    *   `ClientRegistrationRepository`를 통해 `application.yml`에 설정된 제공자 정보(clientId, redirectUri 등)를 가져옵니다.
+3.  **OAuth2AuthorizationRequest 생성:**
+    *   `state` 값(UUID)을 생성하여 보안을 강화합니다.
+    *   **Web:** `target` 속성을 "web"으로 설정합니다.
+    *   **App:** `target` 속성을 "app"으로 설정합니다. 또한, 에뮬레이터 환경을 고려하여 `redirect_uri`의 `localhost`를 `10.0.2.2`로 변환합니다.
+4.  **요청 저장:**
+    *   `InMemoryAuthorizationRequestRepository.saveAuthorizationRequest`를 호출하여 요청 정보를 저장합니다.
+5.  **리다이렉트:**
+    *   제공자의 인증 페이지(Authorization URI)로 리다이렉트합니다 (`response.sendRedirect`).
 
 ---
 
-## 3. 복귀 및 검증 (필터 단계)
+## 2. 인증 요청 저장 (Repository)
 **파일:** `InMemoryAuthorizationRequestRepository.java`
-**메서드:** `removeAuthorizationRequest`
 
-1.  **필터 동작:** Spring Security의 `OAuth2LoginAuthenticationFilter`가 복귀 요청을 가로챕니다.
-2.  **검증 시도:** "이 요청이 아까 보낸 그 요청이 맞나?" 확인하기 위해 `removeAuthorizationRequest`를 호출합니다.
-3.  **State 확인:**
-    *   요청 파라미터에서 `state=abc-123`을 읽습니다.
-    *   Repository(Map)에서 `abc-123` 키로 저장된 객체를 찾습니다.
-4.  **정보 유지 (중요!):**
-    *   원래는 여기서 정보를 꺼내고 **삭제(remove)** 하는 것이 기본 동작입니다.
-    *   하지만 우리는 **삭제하지 않고 조회(get)** 만 하도록 수정했습니다.
-    *   이유: 여기서 지워버리면 다음 단계(성공 핸들러)에서 "앱인지 웹인지" 알 수 없게 되기 때문입니다.
+1.  **저장소:**
+    *   Redis 대신 `ConcurrentHashMap`을 사용하여 메모리에 `state`를 키로 요청 객체를 저장합니다.
+2.  **자동 만료:**
+    *   저장 시 별도 스레드를 실행하여 5분 후 해당 `state`를 자동으로 삭제합니다.
+3.  **조회 방식 변경:**
+    *   기본 `removeAuthorizationRequest` 메서드는 조회 시 데이터를 삭제하지만, 여기서는 **삭제하지 않고 조회만 하도록(`get`) 커스터마이징** 되어 있습니다.
+    *   이는 `OAuth2LoginAuthenticationFilter`가 조회한 후, 나중에 `SuccessHandler`에서도 `target` 정보를 확인하기 위해 데이터가 필요하기 때문입니다.
 
 ---
 
-## 4. 토큰 발급 및 로그인 처리 (내부 로직)
-*   Spring Security가 내부적으로 카카오/구글과 통신하여 `Access Token`을 받고, 사용자 프로필 정보를 가져옵니다.
-*   `CustomOAuth2UserService` (설정되어 있다면)를 통해 회원가입/로그인 처리를 진행하고 `CustomUserAccount`를 반환합니다.
+## 3. 유저 정보 로드 및 저장 (Service)
+**파일:** `CustomOAuth2UserService.java`
+**동작:** 소셜 로그인 성공 후 실행
+
+1.  **유저 정보 가져오기:**
+    *   `DefaultOAuth2UserService.loadUser`를 호출하여 제공자로부터 유저 정보를 받아옵니다.
+2.  **엔티티 변환:**
+    *   `OAuthProvider` Enum을 사용하여 제공자별(Kakao, Google) 속성(`attributes`)을 `UserDTO`로 변환합니다.
+3.  **DB 저장/업데이트:**
+    *   `username`(provider_providerId)으로 DB를 조회합니다.
+    *   **신규 유저:** `UserEntity`를 생성하여 저장합니다.
+    *   **기존 유저:** 이메일, 닉네임 등 변경된 정보를 업데이트합니다.
+4.  **결과 반환:**
+    *   `CustomUserAccount` (UserDetails + OAuth2User 구현체)를 반환합니다.
 
 ---
 
-## 5. 성공 처리 (응답 단계)
+## 4. 로그인 성공 처리 (Handler)
 **파일:** `OAuth2LoginSuccessHandler.java`
-**메서드:** `onAuthenticationSuccess`
+**동작:** 인증 및 유저 로드 완료 후 실행
 
-1.  **최종 확인:** 로그인이 다 끝났으니 사용자를 어디로 보낼지 결정해야 합니다.
-2.  **정보 재조회:**
-    *   다시 `authorizationRequestRepository`를 조회합니다.
-    *   아까 3번 단계에서 지우지 않고 남겨뒀기 때문에, `abc-123` 키로 정보를 찾을 수 있습니다.
-3.  **토큰 생성 및 저장:**
-    *   `JwtUtil`을 이용해 Access/Refresh Token을 생성합니다.
-    *   `RefreshService`를 통해 Refresh Token을 DB에 저장합니다.
-4.  **분기 처리:**
-    *   저장된 정보에서 `target` 값을 꺼냅니다.
-    *   **Case A (App):** `target`이 "app"이면 -> `http://10.0.2.2:8080/login/success`로 리다이렉트 (앱이 가로챔).
-    *   **Case B (Web):** `target`이 "web"이면 -> 쿠키를 굽고 `/map` 페이지로 리다이렉트.
-5.  **메모리 정리 (명시적 삭제):**
-    *   모든 처리가 끝났으므로 `authorizationRequestRepository.deleteAuthorizationRequest(state)`를 호출하여 메모리에서 정보를 삭제합니다.
-
----
-
-## 6. Q&A: 왜 SuccessHandler에서 명시적으로 삭제하지 않나요?
-*   **질문:** `SuccessHandler`에서 `target` 정보를 다 썼으면, 거기서 삭제해야 깔끔하지 않나요?
-*   **답변:** 맞습니다. 그래서 `deleteAuthorizationRequest` 메서드를 추가하여 명시적으로 삭제하고 있습니다.
-*   **이중 안전장치:**
-    1.  **명시적 삭제:** 로그인 성공 시 즉시 삭제 (메모리 효율).
-    2.  **5분 자동 삭제(TTL):** 로그인 중도 포기 시 잔여 데이터 자동 청소 (보안).
+1.  **토큰 생성:**
+    *   `JwtUtil`을 사용하여 Access Token과 Refresh Token을 생성합니다.
+2.  **Refresh Token 저장:**
+    *   `RefreshService.saveRefresh`를 통해 DB에 저장합니다.
+3.  **타겟 확인:**
+    *   `InMemoryAuthorizationRequestRepository`에서 `state`로 저장된 요청을 조회하여 `target` 값("web" 또는 "app")을 확인합니다.
+4.  **응답 분기 처리:**
+    *   **Case A (App):**
+        *   `http://10.0.2.2:8080/login/success`로 리다이렉트합니다.
+        *   Query Parameter로 `access_token`과 `refresh_token`을 전달합니다.
+        *   앱(WebView)에서 이 URL을 가로채서 토큰을 추출하고 창을 닫습니다.
+    *   **Case B (Web):**
+        *   `addCookie` 메서드로 Access/Refresh Token을 **HttpOnly 쿠키**에 담습니다 (`maxAge: -1`).
+        *   `/map` 페이지로 리다이렉트합니다.
+5.  **요청 정보 삭제:**
+    *   `authorizationRequestRepository.deleteAuthorizationRequest(state)`를 호출하여 메모리에서 요청 정보를 명시적으로 삭제합니다.
 
 ---
 
-## 결론
-`removeAuthorizationRequest`는 **3번 단계(검증)** 에서 실행됩니다.
-이때 `state` 파라미터가 없으면 "어떤 요청에 대한 응답인지" 찾을 수 없으므로 에러가 발생합니다.
-따라서 `state`는 전체 과정의 **연결 고리** 역할을 하는 필수적인 요소입니다.
+## 5. 실패 처리
+**설정:** `SecurityConfig`
+
+1.  **FailureHandler:**
+    *   로그인 실패 시 `HttpServletResponse.SC_UNAUTHORIZED` (401) 에러를 반환하고 로그를 출력합니다.
+

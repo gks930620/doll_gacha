@@ -44,6 +44,9 @@ public class CustomUserAccount implements UserDetails, OAuth2User {
     //이 메소드는 oauth2User와 UserDetails의 getAuthroties()를 전부 override
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (userDTO.getRoles() == null) {
+            return java.util.Collections.emptyList();
+        }
         return userDTO.getRoles().stream()
             .map(SimpleGrantedAuthority::new)
             .toList();

@@ -113,8 +113,9 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
     protected void unsuccessfulAuthentication(HttpServletRequest request,
         HttpServletResponse response, AuthenticationException failed)
         throws IOException, ServletException {
-        request.setAttribute("ERROR_CAUSE" , "로그인실패"); //실패 후 config의 entryPoint로
-        super.unsuccessfulAuthentication(request,response,failed);
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json;charset=UTF-8");
+        response.getWriter().write("{\"error\": \"아이디 또는 비밀번호가 일치하지 않습니다.\", \"cause\": \"로그인실패\"}");
     }
 
 }

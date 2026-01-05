@@ -34,5 +34,6 @@ public class UserEntity {
     private String email;
     private String nickname;
 
+    @Builder.Default
     private List<String> roles=new ArrayList<>();
 }

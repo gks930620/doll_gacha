@@ -30,6 +30,7 @@ public class UserDTO {
     private String email;
     private String nickname;
 
+    @Builder.Default
     private List<String> roles=new ArrayList<>();
 
     public static UserDTO from(UserEntity userEntity) {
@@ -40,7 +41,7 @@ public class UserDTO {
             .password(userEntity.getPassword())
             .email(userEntity.getEmail())
             .nickname(userEntity.getNickname())
-            .roles(userEntity.getRoles())
+            .roles(userEntity.getRoles() != null ? userEntity.getRoles() : new ArrayList<>())
             .build();
     }
 
