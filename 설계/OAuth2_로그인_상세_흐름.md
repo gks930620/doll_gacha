@@ -44,7 +44,7 @@
 
 ## 4. 토큰 발급 및 로그인 처리 (내부 로직)
 *   Spring Security가 내부적으로 카카오/구글과 통신하여 `Access Token`을 받고, 사용자 프로필 정보를 가져옵니다.
-*   회원가입이 안 되어 있다면 회원가입 처리, 되어 있다면 로그인 처리를 완료합니다.
+*   `CustomOAuth2UserService` (설정되어 있다면)를 통해 회원가입/로그인 처리를 진행하고 `CustomUserAccount`를 반환합니다.
 
 ---
 
@@ -56,23 +56,25 @@
 2.  **정보 재조회:**
     *   다시 `authorizationRequestRepository`를 조회합니다.
     *   아까 3번 단계에서 지우지 않고 남겨뒀기 때문에, `abc-123` 키로 정보를 찾을 수 있습니다.
-3.  **분기 처리:**
+3.  **토큰 생성 및 저장:**
+    *   `JwtUtil`을 이용해 Access/Refresh Token을 생성합니다.
+    *   `RefreshService`를 통해 Refresh Token을 DB에 저장합니다.
+4.  **분기 처리:**
     *   저장된 정보에서 `target` 값을 꺼냅니다.
     *   **Case A (App):** `target`이 "app"이면 -> `http://10.0.2.2:8080/login/success`로 리다이렉트 (앱이 가로챔).
     *   **Case B (Web):** `target`이 "web"이면 -> 쿠키를 굽고 `/map` 페이지로 리다이렉트.
+5.  **메모리 정리 (명시적 삭제):**
+    *   모든 처리가 끝났으므로 `authorizationRequestRepository.deleteAuthorizationRequest(state)`를 호출하여 메모리에서 정보를 삭제합니다.
 
 ---
 
 ## 6. Q&A: 왜 SuccessHandler에서 명시적으로 삭제하지 않나요?
 *   **질문:** `SuccessHandler`에서 `target` 정보를 다 썼으면, 거기서 삭제해야 깔끔하지 않나요?
-*   **답변:** 맞습니다. 원래는 사용 직후 삭제하는 것이 가장 완벽한 설계입니다.
-*   **현실적인 이유:**
-    1.  우리가 `removeAuthorizationRequest` 메서드를 `get`(조회만 하고 삭제 안 함)으로 변경해버렸기 때문에, `SuccessHandler`에서 이 메서드를 호출해도 삭제되지 않습니다.
-    2.  삭제를 위한 별도의 메서드를 또 만들면 코드가 복잡해집니다.
-*   **해결책:** 그래서 **"5분 후 자동 삭제(TTL)"** 기능을 넣어두었습니다.
-    *   `state`는 고유값이라 재사용될 확률이 거의 없고,
-    *   5분 뒤에는 알아서 메모리에서 사라지므로 보안 및 메모리 누수 문제가 해결됩니다.
-    *   Oauth2LoginSuccessHandler에서  명시적으로 삭제
+*   **답변:** 맞습니다. 그래서 `deleteAuthorizationRequest` 메서드를 추가하여 명시적으로 삭제하고 있습니다.
+*   **이중 안전장치:**
+    1.  **명시적 삭제:** 로그인 성공 시 즉시 삭제 (메모리 효율).
+    2.  **5분 자동 삭제(TTL):** 로그인 중도 포기 시 잔여 데이터 자동 청소 (보안).
+
 ---
 
 ## 결론
