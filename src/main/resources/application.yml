@@ -1,7 +1,5 @@
-#  h2:
-#    console: true
-#    path: /h2-console     #localhost:8080/h2-console ???? ??.
-
+dotenv:
+  enabled: true  # .env파일설정.    KAKAO_CLIENT_ID 직접 쓰려면 없어도됨.
 spring:
   datasource:
     url: jdbc:mariadb://localhost:3406/doll_gacha
@@ -12,7 +10,7 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: none
+      ddl-auto: update
     properties:
       hibernate:
         show_sql: true
@@ -29,7 +27,45 @@ spring:
   thymeleaf:
     cache: false
 
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}  # 카카오 REST API 키
+            client-secret: ${KAKAO_CLIENT_SECRET}  # 카카오 Client Secret
+            client-authentication-method: client_secret_post  # 카카오는 POST 방식으로 Secret 전달
+            redirect-uri: http://localhost:8080/login/oauth2/code/kakao # 카카오 로그인 후 리디렉트될 주소
+            authorization-grant-type: authorization_code  # OAuth2 인증 방식 (코드 방식)
+            scope:
+              - profile_nickname
+              - account_email  # 요청할 사용자 정보 (이메일, 닉네임)
+
+
+          google: # ✅ 구글 OAuth2 추가
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}   #구글은 인가코드- access_token 과정에서 내부적으로 secret을 필요로 함.
+            redirect-uri: http://localhost:8080/login/oauth2/code/google
+            scope:
+              - profile       #카카오는 profile안의 여러정보 다 따로 지정해줘야하지만 구글은 profile만 지정하면 됨.
+              - email
+            authorization-grant-type: authorization_code
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize  # 카카오 로그인 URL  (인증서버)
+            token-uri: https://kauth.kakao.com/oauth/token  # 액세스 토큰 요청 URL (인증서버)
+            user-info-uri: https://kapi.kakao.com/v2/user/me  # 사용자 정보 요청 URL (리소스서버)
+            user-name-attribute: id  # OAuth2User에서 사용할 식별 값. 왠만하면 oauth에서 제공하는대로사용하자. 카카오는 id, 구글은 sub
 logging:
   level:
     org.hibernate.SQL: debug
     org.hibernate.type: trace
+
+
+
+jwt:
+  secret : ${JWT_SECRET_KEY}
+  #키는 길이만 충분하고 노출되지만 않으면 됨. gpt한테 만들어하던가 내가 막 타자 아무렇게 해도됨
+  expiration_access: 1800000  #30분 테스트용
+  expiration_refresh : 14400000   #테스트용 4시간
