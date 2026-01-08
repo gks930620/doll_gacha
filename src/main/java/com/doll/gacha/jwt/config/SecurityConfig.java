@@ -84,24 +84,26 @@ public class SecurityConfig {
                 // 1. 정적 리소스, 페이지 등 기본적으로 모두 허용
                 .requestMatchers(
                     // 정적 리소스
-                    "/css/**", "/js/**", "/images/**", "/favicon.ico",
+                    "/css/**", "/js/**", "/images/**", "/favicon.ico", "/uploads/**",
                     // h2-console
                     "/h2-console/**",
                     // 페이지 URL (CSR이므로 페이지 자체는 모두 허용)
-                    "/", "/map", "/login", "/signup", "/community/**", "/doll/**", "/mypage", "/review/**",
+                    "/", "/map", "/login", "/signup", "/community/**", "/doll/**", "/doll-shop/**",  "/review/**",
                     // 인증 관련 API
                     "/api/login", "/api/join", "/api/refresh/reissue",
                     // OAuth2
                     "/custom-oauth2/login/**",
                     // 공개 API
-                    "/api/dollshop/**"
+                    "/api/doll-shops/**",
+                    "/api/reviews/shop/**"
                 ).permitAll()
 
                 // 2. 인증이 필요한 API
                 .requestMatchers(
                     "/api/logout",  // 로그아웃은 로그인한 사용자만 가능
-                    "/api/my/info"
-                    // TODO: 향후 추가될 인증필요 API (ex: /api/reviews, /api/comments 등)
+                    "/api/my/info",
+                    "/api/reviews"  // 리뷰 작성은 인증 필요
+                    // TODO: 향후 추가될 인증필요 API (ex: /api/comments 등)
                 ).authenticated()
 
                 // 3. 그 외 나머지 요청은 일단 모두 허용 (개발 편의성)

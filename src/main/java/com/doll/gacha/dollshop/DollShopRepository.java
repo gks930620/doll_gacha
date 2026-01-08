@@ -1,17 +1,17 @@
 package com.doll.gacha.dollshop;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface DollShopRepository extends JpaRepository<DollShop, Long> {
+public interface DollShopRepository extends JpaRepository<DollShop, Long> , DollShopRepositoryCustom {
 
-    List<DollShop> findByGubun1AndGubun2(String gubun1, String gubun2);
+    // 전체 매장 목록 페이징 조회
+    Page<DollShop> findAll(Pageable pageable);
 
-    List<DollShop> findByGubun1(String gubun1);
-
-    List<DollShop> findByIsOperating(Boolean isOperating);
 }
 

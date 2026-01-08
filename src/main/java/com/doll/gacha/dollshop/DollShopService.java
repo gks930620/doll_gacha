@@ -1,6 +1,8 @@
 package com.doll.gacha.dollshop;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,31 +16,41 @@ public class DollShopService {
     private final DollShopRepository dollShopRepository;
 
     /**
-     * 시도와 시군구로 가게 검색
+     * 지도용 - 매장 목록 조회 (MapDTO로 반환, 이미지 제외)
+     * @param searchDTO 검색 조건 (gubun1, gubun2)
+     * @return 지도용 매장 리스트
      */
-    public List<DollShop> findByGubun1AndGubun2(String gubun1, String gubun2) {
-        return dollShopRepository.findByGubun1AndGubun2(gubun1, gubun2);
+    public List<DollShopMapDTO> searchShopsForMap(DollShopSearchDTO searchDTO) {
+        // Repository에서 List로 직접 반환 (페이징 없음, 이미지 제외)
+        List<DollShop> shops = dollShopRepository.searchForMap(searchDTO);
+
+        // MapDTO로 변환
+        return shops.stream()
+                .map(DollShopMapDTO::from)
+                .toList();
     }
 
     /**
-     * 시도로만 가게 검색
+     * 게시판용 - 통합 검색 메서드 (페이징, N+1 방지)
+     * Repository에서 이미지까지 함께 세팅
+     * @param searchDTO 검색 조건 (gubun1, gubun2, isOperating, keyword)
+     * @param pageable 페이징 정보
+     * @return 페이징된 매장 목록
      */
-    public List<DollShop> findByGubun1(String gubun1) {
-        return dollShopRepository.findByGubun1(gubun1);
+    public Page<DollShopDTO> searchShopsPaged(DollShopSearchDTO searchDTO, Pageable pageable) {
+        // Repository에서 DollShop + 썸네일 이미지까지 함께 조회 (N+1 방지)
+        Page<DollShop> page = dollShopRepository.searchByConditions(searchDTO, pageable);
+
+        // DTO 변환 (imagePath는 이미 세팅되어 있음)
+        return page.map(DollShopDTO::from);
     }
 
     /**
-     * 운영중인 가게만 검색
+     * 특정 가게 조회 (이미지 제외 - 클라이언트에서 별도 요청)
      */
-    public List<DollShop> findOperatingShops() {
-        return dollShopRepository.findByIsOperating(true);
-    }
-
-    /**
-     * 모든 가게 검색
-     */
-    public List<DollShop> findAll() {
-        return dollShopRepository.findAll();
+    public DollShopDTO getById(Long id) {
+        return dollShopRepository.findById(id)
+            .map(DollShopDTO::from)
+            .orElseThrow(() -> new IllegalArgumentException("Doll shop not found with id: " + id));
     }
 }
-

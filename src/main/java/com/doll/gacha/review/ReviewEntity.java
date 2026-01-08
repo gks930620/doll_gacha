@@ -54,10 +54,6 @@ public class ReviewEntity {
     @Column
     private Integer smallDollCost;  // 소형 인형 1개당 지출
 
-    // 리뷰 이미지들 (1:N - 한 리뷰는 여러 이미지를 가질 수 있음)
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ReviewImage> images = new ArrayList<>();
 
     // 삭제 여부
     @Column(nullable = false)
@@ -81,16 +77,5 @@ public class ReviewEntity {
         updatedAt = LocalDateTime.now();
     }
 
-    // 편의 메서드: 이미지 추가
-    public void addImage(ReviewImage image) {
-        images.add(image);
-        image.setReview(this);
-    }
-
-    // 편의 메서드: 이미지 제거
-    public void removeImage(ReviewImage image) {
-        images.remove(image);
-        image.setReview(null);
-    }
 }
 

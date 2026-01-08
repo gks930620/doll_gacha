@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>가게 상세정보 - 돌캐치</title>
+    <th:block th:replace="~{layout/header :: headerStyle}"></th:block>
+    <th:block th:replace="~{layout/footer :: footerStyle}"></th:block>
+    <style>
+         /* Include styles from doll/detail.html mostly */
+        .main-content {
+            padding-top: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding-left: 16px;
+            padding-right: 16px;
+        }
+        .detail-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+            margin-bottom: 32px;
+        }
+
+        @media (max-width: 968px) {
+            .detail-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .image-section {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .main-image {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .main-image .material-icons {
+            font-size: 120px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .info-section {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .doll-title {
+            font-size: 28px;
+            font-weight: 500;
+            color: #212121;
+            margin-bottom: 16px;
+        }
+
+        .info-divider {
+            height: 1px;
+            background-color: #e0e0e0;
+            margin: 24px 0;
+        }
+
+        .info-items {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .info-item-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .info-item-content {
+            flex: 1;
+        }
+
+        .info-item-label {
+            font-size: 13px;
+            color: #757575;
+            margin-bottom: 4px;
+        }
+
+        .info-item-value {
+            font-size: 15px;
+            color: #212121;
+            font-weight: 500;
+        }
+
+        /* Review Styles */
+        .review-list {
+            margin-top: 32px;
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .review-header-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .review-item {
+            padding: 20px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .review-image {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-top: 8px;
+            cursor: pointer;
+        }
+
+        /* Write Review Form */
+        .review-form {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+            display: none; /* Initially hidden */
+        }
+
+        .review-form.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background-color: #6200ea;
+            color: white;
+        }
+
+        .rating-input {
+            display: flex;
+            gap: 4px;
+            color: #ddd;
+            cursor: pointer;
+        }
+
+        .rating-input .material-icons.active {
+            color: #ff9800;
+        }
+    </style>
+</head>
+<body>
+<th:block th:replace="~{layout/header :: header}"></th:block>
+
+    <main class="main-content">
+        <div class="detail-container">
+            <div class="image-section">
+                <div class="main-image">
+                    <span class="material-icons">store_mall_directory</span>
+                </div>
+            </div>
+
+            <div class="info-section">
+                <!-- Shop Data will be injected here -->
+                <h1 id="shopName" class="doll-title">로딩중...</h1>
+
+                <div class="info-divider"></div>
+
+                <div class="info-items">
+                    <div class="info-item">
+                        <div class="info-item-icon">
+                            <span class="material-icons">location_on</span>
+                        </div>
+                        <div class="info-item-content">
+                            <div class="info-item-label">주소</div>
+                            <div id="shopAddress" class="info-item-value">-</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-item-icon">
+                            <span class="material-icons">phone</span>
+                        </div>
+                        <div class="info-item-content">
+                            <div class="info-item-label">전화번호</div>
+                            <div id="shopPhone" class="info-item-value">-</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-item-icon">
+                            <span class="material-icons">videogame_asset</span>
+                        </div>
+                        <div class="info-item-content">
+                            <div class="info-item-label">기계 수</div>
+                            <div id="machineCount" class="info-item-value">-</div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-item-icon">
+                            <span class="material-icons">verified</span>
+                        </div>
+                        <div class="info-item-content">
+                            <div class="info-item-label">운영 상태</div>
+                            <div id="shopStatus" class="info-item-value">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Statistics Section -->
+        <div class="review-stats" style="margin-top: 32px; background: white; padding: 24px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="font-size: 20px; margin-bottom: 20px;">리뷰 통계</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                <!-- 총 리뷰 수 -->
+                <div style="padding: 16px; background: #f5f5f5; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 13px; color: #757575; margin-bottom: 8px;">총 리뷰</div>
+                    <div id="statTotalReviews" style="font-size: 24px; font-weight: bold; color: #6200ea;">-</div>
+                </div>
+                <!-- 평균 별점 -->
+                <div style="padding: 16px; background: #fff3e0; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 13px; color: #757575; margin-bottom: 8px;">평균 별점</div>
+                    <div id="statAvgRating" style="font-size: 24px; font-weight: bold; color: #ff9800; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                        <span class="material-icons" style="font-size: 28px;">star</span>
+                        <span>-</span>
+                    </div>
+                </div>
+                <!-- 평균 기계 힘 -->
+                <div style="padding: 16px; background: #e8f5e9; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 13px; color: #757575; margin-bottom: 8px;">평균 기계 힘</div>
+                    <div id="statAvgMachineStrength" style="font-size: 24px; font-weight: bold; color: #4caf50;">- / 5</div>
+                </div>
+                <!-- 평균 대형 비용 -->
+                <div style="padding: 16px; background: #fce4ec; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 13px; color: #757575; margin-bottom: 8px;">평균 대형 비용</div>
+                    <div id="statAvgLargeCost" style="font-size: 20px; font-weight: bold; color: #e91e63;">-</div>
+                </div>
+                <!-- 평균 중형 비용 -->
+                <div style="padding: 16px; background: #e3f2fd; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 13px; color: #757575; margin-bottom: 8px;">평균 중형 비용</div>
+                    <div id="statAvgMediumCost" style="font-size: 20px; font-weight: bold; color: #2196f3;">-</div>
+                </div>
+                <!-- 평균 소형 비용 -->
+                <div style="padding: 16px; background: #f3e5f5; border-radius: 8px; text-align: center;">
+                    <div style="font-size: 13px; color: #757575; margin-bottom: 8px;">평균 소형 비용</div>
+                    <div id="statAvgSmallCost" style="font-size: 20px; font-weight: bold; color: #9c27b0;">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="review-list">
+            <div class="review-header-section">
+                <h2 style="font-size: 20px;">리뷰</h2>
+                <button id="writeReviewBtn" class="btn btn-primary" onclick="toggleReviewForm()">리뷰 작성</button>
+            </div>
+
+            <!-- Review Write Form -->
+            <div id="reviewForm" class="review-form">
+                <h3>리뷰 작성하기</h3>
+                <form id="reviewSubmitForm" enctype="multipart/form-data">
+                    <input type="hidden" id="shopIdInput" name="shopId">
+
+                    <div class="form-group">
+                        <label>별점</label>
+                        <div class="rating-input" id="ratingStars">
+                            <span class="material-icons" data-value="1">star</span>
+                            <span class="material-icons" data-value="2">star</span>
+                            <span class="material-icons" data-value="3">star</span>
+                            <span class="material-icons" data-value="4">star</span>
+                            <span class="material-icons" data-value="5">star</span>
+                        </div>
+                        <input type="hidden" name="rating" id="ratingValue" value="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label>기계 힘 (1-5)</label>
+                        <input type="number" name="machineStrength" class="form-control" min="1" max="5" value="3">
+                    </div>
+
+                    <div class="form-group">
+                        <label>비용 (대형/중형/소형)</label>
+                        <div style="display:flex; gap:10px;">
+                            <input type="number" name="costLarge" class="form-control" placeholder="대형 비용">
+                            <input type="number" name="costMedium" class="form-control" placeholder="중형 비용">
+                            <input type="number" name="costSmall" class="form-control" placeholder="소형 비용">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>내용</label>
+                        <textarea name="content" class="form-control" rows="4" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>사진 첨부</label>
+                        <input type="file" name="files" multiple accept="image/*" class="form-control">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">등록 완료</button>
+                </form>
+            </div>
+
+            <div id="reviewsContainer">
+                <!-- Reviews injected here -->
+                <p style="color:#757575;">등록된 리뷰가 없습니다.</p>
+            </div>
+
+            <!-- Pagination -->
+            <div id="paginationContainer" style="display: flex; justify-content: center; gap: 8px; margin-top: 24px; flex-wrap: wrap;">
+                <!-- Pagination buttons will be injected here -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const shopId = urlParams.get('id');
+        let currentPage = 0;
+        const pageSize = 10;
+        console.log(`Detail page loaded for ID: ${shopId}`);
+
+        if (!shopId) {
+            alert('잘못된 접근입니다. 가게 ID가 없습니다.');
+            location.href = '/map';
+        } else {
+            document.getElementById('shopIdInput').value = shopId;
+
+            // Fetch Shop Details
+            fetch(`/api/doll-shops/${shopId}`)
+                .then(async res => {
+                    if(!res.ok) {
+                        const errorText = await res.text();
+                        throw new Error(`Server Error: ${res.status} - ${errorText}`);
+                    }
+                    return res.json();
+                })
+                .then(shop => {
+                    console.log('Shop details loaded:', shop);
+                    document.getElementById('shopName').textContent = shop.businessName;
+                    document.getElementById('shopAddress').textContent = shop.address;
+                    document.getElementById('shopPhone').textContent = shop.phone || '정보 없음';
+                    document.getElementById('machineCount').textContent = shop.totalGameMachines + '대';
+                    document.getElementById('shopStatus').textContent = shop.isOperating ? '운영중' : '폐업';
+
+                    // 이미지는 별도 API로 요청
+                    loadShopImages(shopId);
+                })
+                .catch(err => {
+                    console.error('가게 정보 로드 실패:', err);
+                    alert('가게 정보를 불러오는데 실패했습니다: ' + err.message);
+                });
+
+            // Fetch Reviews
+            fetchReviews(currentPage);
+
+            // Fetch Review Statistics
+            fetchReviewStats();
+        }
+
+        // 매장 이미지 로드 (별도 API 요청)
+        function loadShopImages(shopId) {
+            fetch(`/api/files?refId=${shopId}&refType=DOLL_SHOP&usage=THUMBNAIL`)
+                .then(res => res.json())
+                .then(images => {
+                    console.log('매장 이미지 로드:', images);
+                    if (images && images.length > 0) {
+                        const mainImageDiv = document.querySelector('.main-image');
+                        mainImageDiv.innerHTML = `<img src="${images[0]}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+                        mainImageDiv.style.background = 'none';
+                    }
+                })
+                .catch(err => {
+                    console.error('이미지 로드 실패:', err);
+                });
+        }
+
+        function fetchReviewStats() {
+            fetch(`/api/reviews/doll-shop/${shopId}/stats`)
+                .then(res => res.json())
+                .then(stats => {
+                    console.log('리뷰 통계 로드:', stats);
+
+                    // 총 리뷰 수
+                    document.getElementById('statTotalReviews').textContent = stats.totalReviews + '개';
+
+                    // 평균 별점 (소수점 1자리)
+                    const avgRating = stats.avgRating ? stats.avgRating.toFixed(1) : '0.0';
+                    document.getElementById('statAvgRating').querySelector('span:last-child').textContent = avgRating;
+
+                    // 평균 기계 힘 (소수점 1자리)
+                    const avgStrength = stats.avgMachineStrength ? stats.avgMachineStrength.toFixed(1) : '0.0';
+                    document.getElementById('statAvgMachineStrength').textContent = avgStrength + ' / 5';
+
+                    // 평균 대형 비용
+                    const avgLarge = stats.avgLargeDollCost ? Math.round(stats.avgLargeDollCost).toLocaleString() + '원' : '데이터 없음';
+                    document.getElementById('statAvgLargeCost').textContent = avgLarge;
+
+                    // 평균 중형 비용
+                    const avgMedium = stats.avgMediumDollCost ? Math.round(stats.avgMediumDollCost).toLocaleString() + '원' : '데이터 없음';
+                    document.getElementById('statAvgMediumCost').textContent = avgMedium;
+
+                    // 평균 소형 비용
+                    const avgSmall = stats.avgSmallDollCost ? Math.round(stats.avgSmallDollCost).toLocaleString() + '원' : '데이터 없음';
+                    document.getElementById('statAvgSmallCost').textContent = avgSmall;
+                })
+                .catch(err => {
+                    console.error('리뷰 통계 로드 실패:', err);
+                    // 에러 시에도 기본값 표시
+                    document.getElementById('statTotalReviews').textContent = '0개';
+                    document.getElementById('statAvgRating').querySelector('span:last-child').textContent = '0.0';
+                    document.getElementById('statAvgMachineStrength').textContent = '0.0 / 5';
+                    document.getElementById('statAvgLargeCost').textContent = '데이터 없음';
+                    document.getElementById('statAvgMediumCost').textContent = '데이터 없음';
+                    document.getElementById('statAvgSmallCost').textContent = '데이터 없음';
+                });
+        }
+
+        function fetchReviews(page = 0) {
+            fetch(`/api/reviews/doll-shop/${shopId}?page=${page}&size=${pageSize}`)
+                .then(res => res.json())
+                .then(data => {
+                    const container = document.getElementById('reviewsContainer');
+                    const paginationContainer = document.getElementById('paginationContainer');
+
+                    // data는 Page 객체: { content: [], totalPages, totalElements, number, ... }
+                    if (data.content.length === 0) {
+                        container.innerHTML = '<p style="color:#757575; padding: 20px;">등록된 리뷰가 없습니다.</p>';
+                        paginationContainer.innerHTML = '';
+                        return;
+                    }
+
+                    // 리뷰 목록 렌더링
+                    container.innerHTML = data.content.map(review => `
+                        <div class="review-item">
+                            <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+                                <strong>${review.username || '익명'}</strong>
+                                <span style="color:#FF9800; display:flex; align-items:center;">
+                                    ${renderStars(review.rating)}
+                                </span>
+                            </div>
+                            <div style="font-size:13px; color:#757575; margin-bottom:8px;">
+                                기계 힘: ${review.machineStrength}/5
+                                ${review.largeDollCost ? ` | 대형: ${review.largeDollCost.toLocaleString()}원` : ''}
+                                ${review.mediumDollCost ? ` | 중형: ${review.mediumDollCost.toLocaleString()}원` : ''}
+                                ${review.smallDollCost ? ` | 소형: ${review.smallDollCost.toLocaleString()}원` : ''}
+                            </div>
+                            <p>${review.content}</p>
+                            <div style="margin-top:8px; font-size:12px; color:#999;">
+                                ${new Date(review.createdAt).toLocaleDateString()}
+                            </div>
+                        </div>
+                    `).join('');
+
+                    // 페이지네이션 렌더링
+                    renderPagination(data);
+                })
+                .catch(err => console.error('리뷰 로드 실패:', err));
+        }
+
+        function renderPagination(pageData) {
+            const container = document.getElementById('paginationContainer');
+            const totalPages = pageData.totalPages;
+            const currentPageNum = pageData.number;
+
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+
+            let buttons = '';
+
+            // 이전 버튼
+            if (currentPageNum > 0) {
+                buttons += `<button onclick="goToPage(${currentPageNum - 1})" style="padding: 8px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">이전</button>`;
+            }
+
+            // 페이지 번호 버튼 (최대 5개 표시)
+            const startPage = Math.max(0, currentPageNum - 2);
+            const endPage = Math.min(totalPages - 1, startPage + 4);
+
+            for (let i = startPage; i <= endPage; i++) {
+                const isActive = i === currentPageNum;
+                buttons += `<button onclick="goToPage(${i})" style="padding: 8px 12px; border: 1px solid #ddd; background: ${isActive ? '#6200ea' : 'white'}; color: ${isActive ? 'white' : 'black'}; border-radius: 4px; cursor: pointer; font-weight: ${isActive ? 'bold' : 'normal'};">${i + 1}</button>`;
+            }
+
+            // 다음 버튼
+            if (currentPageNum < totalPages - 1) {
+                buttons += `<button onclick="goToPage(${currentPageNum + 1})" style="padding: 8px 12px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">다음</button>`;
+            }
+
+            container.innerHTML = buttons;
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            fetchReviews(page);
+            // 리뷰 섹션으로 스크롤
+            document.querySelector('.review-list').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function renderStars(rating) {
+            let stars = '';
+            for(let i=0; i<5; i++) {
+                stars += `<span class="material-icons" style="font-size:16px;">${i < rating ? 'star' : 'star_border'}</span>`;
+            }
+            return stars;
+        }
+
+        // Toggle Review Form
+        function toggleReviewForm() {
+            const form = document.getElementById('reviewForm');
+            if (form.style.display === 'block') {
+                form.style.display = 'none';
+            } else {
+                form.style.display = 'block';
+            }
+        }
+
+        // Star Rating Logic
+        document.getElementById('ratingStars').addEventListener('click', function(e) {
+            if(e.target.tagName === 'SPAN') {
+                const value = e.target.getAttribute('data-value');
+                document.getElementById('ratingValue').value = value;
+                updateStarDisplay(value);
+            }
+        });
+
+        function updateStarDisplay(value) {
+            const stars = document.querySelectorAll('#ratingStars .material-icons');
+            stars.forEach((star, index) => {
+                if (index < value) {
+                    star.classList.add('active');
+                    star.textContent = 'star';
+                } else {
+                    star.classList.remove('active');
+                    star.textContent = 'star_border';
+                }
+            });
+        }
+        updateStarDisplay(5); // initialize
+
+        // Review Submit
+        document.getElementById('reviewSubmitForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+
+            fetch('/api/reviews', {
+                method: 'POST',
+                body: formData // Content-Type is set automatically
+            })
+            .then(async res => {
+                if (res.status === 401 || res.status === 403) {
+                     alert('로그인이 필요합니다.');
+                     window.location.href = '/login';
+                     return;
+                }
+                if (!res.ok) {
+                    const text = await res.text();
+                    throw new Error(text);
+                }
+                return res.json();
+            })
+            .then(data => {
+                alert('리뷰가 등록되었습니다!');
+                window.location.reload();
+            })
+            .catch(err => {
+                if (err) {
+                    alert('리뷰 등록 실패: ' + err.message);
+                }
+            });
+        });
+
+        // Check Login Status for header (Simplified check, assuming header script handles it usually, but here adding minimal check)
+        // Actually layout/header usually handles user menu.
+    </script>
+    <th:block th:replace="~{layout/header :: headerScript}"></th:block>
+<th:block th:replace="~{layout/footer :: footer}"></th:block>
+
+</body>
+</html>
+
