@@ -1,11 +1,13 @@
 package com.doll.gacha.dollshop;
 
+import com.doll.gacha.dollshop.dto.DollShopDTO;
+import com.doll.gacha.dollshop.dto.DollShopListDTO;
+import com.doll.gacha.dollshop.dto.DollShopMapDTO;
+import com.doll.gacha.dollshop.dto.DollShopSearchDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,20 +22,14 @@ public class DollShopController {
 
     /**
      * 지도용 - 전체 매장 목록 조회 (gubun1, gubun2로 필터링 가능)
-     * MapDTO로 필요한 데이터만 반환 (N+1 방지)
+     * @param searchDTO 검색 조건 (gubun1, gubun2)
+     * @return MapDTO로 필요한 데이터만 반환 (N+1 방지)
      */
     @GetMapping("/map")
     public ResponseEntity<List<DollShopMapDTO>> getShopsForMap(
-            @RequestParam(required = false) String gubun1,
-            @RequestParam(required = false) String gubun2) {
+            @ModelAttribute DollShopSearchDTO searchDTO) {
 
-        log.info("지도용 매장 조회 - gubun1: {}, gubun2: {}", gubun1, gubun2);
-
-        // SearchDTO 생성
-        DollShopSearchDTO searchDTO = DollShopSearchDTO.builder()
-                .gubun1(gubun1)
-                .gubun2(gubun2)
-                .build();
+        log.info("지도용 매장 조회 - searchDTO: {}", searchDTO);
 
         // MapDTO List 반환
         List<DollShopMapDTO> list = dollShopService.searchShopsForMap(searchDTO);
@@ -42,25 +38,21 @@ public class DollShopController {
 
     /**
      * 게시판용 - 매장 목록 페이징 조회 (모든 검색 조건 지원)
-     * @param searchDTO 검색 조건 (gubun1, gubun2, isOperating, keyword)
-     * @param page 페이지 번호 (0부터 시작)
-     * @param size 페이지 크기 (기본값: 10)
-     * @param sortBy 정렬 기준 (기본값: id)
-     * @param direction 정렬 방향 (기본값: DESC)
+     * @param searchDTO 검색 조건 (gubun1, gubun2, keyword)
+     * @param pageable 페이징 및 정렬 정보 (스프링이 자동으로 바인딩)
+     *                 - page: 페이지 번호 (0부터 시작, 기본값: 0)
+     *                 - size: 페이지 크기 (기본값: 10)
+     *                 - sort: 정렬 기준 (예: sort=id,desc 또는 sort=averageRating,desc&sort=id,desc)
      * @return 페이징된 매장 목록
      */
     @GetMapping("/search")
-    public ResponseEntity<Page<DollShopDTO>> searchShops(
+    public ResponseEntity<Page<DollShopListDTO>> searchShops(
             @ModelAttribute DollShopSearchDTO searchDTO,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "id") String sortBy,
-            @RequestParam(defaultValue = "DESC") String direction) {
+            Pageable pageable) {
 
-        Sort.Direction sortDirection = Sort.Direction.fromString(direction);
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+        log.info("매장 검색 - searchDTO: {}, pageable: {}", searchDTO, pageable);
 
-        Page<DollShopDTO> shops = dollShopService.searchShopsPaged(searchDTO, pageable);
+        Page<DollShopListDTO> shops = dollShopService.searchShopsPaged(searchDTO, pageable);
         return ResponseEntity.ok(shops);
     }
 
@@ -71,6 +63,11 @@ public class DollShopController {
     @GetMapping("/{id}")
     public ResponseEntity<DollShopDTO> getShopById(@PathVariable Long id) {
         log.info("매장 상세 조회 - id: {}", id);
-        return ResponseEntity.ok(dollShopService.getById(id));
+        try {
+            return ResponseEntity.ok(dollShopService.getById(id));
+        } catch (IllegalArgumentException e) {
+            log.warn("매장을 찾을 수 없음 - id: {}, error: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
 }

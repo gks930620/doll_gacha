@@ -51,6 +51,11 @@ public class HomeController {
         return "community/detail";
     }
 
+    @GetMapping("/community/edit")
+    public String communityEdit() {
+        return "community/edit";
+    }
+
     @GetMapping("/doll")
     public String doll() {
         return "doll/list";

@@ -3,6 +3,7 @@ package com.doll.gacha.jwt.service;
 
 import com.doll.gacha.jwt.JwtUtil;
 import com.doll.gacha.jwt.entity.RefreshEntity;
+import com.doll.gacha.jwt.entity.UserEntity;
 import com.doll.gacha.jwt.repository.RefreshRepository;
 import com.doll.gacha.jwt.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,9 @@ public class RefreshService {
         refreshRepository.deleteByUserEntity_Username(username); // exists 체크 없이 바로 삭제 시도 (더 간결)
 
         RefreshEntity refreshEntity = new RefreshEntity();
-        refreshEntity.setUserEntity(userRepository.findByUsername(username));
+        UserEntity user = userRepository.findByUsername(username)
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        refreshEntity.setUserEntity(user);
         refreshEntity.setToken(token);
         refreshRepository.save(refreshEntity);
 

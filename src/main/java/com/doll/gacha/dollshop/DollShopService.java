@@ -1,5 +1,10 @@
 package com.doll.gacha.dollshop;
 
+import com.doll.gacha.dollshop.dto.DollShopDTO;
+import com.doll.gacha.dollshop.dto.DollShopListDTO;
+import com.doll.gacha.dollshop.dto.DollShopMapDTO;
+import com.doll.gacha.dollshop.dto.DollShopSearchDTO;
+import com.doll.gacha.dollshop.repositroy.DollShopRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,8 +17,21 @@ import java.util.List;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class DollShopService {
-
     private final DollShopRepository dollShopRepository;
+    /**
+     * 게시판용 - 통합 검색 메서드 (페이징, N+1 방지)
+     * Repository에서 이미지까지 함께 세팅
+     * @param searchDTO 검색 조건 (gubun1, gubun2, isOperating, keyword)
+     * @param pageable 페이징 정보
+     * @return 페이징된 매장 목록
+     */
+    public Page<DollShopListDTO> searchShopsPaged(DollShopSearchDTO searchDTO, Pageable pageable) {
+        // Repository에서 DollShop + 썸네일 이미지까지 함께 조회 (N+1 방지)
+        Page<DollShopListDTO> page = dollShopRepository.searchByConditions(searchDTO, pageable);
+
+        // DTO 변환 (imagePath는 이미 세팅되어 있음)
+        return page;
+    }
 
     /**
      * 지도용 - 매장 목록 조회 (MapDTO로 반환, 이미지 제외)
@@ -26,24 +44,11 @@ public class DollShopService {
 
         // MapDTO로 변환
         return shops.stream()
-                .map(DollShopMapDTO::from)
-                .toList();
+            .map(DollShopMapDTO::from)
+            .toList();
     }
 
-    /**
-     * 게시판용 - 통합 검색 메서드 (페이징, N+1 방지)
-     * Repository에서 이미지까지 함께 세팅
-     * @param searchDTO 검색 조건 (gubun1, gubun2, isOperating, keyword)
-     * @param pageable 페이징 정보
-     * @return 페이징된 매장 목록
-     */
-    public Page<DollShopDTO> searchShopsPaged(DollShopSearchDTO searchDTO, Pageable pageable) {
-        // Repository에서 DollShop + 썸네일 이미지까지 함께 조회 (N+1 방지)
-        Page<DollShop> page = dollShopRepository.searchByConditions(searchDTO, pageable);
 
-        // DTO 변환 (imagePath는 이미 세팅되어 있음)
-        return page.map(DollShopDTO::from);
-    }
 
     /**
      * 특정 가게 조회 (이미지 제외 - 클라이언트에서 별도 요청)

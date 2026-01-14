@@ -8,7 +8,8 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-    <th:block th:replace="~{layout/common-styles :: styles}"></th:block>
+    <th:block th:replace="~{layout/header :: headerStyle}"></th:block>
+    <th:block th:replace="~{layout/footer :: footerStyle}"></th:block>
 
     <style>
         .post-detail {
@@ -291,21 +292,26 @@
     </style>
 </head>
 <body>
-    <th:block th:replace="~{layout/common-styles :: header}"></th:block>
+    <th:block th:replace="~{layout/header :: header}"></th:block>
 
     <main class="main-content">
-        <article class="post-detail">
+        <!-- 로딩 상태 -->
+        <div id="loadingState" style="display: none; text-align: center; padding: 60px 20px; color: #757575;">
+            <div style="font-size: 14px;">로딩 중...</div>
+        </div>
+
+        <!-- 게시글 상세 -->
+        <article class="post-detail" id="postDetail" style="display: none;">
             <div class="post-detail-header">
-                <span class="post-category">후기</span>
-                <h1 class="post-detail-title">강남역 신규 오픈한 인형뽑기방 후기</h1>
+                <h1 class="post-detail-title" id="postTitle"></h1>
                 <div class="post-detail-meta">
                     <span class="post-meta-item">
                         <span class="material-icons">person</span>
-                        <span>인형러버123</span>
+                        <span id="postAuthor"></span>
                     </span>
                     <span class="post-meta-item">
                         <span class="material-icons">schedule</span>
-                        <span>2025년 12월 18일 14:30</span>
+                        <span id="postDate"></span>
                     </span>
                 </div>
             </div>
@@ -313,63 +319,24 @@
             <div class="post-detail-stats">
                 <span class="post-stat">
                     <span class="material-icons">visibility</span>
-                    <span>245</span>
-                </span>
-                <span class="post-stat">
-                    <span class="material-icons">thumb_up</span>
-                    <span>32</span>
-                </span>
-                <span class="post-stat">
-                    <span class="material-icons">comment</span>
-                    <span>15</span>
+                    <span id="postViewCount"></span>
                 </span>
             </div>
 
-            <div class="post-detail-content">
-                <p>오늘 강남역 근처에 새로 오픈한 인형뽑기방 다녀왔어요! 🎉</p>
-                <p>위치는 강남역 10번 출구에서 도보 5분 거리에 있고, 건물 2층에 위치해있습니다.</p>
-
-                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 18px;">매장 분위기</h3>
-                <p>매장이 굉장히 넓고 깨끗해요. 기계도 최신형으로 갖춰져 있고, 조명도 밝아서 인형을 잘 볼 수 있습니다.
-                특히 각 기계마다 난이도가 표시되어 있어서 초보자들도 쉽게 도전할 수 있을 것 같아요.</p>
-
-                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 18px;">인형 라인업</h3>
-                <p>산리오 캐릭터들이 엄청 많더라구요! 시나모롤, 쿠로미, 마이멜로디 등등...
-                그 외에도 디즈니, 포켓몬, 짱구 인형들도 있었어요. 인형 상태도 좋고 사이즈도 다양했습니다.</p>
-
-                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 18px;">가격</h3>
-                <p>1회 1,000원이고, 10회권은 9,000원에 판매하고 있어요.
-                신규 오픈 이벤트로 지금은 10회권 구매 시 2회 더 서비스로 주더라구요!</p>
-
-                <h3 style="margin-top: 24px; margin-bottom: 12px; font-size: 18px;">총평</h3>
-                <p>기계 상태도 좋고 인형 퀄리티도 좋아서 만족스러웠습니다.
-                다만 오픈한지 얼마 안 돼서 사람이 좀 많았어요. 평일 오후에 가시면 더 여유롭게 즐기실 수 있을 것 같아요!</p>
-
-                <p style="margin-top: 24px;">추천드립니다! ⭐⭐⭐⭐⭐</p>
+            <div class="post-detail-content" id="postContent">
+                <!-- 내용이 여기에 렌더링됨 (에디터 내 이미지 포함) -->
             </div>
 
-            <div class="post-actions">
-                <button class="btn btn-icon" onclick="toggleLike()">
-                    <span class="material-icons">thumb_up</span>
-                    <span>좋아요 32</span>
-                </button>
-                <button class="btn btn-icon">
-                    <span class="material-icons">bookmark_border</span>
-                    <span>북마크</span>
-                </button>
-                <button class="btn btn-icon">
-                    <span class="material-icons">share</span>
-                    <span>공유</span>
-                </button>
-            </div>
+            <!-- 첨부파일 (다운로드만) -->
+            <div id="postAttachments" style="padding: 0 24px 24px 24px;"></div>
 
             <div class="post-nav-actions">
                 <a href="/community" class="btn btn-secondary">
                     <span class="material-icons">list</span>
                     목록
                 </a>
-                <div style="display: flex; gap: 8px;">
-                    <button class="btn btn-primary">
+                <div id="postActions" style="display: none; gap: 8px;">
+                    <button class="btn btn-primary" onclick="editPost()">
                         <span class="material-icons">edit</span>
                         수정
                     </button>
@@ -380,119 +347,221 @@
                 </div>
             </div>
         </article>
-
-        <section class="comments-section">
-            <div class="comments-header">
-                <span class="material-icons">comment</span>
-                <span>댓글 15개</span>
-            </div>
-
-            <div class="comment-write">
-                <textarea class="comment-textarea" placeholder="댓글을 입력하세요..." id="commentInput"></textarea>
-                <div class="comment-write-actions">
-                    <button class="btn btn-primary" onclick="submitComment()">
-                        <span class="material-icons">send</span>
-                        댓글 작성
-                    </button>
-                </div>
-            </div>
-
-            <div class="comment-list">
-                <div class="comment-item">
-                    <div class="comment-header">
-                        <div class="comment-author">
-                            <span class="material-icons">account_circle</span>
-                            <span>인형수집가</span>
-                        </div>
-                        <span class="comment-date">1시간 전</span>
-                    </div>
-                    <div class="comment-content">
-                        오! 저도 이번주에 가봐야겠어요! 정보 감사합니다 😊
-                    </div>
-                    <div class="comment-actions">
-                        <button class="comment-action-btn">
-                            <span class="material-icons">thumb_up</span>
-                            <span>5</span>
-                        </button>
-                        <button class="comment-action-btn">
-                            <span class="material-icons">reply</span>
-                            <span>답글</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="comment-item">
-                    <div class="comment-header">
-                        <div class="comment-author">
-                            <span class="material-icons">account_circle</span>
-                            <span>뽑기고수</span>
-                        </div>
-                        <span class="comment-date">2시간 전</span>
-                    </div>
-                    <div class="comment-content">
-                        여기 진짜 좋아요! 저도 어제 다녀왔는데 시나모롤 3개나 뽑았어요 ㅎㅎ
-                    </div>
-                    <div class="comment-actions">
-                        <button class="comment-action-btn">
-                            <span class="material-icons">thumb_up</span>
-                            <span>8</span>
-                        </button>
-                        <button class="comment-action-btn">
-                            <span class="material-icons">reply</span>
-                            <span>답글</span>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="comment-item">
-                    <div class="comment-header">
-                        <div class="comment-author">
-                            <span class="material-icons">account_circle</span>
-                            <span>매장탐험가</span>
-                        </div>
-                        <span class="comment-date">3시간 전</span>
-                    </div>
-                    <div class="comment-content">
-                        상세한 후기 감사합니다! 주말에 시간 내서 가봐야겠네요
-                    </div>
-                    <div class="comment-actions">
-                        <button class="comment-action-btn">
-                            <span class="material-icons">thumb_up</span>
-                            <span>3</span>
-                        </button>
-                        <button class="comment-action-btn">
-                            <span class="material-icons">reply</span>
-                            <span>답글</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </section>
     </main>
 
-    <th:block th:replace="~{layout/common-styles :: footer}"></th:block>
-    <th:block th:replace="~{layout/common-styles :: scripts}"></th:block>
+    <th:block th:replace="~{layout/footer :: footer}"></th:block>
+    <th:block th:replace="~{layout/header :: headerScript}"></th:block>
+
+    <!-- DOMPurify for XSS Protection -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 
     <script>
-        function toggleLike() {
-            alert('좋아요를 눌렀습니다!');
-        }
+        let currentCommunityId = null;
+        let currentUser = null;
 
-        function deletePost() {
-            if (confirm('정말 삭제하시겠습니까?')) {
-                alert('게시글이 삭제되었습니다.');
-                window.location.href = '/community';
-            }
-        }
+        // 페이지 로드 시 데이터 가져오기
+        document.addEventListener('DOMContentLoaded', () => {
+            // URL에서 게시글 ID 추출
+            const urlParams = new URLSearchParams(window.location.search);
+            currentCommunityId = urlParams.get('id');
 
-        function submitComment() {
-            const comment = document.getElementById('commentInput').value;
-            if (!comment.trim()) {
-                alert('댓글을 입력해주세요.');
+            if (!currentCommunityId) {
+                alert('잘못된 접근입니다.');
+                location.href = '/community';
                 return;
             }
-            alert('댓글이 작성되었습니다.');
-            document.getElementById('commentInput').value = '';
+
+            checkLoginStatus(); // 로그인 상태 확인
+            loadCommunityDetail(); // 게시글 로드
+        });
+
+        // 로그인 상태 확인
+        function checkLoginStatus() {
+            fetch('/api/my/info')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Not logged in');
+                })
+                .then(userInfo => {
+                    currentUser = userInfo;
+                    console.log('✅ 로그인 상태:', userInfo.nickname);
+                })
+                .catch(err => {
+                    console.log('❌ 비로그인 상태');
+                    currentUser = null;
+                });
+        }
+
+        // 게시글 상세 로드
+        async function loadCommunityDetail() {
+            try {
+                showLoading(true);
+
+                const response = await fetch(`/api/community/${currentCommunityId}`);
+
+                if (!response.ok) {
+                    throw new Error('게시글을 불러오는데 실패했습니다.');
+                }
+
+                const data = await response.json();
+                console.log('✅ 게시글 데이터:', data);
+
+                renderCommunityDetail(data);
+                showLoading(false);
+
+            } catch (error) {
+                console.error('❌ 에러 발생:', error);
+                showLoading(false);
+                alert('게시글을 불러오는데 실패했습니다.');
+                location.href = '/community';
+            }
+        }
+
+        // 게시글 렌더링
+        function renderCommunityDetail(data) {
+            // 제목
+            document.getElementById('postTitle').textContent = data.title;
+
+            // 작성자
+            document.getElementById('postAuthor').textContent = data.nickname || data.username;
+
+            // 작성일
+            document.getElementById('postDate').textContent = formatDate(data.createdAt);
+
+            // 조회수
+            document.getElementById('postViewCount').textContent = data.viewCount || 0;
+
+            // 내용 (DOMPurify로 XSS 방어 처리 후 렌더링)
+            const cleanContent = DOMPurify.sanitize(data.content, {
+                ALLOWED_TAGS: [
+                    // 텍스트 서식
+                    'p', 'br', 'strong', 'em', 'u', 's', 'span', 'div',
+                    // 제목
+                    'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+                    // 목록
+                    'ul', 'ol', 'li',
+                    // 인용/코드
+                    'blockquote', 'pre', 'code',
+                    // 링크
+                    'a',
+                    // 이미지 (에디터에서 삽입한 이미지)
+                    'img'
+                ],
+                ALLOWED_ATTR: [
+                    // 스타일 (Quill 에디터 서식용)
+                    'style', 'class',
+                    // 링크
+                    'href', 'target', 'rel',
+                    // 이미지
+                    'src', 'alt', 'width', 'height'
+                ],
+                ALLOW_DATA_ATTR: false, // data-* 속성 차단
+                ALLOW_UNKNOWN_PROTOCOLS: false, // javascript: 같은 프로토콜 차단
+            });
+            document.getElementById('postContent').innerHTML = cleanContent;
+
+            // 첨부파일 렌더링 (다운로드만 가능)
+            if (data.attachments && data.attachments.length > 0) {
+                const attachmentsHtml = `
+                    <div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px; background: #f5f5f5;">
+                        <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #424242;">첨부파일</h4>
+                        ${data.attachments.map(file => `
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span class="material-icons" style="font-size: 20px; color: #757575;">attach_file</span>
+                                <a href="${file.downloadUrl}" style="color: #6200ea; text-decoration: none;" download>
+                                    ${file.originalFileName} (${formatFileSize(file.fileSize)})
+                                </a>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                document.getElementById('postAttachments').innerHTML = attachmentsHtml;
+            }
+
+            // 본인 게시글이면 수정/삭제 버튼 표시
+            if (currentUser && currentUser.username === data.username) {
+                document.getElementById('postActions').style.display = 'flex';
+            }
+
+            // 게시글 표시
+            document.getElementById('postDetail').style.display = 'block';
+        }
+
+        // 로딩 상태 표시
+        function showLoading(show) {
+            document.getElementById('loadingState').style.display = show ? 'block' : 'none';
+            document.getElementById('postDetail').style.display = show ? 'none' : 'block';
+        }
+
+        // 날짜 포맷
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // 파일 크기 포맷
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        // 수정 페이지로 이동
+        function editPost() {
+            location.href = `/community/edit?id=${currentCommunityId}`;
+        }
+
+        // 게시글 삭제
+        async function deletePost() {
+            if (!confirm('정말 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                // 1. 현재 게시글의 첨부파일 목록 가져오기 (이미 로드된 데이터 사용)
+                const response = await fetch(`/api/community/${currentCommunityId}`);
+                const data = await response.json();
+
+                // 2. 첨부파일들 먼저 삭제
+                if (data.attachments && data.attachments.length > 0) {
+                    console.log(`📎 첨부파일 ${data.attachments.length}개 삭제 중...`);
+                    for (const file of data.attachments) {
+                        try {
+                            await fetch(`/api/files/${file.fileId}`, {
+                                method: 'DELETE',
+                                credentials: 'include'
+                            });
+                            console.log(`✅ 파일 삭제: ${file.originalFileName}`);
+                        } catch (err) {
+                            console.warn(`⚠️ 파일 삭제 실패: ${file.originalFileName}`, err);
+                        }
+                    }
+                }
+
+                // 3. 게시글 삭제
+                const deleteResponse = await fetch(`/api/community/${currentCommunityId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (deleteResponse.ok || deleteResponse.status === 204) {
+                    alert('게시글이 삭제되었습니다.');
+                    location.href = '/community';
+                } else {
+                    throw new Error('삭제 실패');
+                }
+            } catch (error) {
+                console.error('❌ 삭제 에러:', error);
+                alert('게시글 삭제에 실패했습니다.');
+            }
         }
     </script>
 </body>

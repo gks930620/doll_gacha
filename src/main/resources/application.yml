@@ -27,6 +27,7 @@ spring:
         - classpath:data-dollshop.sql
         - classpath:data-files.sql
         - classpath:data-review.sql
+        - classpath:data-community.sql
 
   devtools:
     livereload:

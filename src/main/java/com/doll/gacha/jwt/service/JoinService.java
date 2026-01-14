@@ -19,7 +19,8 @@ public class JoinService {
     public void joinProcess(JoinDTO joinDTO) {
 
         //db에 이미 동일한 username을 가진 회원이 존재하는지?
-        UserEntity find = userRepository.findByUsername(joinDTO.getUsername());
+        UserEntity find = userRepository.findByUsername(joinDTO.getUsername())
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
         if(find!=null) {
             System.out.println("이미 있는 ID입니다.");
             return ;

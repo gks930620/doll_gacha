@@ -95,18 +95,45 @@ public class SecurityConfig {
                     "/custom-oauth2/login/**",
                     // 공개 API
                     "/api/doll-shops/**",
-                    "/api/reviews/shop/**"
+                    "/api/reviews/doll-shop/**",  // 리뷰 조회는 공개
+                    "/api/community",             // 커뮤니티 목록/검색 조회 공개
+                    "/api/community/{id:[0-9]+}", // 커뮤니티 상세 조회 공개
+                    "/api/files/download/**"      // 파일 다운로드 공개
                 ).permitAll()
 
                 // 2. 인증이 필요한 API
                 .requestMatchers(
                     "/api/logout",  // 로그아웃은 로그인한 사용자만 가능
                     "/api/my/info",
-                    "/api/reviews"  // 리뷰 작성은 인증 필요
-                    // TODO: 향후 추가될 인증필요 API (ex: /api/comments 등)
+                    "/api/files/upload"  // 파일 업로드는 인증 필요
                 ).authenticated()
 
-                // 3. 그 외 나머지 요청은 일단 모두 허용 (개발 편의성)
+                // 3. 커뮤니티 작성/수정/삭제는 인증 필요
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.POST, "/api/community", "/api/community/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.PUT, "/api/community/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.DELETE, "/api/community/**"
+                ).authenticated()
+
+                // 4. 리뷰 작성/수정/삭제는 인증 필요 (POST, PUT, PATCH, DELETE)
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.POST, "/api/reviews/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.PUT, "/api/reviews/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.PATCH, "/api/reviews/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.DELETE, "/api/reviews/**"
+                ).authenticated()
+
+                // 4. 그 외 나머지 요청은 일단 모두 허용 (개발 편의성)
                 // 운영 환경에서는 .anyRequest().denyAll() 또는 .anyRequest().authenticated() 등으로 변경 고려
                 .anyRequest().permitAll()
             );

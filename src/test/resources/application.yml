@@ -7,11 +7,23 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: create-drop # 테스트 시작 시 생성, 종료 시 삭제
+    defer-datasource-initialization: true
     properties:
       hibernate:
         format_sql: true
         show_sql: true
+        default_batch_fetch_size: 100
+    open-in-view: false
+
+  sql:
+    init:
+      mode: always
+      data-locations:
+        - classpath:data-users.sql
+        - classpath:data-dollshop.sql
+        - classpath:data-files.sql
+        - classpath:data-review.sql
 
   security:
     oauth2:
@@ -26,12 +38,12 @@ spring:
             scope:
               - profile_nickname
               - account_email
-          google:
-            client-id: test-google-id
-            client-secret: test-google-secret
-            redirect-uri: http://localhost:8080/login/oauth2/code/google
-            scope:
-              - profile
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
 
 jwt:
   secret: testSecretKeyShouldBeLongEnoughToSatisfyRequirements1234567890

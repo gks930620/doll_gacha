@@ -8,7 +8,11 @@
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
 
-    <th:block th:replace="~{layout/common-styles :: styles}"></th:block>
+    <!-- Quill.js CSS -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+
+    <th:block th:replace="~{layout/header :: headerStyle}"></th:block>
+    <th:block th:replace="~{layout/footer :: footerStyle}"></th:block>
 
     <style>
         .page-header {
@@ -195,10 +199,24 @@
         .btn .material-icons {
             font-size: 18px;
         }
+
+        /* Quill 에디터 고정 크기 및 스크롤 */
+        #editor {
+            height: 600px;
+        }
+
+        .ql-container {
+            height: calc(100% - 42px); /* 툴바 높이 제외 */
+            overflow-y: auto; /* 세로 스크롤 활성화 */
+        }
+
+        .ql-editor {
+            min-height: 100%;
+        }
     </style>
 </head>
 <body>
-    <th:block th:replace="~{layout/common-styles :: header}"></th:block>
+    <th:block th:replace="~{layout/header :: header}"></th:block>
 
     <main class="main-content">
         <div class="page-header">
@@ -210,38 +228,29 @@
 
         <form class="write-form" onsubmit="return handleSubmit(event)">
             <div class="form-group">
-                <label class="form-label required" for="category">카테고리</label>
-                <select class="form-select" id="category" required>
-                    <option value="">선택하세요</option>
-                    <option value="review">후기</option>
-                    <option value="question">질문</option>
-                    <option value="tip">팁/노하우</option>
-                    <option value="free">자유</option>
-                </select>
-            </div>
-
-            <div class="form-group">
                 <label class="form-label required" for="title">제목</label>
-                <input type="text" class="form-input" id="title" placeholder="제목을 입력하세요" required>
+                <input type="text" class="form-input" id="title" placeholder="제목을 입력하세요" required maxlength="200">
             </div>
 
             <div class="form-group">
-                <label class="form-label required" for="content">내용</label>
-                <textarea class="form-textarea" id="content" placeholder="내용을 입력하세요" required></textarea>
-                <div class="form-help">최소 10자 이상 작성해주세요.</div>
+                <label class="form-label required">내용</label>
+                <!-- Quill 에디터 컨테이너 -->
+                <div id="editor" style="height: 400px; background: white;"></div>
+                <div class="form-help">최소 10자 이상 작성해주세요. (에디터 툴바의 이미지 버튼으로 본문에 이미지 삽입 가능)</div>
             </div>
 
             <div class="form-group">
-                <label class="form-label">이미지 첨부</label>
+                <label class="form-label">첨부파일 (선택)</label>
                 <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
-                    <span class="material-icons">cloud_upload</span>
-                    <p>클릭하여 이미지를 업로드하거나<br>드래그 앤 드롭하세요</p>
-                    <p style="font-size: 12px; margin-top: 8px;">JPG, PNG 파일 (최대 5MB)</p>
+                    <span class="material-icons">attach_file</span>
+                    <p>클릭하여 파일을 첨부하세요</p>
+                    <p style="font-size: 12px; margin-top: 8px;">모든 파일 형식 가능 (이미지, PDF, 문서 등)</p>
                 </div>
-                <input type="file" id="fileInput" class="file-input" accept="image/*" multiple onchange="handleFileSelect(event)">
+                <input type="file" id="fileInput" class="file-input" multiple onchange="handleFileSelect(event)">
                 <div class="uploaded-files" id="uploadedFiles"></div>
             </div>
 
+            <div class="form-actions">
             <div class="form-actions">
                 <a href="/community" class="btn btn-secondary">
                     <span class="material-icons">close</span>
@@ -255,29 +264,157 @@
         </form>
     </main>
 
-    <th:block th:replace="~{layout/common-styles :: footer}"></th:block>
-    <th:block th:replace="~{layout/common-styles :: scripts}"></th:block>
+    <th:block th:replace="~{layout/footer :: footer}"></th:block>
+    <th:block th:replace="~{layout/header :: headerScript}"></th:block>
+
+    <!-- Quill.js Script -->
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
     <script>
-        let selectedFiles = [];
+        let quill; // Quill 에디터 인스턴스
+        let attachedFiles = []; // 첨부파일 배열
 
-        function handleFileSelect(event) {
-            const files = Array.from(event.target.files);
-            selectedFiles = [...selectedFiles, ...files];
-            displayUploadedFiles();
+        // 페이지 로드 시 로그인 확인 및 에디터 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            checkLoginAndRedirect();
+            initQuillEditor();
+        });
+
+        // 로그인 확인 (API 호출로 정확하게 체크)
+        function checkLoginAndRedirect() {
+            fetch('/api/my/info')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Not logged in');
+                })
+                .then(userInfo => {
+                    console.log('✅ 로그인 상태 확인: true, 사용자:', userInfo.nickname);
+                })
+                .catch(err => {
+                    console.log('❌ 비로그인 상태 - 로그인 페이지로 이동');
+                    alert('로그인이 필요합니다.');
+                    window.location.href = '/login';
+                });
         }
 
+        // Quill 에디터 초기화
+        function initQuillEditor() {
+            quill = new Quill('#editor', {
+                theme: 'snow',
+                placeholder: '내용을 입력하세요...',
+                modules: {
+                    toolbar: {
+                        container: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            ['blockquote', 'code-block'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            [{ 'color': [] }, { 'background': [] }],
+                            ['link', 'image'], // 이미지 버튼 추가
+                            ['clean']
+                        ],
+                        handlers: {
+                            image: imageHandler // 커스텀 이미지 핸들러
+                        }
+                    }
+                }
+            });
+        }
+
+        // 에디터 내 이미지 업로드 핸들러
+        function imageHandler() {
+            const input = document.createElement('input');
+            input.setAttribute('type', 'file');
+            input.setAttribute('accept', 'image/*');
+            input.click();
+
+            input.onchange = async () => {
+                const file = input.files[0];
+                if (!file) return;
+
+                // 이미지 파일 검증
+                if (!file.type.startsWith('image/')) {
+                    alert('이미지 파일만 업로드 가능합니다.');
+                    return;
+                }
+
+                // 파일 크기 체크 (5MB 제한)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('이미지 크기는 5MB 이하여야 합니다.');
+                    return;
+                }
+
+                try {
+                    // 임시 ID로 서버에 업로드 (refId는 게시글 작성 시 업데이트)
+                    const formData = new FormData();
+                    formData.append('files', file);
+                    formData.append('refId', 0); // 임시 ID
+                    formData.append('refType', 'COMMUNITY');
+                    formData.append('usage', 'IMAGES');
+
+                    const response = await fetch('/api/files/upload', {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: formData
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('이미지 업로드 실패');
+                    }
+
+                    const uploadedUrls = await response.json();
+                    const imageUrl = uploadedUrls[0]; // 첫 번째 URL
+
+                    // 에디터에 이미지 URL 삽입
+                    const range = quill.getSelection();
+                    quill.insertEmbed(range.index, 'image', imageUrl);
+                    quill.setSelection(range.index + 1);
+
+                    console.log('✅ 에디터 이미지 업로드 성공:', imageUrl);
+
+                } catch (error) {
+                    console.error('❌ 이미지 업로드 실패:', error);
+                    alert('이미지 업로드에 실패했습니다.');
+                }
+            };
+        }
+
+        // 첨부파일 선택 핸들러
+        function handleFileSelect(event) {
+            const files = Array.from(event.target.files);
+
+            // 모든 파일 타입 허용
+            attachedFiles = [...attachedFiles, ...files];
+            displayUploadedFiles();
+
+            // input 초기화 (같은 파일 다시 선택 가능하도록)
+            event.target.value = '';
+        }
+
+        // 첨부파일 목록 표시
         function displayUploadedFiles() {
             const container = document.getElementById('uploadedFiles');
             container.innerHTML = '';
 
-            selectedFiles.forEach((file, index) => {
+            if (attachedFiles.length === 0) return;
+
+            attachedFiles.forEach((file, index) => {
                 const fileDiv = document.createElement('div');
                 fileDiv.className = 'uploaded-file';
+
+                // 파일 타입에 따른 아이콘
+                let icon = 'insert_drive_file';
+                if (file.type.startsWith('image/')) icon = 'image';
+                else if (file.type.includes('pdf')) icon = 'picture_as_pdf';
+                else if (file.type.includes('word') || file.type.includes('document')) icon = 'description';
+                else if (file.type.includes('excel') || file.type.includes('sheet')) icon = 'table_chart';
+
                 fileDiv.innerHTML = `
                     <div class="uploaded-file-info">
-                        <span class="material-icons">image</span>
-                        <span>${file.name}</span>
+                        <span class="material-icons">${icon}</span>
+                        <span>${file.name} (${formatFileSize(file.size)})</span>
                     </div>
                     <button type="button" class="remove-file-btn" onclick="removeFile(${index})">
                         <span class="material-icons">close</span>
@@ -287,32 +424,112 @@
             });
         }
 
+        // 첨부파일 제거
         function removeFile(index) {
-            selectedFiles.splice(index, 1);
+            attachedFiles.splice(index, 1);
             displayUploadedFiles();
         }
 
-        function handleSubmit(event) {
+        // 파일 크기 포맷
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+
+        async function handleSubmit(event) {
             event.preventDefault();
 
-            const category = document.getElementById('category').value;
-            const title = document.getElementById('title').value;
-            const content = document.getElementById('content').value;
+            const title = document.getElementById('title').value.trim();
+            // Quill 에디터에서 HTML 내용 가져오기
+            const content = quill.root.innerHTML.trim();
+            // 순수 텍스트만 가져오기 (공백 체크용)
+            const textContent = quill.getText().trim();
 
-            if (!category || !title || !content) {
-                alert('모든 필수 항목을 입력해주세요.');
+            // 유효성 검사
+            if (!title) {
+                alert('제목을 입력해주세요.');
                 return false;
             }
 
-            if (content.length < 10) {
+            if (!textContent || textContent.length < 10) {
                 alert('내용을 10자 이상 입력해주세요.');
                 return false;
             }
 
-            // 여기에 실제 폼 제출 로직을 추가합니다
-            console.log('Form submitted:', { category, title, content, files: selectedFiles });
-            alert('게시글이 등록되었습니다.');
-            window.location.href = '/community';
+            try {
+                console.log('📝 게시글 작성 시작...');
+
+                // 1. 게시글 먼저 등록
+                const communityData = {
+                    title: title,
+                    content: content // HTML 포함된 내용
+                };
+
+                console.log('📤 게시글 데이터:', communityData);
+
+                // credentials: 'include'로 쿠키를 자동으로 전달 (Authorization 헤더 불필요)
+                const response = await fetch('/api/community', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include', // 쿠키 자동 전달
+                    body: JSON.stringify(communityData)
+                });
+
+                console.log('📡 응답 상태:', response.status);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('❌ 게시글 작성 실패:', errorText);
+
+                    // 401 Unauthorized인 경우 로그인 페이지로
+                    if (response.status === 401) {
+                        alert('로그인이 필요하거나 세션이 만료되었습니다.');
+                        window.location.href = '/login';
+                        return false;
+                    }
+
+                    throw new Error('게시글 작성에 실패했습니다.');
+                }
+
+                const communityId = await response.json();
+                console.log('✅ 게시글 작성 성공! ID:', communityId);
+
+                // 2. 첨부파일이 있으면 업로드
+                if (attachedFiles.length > 0) {
+                    console.log(`📎 첨부파일 ${attachedFiles.length}개 업로드 중...`);
+
+                    const formData = new FormData();
+                    attachedFiles.forEach(file => {
+                        formData.append('files', file);
+                    });
+                    formData.append('refId', communityId);
+                    formData.append('refType', 'COMMUNITY');
+                    formData.append('usage', 'ATTACHMENT'); // 첨부파일은 ATTACHMENT
+
+                    const fileResponse = await fetch('/api/files/upload', {
+                        method: 'POST',
+                        credentials: 'include',
+                        body: formData
+                    });
+
+                    if (!fileResponse.ok) {
+                        console.warn('⚠️ 파일 업로드 실패 (게시글은 등록됨)');
+                    } else {
+                        console.log('✅ 첨부파일 업로드 성공!');
+                    }
+                }
+
+                alert('게시글이 등록되었습니다.');
+                window.location.href = '/community';
+
+            } catch (error) {
+                console.error('❌ 에러 발생:', error);
+                alert(error.message || '게시글 등록에 실패했습니다.');
+            }
 
             return false;
         }
