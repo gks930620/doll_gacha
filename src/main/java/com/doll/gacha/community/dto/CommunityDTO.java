@@ -19,6 +19,7 @@ public class CommunityDTO {
     private String title;
     private String content;
     private Integer viewCount;
+    private Long commentCount;            // 댓글 수
     private List<String> imageUrls;       // 이미지 URL 리스트
     private List<FileInfoDTO> attachments; // 첨부파일 정보 리스트
     private LocalDateTime createdAt;
@@ -40,6 +41,7 @@ public class CommunityDTO {
                 .title(entity.getTitle())
                 .content(entity.getContent())
                 .viewCount(entity.getViewCount())
+                .commentCount(0L)  // 기본값, 실제 값은 Repository에서 설정
                 .imageUrls(imageUrls)
                 .attachments(attachments)
                 .createdAt(entity.getCreatedAt())

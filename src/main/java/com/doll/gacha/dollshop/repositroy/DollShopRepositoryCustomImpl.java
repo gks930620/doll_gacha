@@ -5,8 +5,8 @@ import static com.doll.gacha.common.entity.QFileEntity.fileEntity;
 import static com.doll.gacha.review.QReviewEntity.reviewEntity;
 
 import com.doll.gacha.common.entity.FileEntity;
-import com.doll.gacha.dollshop.DollShop;
 import com.doll.gacha.dollshop.dto.DollShopListDTO;
+import com.doll.gacha.dollshop.dto.DollShopMapDTO;
 import com.doll.gacha.dollshop.dto.DollShopSearchDTO;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.Projections;
@@ -143,10 +143,21 @@ public class DollShopRepositoryCustomImpl implements DollShopRepositoryCustom {
     }
 
     @Override
-    public List<DollShop> searchForMap(DollShopSearchDTO searchDTO) {
-        // 지도용 - 이미지 제외, 페이징 없음, 전체 조회
+    public List<DollShopMapDTO> searchForMap(DollShopSearchDTO searchDTO) {
+        // 지도용 - 이미지 제외, 페이징 없음, DTO 직접 반환
         return queryFactory
-            .selectFrom(dollShop)
+            .select(Projections.fields(DollShopMapDTO.class,
+                dollShop.id,
+                dollShop.businessName,
+                dollShop.address,
+                dollShop.phone,
+                dollShop.longitude,
+                dollShop.latitude,
+                dollShop.totalGameMachines,
+                dollShop.approvalDate,
+                dollShop.isOperating
+            ))
+            .from(dollShop)
             .where(
                 eqGubun1(searchDTO.getGubun1()),
                 eqGubun2(searchDTO.getGubun2()),

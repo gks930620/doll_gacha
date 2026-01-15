@@ -21,34 +21,20 @@ public class CommunityController {
     private final CommunityService communityService;
 
     /**
-     * 게시글 목록 조회 / 검색 - 페이징 (통합)
-     *
-     * @param searchType 검색 타입 ("title" 또는 "nickname") - 선택
-     * @param keyword 검색 키워드 - 선택
-     * @param pageable 페이징 정보 (Spring이 자동 변환)
-     *                 - page: 페이지 번호 (0부터 시작, 기본값: 0)
-     *                 - size: 페이지 크기 (기본값: 10)
-     *                 - sort: 정렬 (예: createdAt,desc)
-     * @return 페이징된 게시글 목록
-     *
-     * 사용 예시:
-     * - 전체 목록: GET /api/community?page=0&size=10
-     * - 검색: GET /api/community?searchType=title&keyword=인형&page=0&size=10
+     * 게시글 목록 조회 / 검색 (페이징)
      */
     @GetMapping
     public ResponseEntity<Page<CommunityDTO>> getCommunityList(
             @RequestParam(required = false) String searchType,
             @RequestParam(required = false) String keyword,
             Pageable pageable) {
+
         Page<CommunityDTO> communities = communityService.getCommunityList(searchType, keyword, pageable);
         return ResponseEntity.ok(communities);
     }
 
     /**
      * 게시글 상세 조회 (조회수 증가)
-     *
-     * @param communityId 게시글 ID
-     * @return 게시글 상세 정보 (이미지, 첨부파일 포함)
      */
     @GetMapping("/{communityId}")
     public ResponseEntity<CommunityDTO> getCommunityDetail(@PathVariable Long communityId) {
@@ -57,12 +43,7 @@ public class CommunityController {
     }
 
     /**
-     * 게시글 작성 (인증 필요)
-     * SecurityConfig에서 POST /api/community/** 에 대해 authenticated() 설정 필요
-     *
-     * @param createDTO 게시글 작성 정보
-     * @param userAccount 현재 로그인한 사용자 정보 (Spring Security가 자동 주입)
-     * @return 생성된 게시글 ID
+     * 게시글 작성 (로그인 필요)
      */
     @PostMapping
     public ResponseEntity<Long> createCommunity(
@@ -74,12 +55,7 @@ public class CommunityController {
     }
 
     /**
-     * 게시글 수정 (인증 필요)
-     *
-     * @param communityId 수정할 게시글 ID
-     * @param updateDTO 수정 정보
-     * @param userAccount 현재 로그인한 사용자 정보
-     * @return 성공 응답
+     * 게시글 수정 (로그인 필요, 작성자만)
      */
     @PutMapping("/{communityId}")
     public ResponseEntity<Void> updateCommunity(
@@ -88,15 +64,11 @@ public class CommunityController {
             @AuthenticationPrincipal CustomUserAccount userAccount) {
 
         communityService.updateCommunity(communityId, updateDTO, userAccount.getUsername());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     /**
-     * 게시글 삭제 (인증 필요, Soft Delete)
-     *
-     * @param communityId 삭제할 게시글 ID
-     * @param userAccount 현재 로그인한 사용자 정보
-     * @return 성공 응답
+     * 게시글 삭제 (로그인 필요, 작성자만, Soft Delete)
      */
     @DeleteMapping("/{communityId}")
     public ResponseEntity<Void> deleteCommunity(

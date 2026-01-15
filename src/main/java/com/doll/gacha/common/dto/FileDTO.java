@@ -48,8 +48,6 @@ public class FileDTO {
                 .contentType(this.contentType)
                 .refId(this.refId)
                 .refType(this.refType)
-                .createdAt(this.createdAt)
-                .updatedAt(this.updatedAt)
                 .build();
     }
 }

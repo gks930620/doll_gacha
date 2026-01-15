@@ -133,7 +133,18 @@ public class SecurityConfig {
                     org.springframework.http.HttpMethod.DELETE, "/api/reviews/**"
                 ).authenticated()
 
-                // 4. 그 외 나머지 요청은 일단 모두 허용 (개발 편의성)
+                // 5. 댓글 작성/수정/삭제는 인증 필요 (POST, PUT, DELETE)
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.POST, "/api/comments/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.PUT, "/api/comments/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.DELETE, "/api/comments/**"
+                ).authenticated()
+
+                // 6. 그 외 나머지 요청은 일단 모두 허용 (개발 편의성)
                 // 운영 환경에서는 .anyRequest().denyAll() 또는 .anyRequest().authenticated() 등으로 변경 고려
                 .anyRequest().permitAll()
             );

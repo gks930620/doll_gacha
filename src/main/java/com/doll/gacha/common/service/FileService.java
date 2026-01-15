@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -38,7 +37,7 @@ public class FileService {
         // 파일 경로 변환
         return files.stream()
                 .map(file -> "/uploads/" + file.getStoredFileName())
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
@@ -72,7 +71,7 @@ public class FileService {
 
                     return "/uploads/" + result.getStoredFilename();
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**

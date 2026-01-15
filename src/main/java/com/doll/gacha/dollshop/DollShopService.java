@@ -26,11 +26,8 @@ public class DollShopService {
      * @return 페이징된 매장 목록
      */
     public Page<DollShopListDTO> searchShopsPaged(DollShopSearchDTO searchDTO, Pageable pageable) {
-        // Repository에서 DollShop + 썸네일 이미지까지 함께 조회 (N+1 방지)
-        Page<DollShopListDTO> page = dollShopRepository.searchByConditions(searchDTO, pageable);
-
-        // DTO 변환 (imagePath는 이미 세팅되어 있음)
-        return page;
+        // Repository에서 직접 DTO로 조회 (DollShop + 썸네일 이미지 + 리뷰 통계 포함)
+        return dollShopRepository.searchByConditions(searchDTO, pageable);
     }
 
     /**
@@ -39,13 +36,8 @@ public class DollShopService {
      * @return 지도용 매장 리스트
      */
     public List<DollShopMapDTO> searchShopsForMap(DollShopSearchDTO searchDTO) {
-        // Repository에서 List로 직접 반환 (페이징 없음, 이미지 제외)
-        List<DollShop> shops = dollShopRepository.searchForMap(searchDTO);
-
-        // MapDTO로 변환
-        return shops.stream()
-            .map(DollShopMapDTO::from)
-            .toList();
+        // Repository에서 직접 DTO로 조회 (원칙: select시 queryDSL에서 직접 DTO 리턴)
+        return dollShopRepository.searchForMap(searchDTO);
     }
 
 
@@ -56,6 +48,6 @@ public class DollShopService {
     public DollShopDTO getById(Long id) {
         return dollShopRepository.findById(id)
             .map(DollShopDTO::from)
-            .orElseThrow(() -> new IllegalArgumentException("Doll shop not found with id: " + id));
+            .orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다: " + id));
     }
 }

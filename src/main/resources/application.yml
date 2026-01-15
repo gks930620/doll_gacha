@@ -28,6 +28,7 @@ spring:
         - classpath:data-files.sql
         - classpath:data-review.sql
         - classpath:data-community.sql
+        - classpath:data-comment.sql
 
   devtools:
     livereload:

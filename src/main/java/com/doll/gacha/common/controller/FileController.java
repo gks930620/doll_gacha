@@ -20,7 +20,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,7 +27,6 @@ import java.util.stream.Collectors;
 public class FileController {
     private final FileService fileService;
     private final FileUtil fileUtil;
-    private final String uploadDir = "C:/workspace/simple_side/doll_gacha/uploads/";
 
     /**
      * 이미지 파일 서빙 (HTML img 태그에서 호출)
@@ -36,7 +34,7 @@ public class FileController {
     @GetMapping("/images/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
         try {
-            Path file = Paths.get(uploadDir).resolve(filename);
+            Path file = Paths.get(fileUtil.getUploadDir()).resolve(filename);
             Resource resource = new UrlResource(file.toUri());
 
             if (resource.exists() || resource.isReadable()) {
@@ -98,7 +96,7 @@ public class FileController {
             List<FileUtil.FileUploadResult> uploadResults = files.stream()
                     .filter(file -> !file.isEmpty())
                     .map(fileUtil::saveFile)
-                    .collect(Collectors.toList());
+                    .toList();
 
             log.info("파일 물리적 저장 완료 - 파일 수: {}", uploadResults.size());
 
@@ -133,7 +131,7 @@ public class FileController {
             }
 
             // 2. 물리적 파일 로드
-            Path file = Paths.get(uploadDir).resolve(fileEntity.getStoredFileName());
+            Path file = Paths.get(fileUtil.getUploadDir()).resolve(fileEntity.getStoredFileName());
             Resource resource = new UrlResource(file.toUri());
 
             if (!resource.exists() || !resource.isReadable()) {

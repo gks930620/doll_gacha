@@ -4,7 +4,9 @@ import com.doll.gacha.jwt.model.CustomUserAccount;
 import com.doll.gacha.review.dto.ReviewCreateDTO;
 import com.doll.gacha.review.dto.ReviewDTO;
 import com.doll.gacha.review.dto.ReviewStatsDTO;
+import com.doll.gacha.review.dto.ReviewUpdateDTO;
 import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -62,8 +64,21 @@ public class ReviewController {
             @Valid @RequestBody ReviewCreateDTO createDTO,
             @AuthenticationPrincipal CustomUserAccount userAccount) {
         String username = userAccount.getUsername();
-        ReviewDTO createdReview = reviewService.createReview(username, createDTO);
+        ReviewDTO createdReview = reviewService.createReview(username, createDTO, LocalDateTime.now());
         return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);
+    }
+
+    /**
+     * 리뷰 수정 (인증 필요)
+     */
+    @PutMapping("/{reviewId}")
+    public ResponseEntity<ReviewDTO> updateReview(
+            @PathVariable Long reviewId,
+            @Valid @RequestBody ReviewUpdateDTO updateDTO,
+            @AuthenticationPrincipal CustomUserAccount userAccount) {
+        String username = userAccount.getUsername();
+        ReviewDTO updatedReview = reviewService.updateReview(reviewId, username, updateDTO);
+        return ResponseEntity.ok(updatedReview);
     }
 
     /**

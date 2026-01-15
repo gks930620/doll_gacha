@@ -93,6 +93,13 @@ public class FileUtil {
     }
 
     /**
+     * 업로드 디렉토리 경로 반환
+     */
+    public String getUploadDir() {
+        return uploadDir;
+    }
+
+    /**
      * 파일 저장 결과 DTO
      */
     @lombok.Getter

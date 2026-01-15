@@ -1,6 +1,6 @@
 package com.doll.gacha.community.repository;
 
-import com.doll.gacha.community.CommunityEntity;
+import com.doll.gacha.community.dto.CommunityDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -13,6 +13,6 @@ public interface CommunityRepositoryCustom {
      * @param pageable 페이징 정보
      * @return 게시글 목록 (최신순 정렬)
      */
-    Page<CommunityEntity> searchCommunity(String searchType, String keyword, Pageable pageable);
+    Page<CommunityDTO> searchCommunity(String searchType, String keyword, Pageable pageable);
 }
 
