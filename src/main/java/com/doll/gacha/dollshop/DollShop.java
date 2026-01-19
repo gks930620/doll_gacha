@@ -8,7 +8,6 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "doll_shop")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -48,5 +47,8 @@ public class DollShop {
     // 추가 필드: 시/군/구 (예: 강남구, 수원시, 여수시)
     @Column(nullable = false, length = 50)
     private String gubun2;
-}
 
+    // 가게 대표 이미지 URL
+    @Column(length = 300)
+    private String imagePath;
+}

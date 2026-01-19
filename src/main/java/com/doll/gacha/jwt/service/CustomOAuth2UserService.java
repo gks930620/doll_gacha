@@ -30,7 +30,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         UserEntity extractUser = oauth2UseDTO.toEntity();
 
         // 2. DB 조회
-        UserEntity userEntity = userRepository.findByUsername(extractUser.getUsername());
+        UserEntity userEntity = userRepository.findByUsername(extractUser.getUsername())
+            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
         if (userEntity == null) {  //처음 로그인이면...
             // 3-1. 신규 유저: 저장

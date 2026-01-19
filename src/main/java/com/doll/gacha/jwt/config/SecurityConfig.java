@@ -84,27 +84,67 @@ public class SecurityConfig {
                 // 1. 정적 리소스, 페이지 등 기본적으로 모두 허용
                 .requestMatchers(
                     // 정적 리소스
-                    "/css/**", "/js/**", "/images/**", "/favicon.ico",
+                    "/css/**", "/js/**", "/images/**", "/favicon.ico", "/uploads/**",
                     // h2-console
                     "/h2-console/**",
-                    // 페이지 URL (CSR이므로 페이지 자체는 모두 허용)
-                    "/", "/map", "/login", "/signup", "/community/**", "/doll/**", "/mypage", "/review/**",
+                    // 페이지 URL (CSR이므로 페이지 자체는 모두 허용 - API에서 인증 체크)
+                    "/", "/map", "/login", "/signup", "/mypage", "/community/**", "/doll/**", "/doll-shop/**",  "/review/**",
                     // 인증 관련 API
                     "/api/login", "/api/join", "/api/refresh/reissue",
                     // OAuth2
                     "/custom-oauth2/login/**",
                     // 공개 API
-                    "/api/dollshop/**"
+                    "/api/doll-shops/**",
+                    "/api/reviews/doll-shop/**",  // 리뷰 조회는 공개
+                    "/api/community",             // 커뮤니티 목록/검색 조회 공개
+                    "/api/community/{id:[0-9]+}", // 커뮤니티 상세 조회 공개
+                    "/api/files/download/**"      // 파일 다운로드 공개
                 ).permitAll()
 
                 // 2. 인증이 필요한 API
                 .requestMatchers(
                     "/api/logout",  // 로그아웃은 로그인한 사용자만 가능
-                    "/api/my/info"
-                    // TODO: 향후 추가될 인증필요 API (ex: /api/reviews, /api/comments 등)
+                    "/api/my/info",
+                    "/api/files/upload"  // 파일 업로드는 인증 필요
                 ).authenticated()
 
-                // 3. 그 외 나머지 요청은 일단 모두 허용 (개발 편의성)
+                // 3. 커뮤니티 작성/수정/삭제는 인증 필요
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.POST, "/api/community", "/api/community/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.PUT, "/api/community/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.DELETE, "/api/community/**"
+                ).authenticated()
+
+                // 4. 리뷰 작성/수정/삭제는 인증 필요 (POST, PUT, PATCH, DELETE)
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.POST, "/api/reviews/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.PUT, "/api/reviews/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.PATCH, "/api/reviews/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.DELETE, "/api/reviews/**"
+                ).authenticated()
+
+                // 5. 댓글 작성/수정/삭제는 인증 필요 (POST, PUT, DELETE)
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.POST, "/api/comments/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.PUT, "/api/comments/**"
+                ).authenticated()
+                .requestMatchers(
+                    org.springframework.http.HttpMethod.DELETE, "/api/comments/**"
+                ).authenticated()
+
+                // 6. 그 외 나머지 요청은 일단 모두 허용 (개발 편의성)
                 // 운영 환경에서는 .anyRequest().denyAll() 또는 .anyRequest().authenticated() 등으로 변경 고려
                 .anyRequest().permitAll()
             );
@@ -136,22 +176,37 @@ public class SecurityConfig {
        
         http
             .exceptionHandling(ex -> ex
+                  // 여기는 인증된 api요청에 토큰 없이 접근하려고 할 때
+                 //JwtLoginFilter는 로그인 시도하려고 할 때.. 즉 id pw입력한거 비교할 때
                 .authenticationEntryPoint((request, response, authException) -> {
-                    // 클라이언트 유형(웹/앱)에 관계없이 항상 JSON으로 에러 응답을 보냅니다.
-                    // 클라이언트 측에서 이 응답을 받고 로그인 페이지로 리디렉션할지 결정해야 합니다.
+                    // ErrorResponse 형식으로 통일된 응답
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json;charset=UTF-8");
 
-                    String errorCause = request.getAttribute("ERROR_CAUSE") != null ? (String) request.getAttribute("ERROR_CAUSE") : "NOT_AUTHENTICATED";
-                    String errorMessage = "인증이 필요합니다.";
+                    String errorCause = request.getAttribute("ERROR_CAUSE") != null
+                        ? (String) request.getAttribute("ERROR_CAUSE")
+                        : "NOT_AUTHENTICATED";
+
+                    String errorMessage;
+                    String errorCode;
 
                     if ("토큰만료".equals(errorCause)) {
-                        errorMessage = "Access Token expired";
-                    } else if ("로그인실패".equals(errorCause)) {
-                        errorMessage = "아이디 또는 비밀번호가 일치하지 않습니다.";
+                        errorMessage = "Access Token이 만료되었습니다. 토큰을 재발급해주세요.";
+                        errorCode = "TOKEN_EXPIRED";
+                    } else if ("잘못된토큰".equals(errorCause)) {
+                        errorMessage = "유효하지 않은 토큰입니다.";
+                        errorCode = "INVALID_TOKEN";
+                    } else {
+                        errorMessage = "인증이 필요합니다.";
+                        errorCode = "NOT_AUTHENTICATED";
                     }
 
-                    response.getWriter().write(String.format("{\"error\": \"%s\", \"cause\": \"%s\"}", errorMessage, errorCause));
+                    // ErrorResponse 형식으로 응답
+                    String jsonResponse = String.format(
+                        "{\"success\":false,\"message\":\"%s\",\"errorCode\":\"%s\",\"timestamp\":\"%s\"}",
+                        errorMessage, errorCode, java.time.LocalDateTime.now()
+                    );
+                    response.getWriter().write(jsonResponse);
                 })
             );
         return http.build();

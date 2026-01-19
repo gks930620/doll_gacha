@@ -6,13 +6,10 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "reviews")
 @Getter
-@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -54,10 +51,6 @@ public class ReviewEntity {
     @Column
     private Integer smallDollCost;  // 소형 인형 1개당 지출
 
-    // 리뷰 이미지들 (1:N - 한 리뷰는 여러 이미지를 가질 수 있음)
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<ReviewImage> images = new ArrayList<>();
 
     // 삭제 여부
     @Column(nullable = false)
@@ -72,8 +65,12 @@ public class ReviewEntity {
 
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
+        }
+        if (updatedAt == null) {
+            updatedAt = LocalDateTime.now();
+        }
     }
 
     @PreUpdate
@@ -81,16 +78,36 @@ public class ReviewEntity {
         updatedAt = LocalDateTime.now();
     }
 
-    // 편의 메서드: 이미지 추가
-    public void addImage(ReviewImage image) {
-        images.add(image);
-        image.setReview(this);
+    // ===== 비즈니스 메서드 =====
+
+    /**
+     * 리뷰 소프트 삭제
+     */
+    public void softDelete() {
+        if (this.isDeleted) {
+            throw com.doll.gacha.common.exception.DuplicateResourceException.alreadyDeleted("리뷰");
+        }
+        this.isDeleted = true;
     }
 
-    // 편의 메서드: 이미지 제거
-    public void removeImage(ReviewImage image) {
-        images.remove(image);
-        image.setReview(null);
+    /**
+     * 작성자 확인
+     */
+    public boolean isWrittenBy(String username) {
+        return this.user != null && this.user.getUsername().equals(username);
+    }
+
+    /**
+     * 리뷰 정보 업데이트
+     */
+    public void update(String content, Integer rating, Integer machineStrength,
+                       Integer largeDollCost, Integer mediumDollCost, Integer smallDollCost) {
+        this.content = content;
+        this.rating = rating;
+        this.machineStrength = machineStrength;
+        this.largeDollCost = largeDollCost;
+        this.mediumDollCost = mediumDollCost;
+        this.smallDollCost = smallDollCost;
+        // updatedAt is handled by @PreUpdate or manually if we want
     }
 }
-

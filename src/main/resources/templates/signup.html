@@ -253,8 +253,14 @@
                     alert('회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.');
                     window.location.href = '/login?username=' + encodeURIComponent(username);
                 } else {
-                    const error = await response.json();
-                    errorDiv.textContent = error.error || '회원가입에 실패했습니다. 입력 정보를 확인해주세요.';
+                    const errorData = await response.json();
+                    // 유효성 검증 에러인 경우 상세 메시지 표시
+                    if (errorData.errors && errorData.errors.length > 0) {
+                        const errorMessages = errorData.errors.map(e => e.message).join('\n');
+                        errorDiv.textContent = errorMessages;
+                    } else {
+                        errorDiv.textContent = errorData.message || '회원가입에 실패했습니다. 입력 정보를 확인해주세요.';
+                    }
                     errorDiv.classList.add('show');
                 }
             } catch (error) {

@@ -1,117 +1,102 @@
 package com.doll.gacha.review;
 
-import com.doll.gacha.dollshop.DollShop;
-import com.doll.gacha.dollshop.DollShopRepository;
-import com.doll.gacha.jwt.entity.UserEntity;
-import com.doll.gacha.jwt.repository.UserRepository;
+import com.doll.gacha.common.dto.ApiResponse;
+import com.doll.gacha.common.dto.PageResponse;
+import com.doll.gacha.jwt.model.CustomUserAccount;
+import com.doll.gacha.review.dto.ReviewCreateDTO;
+import com.doll.gacha.review.dto.ReviewDTO;
+import com.doll.gacha.review.dto.ReviewStatsDTO;
+import com.doll.gacha.review.dto.ReviewUpdateDTO;
+import jakarta.validation.Valid;
+import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
-@Controller
-@RequestMapping("/review")
+@RestController
+@RequestMapping("/api/reviews")
 @RequiredArgsConstructor
 public class ReviewController {
 
     private final ReviewService reviewService;
-    private final UserRepository userRepository;
-    private final DollShopRepository dollShopRepository;
 
     /**
-     * 내 리뷰 목록 (임시로 userId=1 사용)
+     * 특정 가게의 리뷰 목록 조회 - 페이징
+     *
+     * @param dollShopId 가게 ID
+     * @param pageable 페이징 정보 (Spring이 자동 변환)
+     *                 - page: 페이지 번호 (0부터 시작, 기본값: 0)
+     *                 - size: 페이지 크기 (기본값: 10)
+     *                 - sort: 정렬 (예: createdAt,desc)
+     * @return 페이징된 리뷰 목록
      */
-    @GetMapping("/list")
-    public String list(Model model) {
-        // TODO: 로그인 구현 후 세션에서 가져오기
-        Long currentUserId = 1L;
-
-        List<ReviewEntity> reviews = reviewService.getMyReviews(currentUserId);
-        model.addAttribute("reviews", reviews);
-
-        return "review/list";
+    @GetMapping("/doll-shop/{dollShopId}")
+    public ResponseEntity<ApiResponse<PageResponse<ReviewDTO>>> getShopReviews(
+            @PathVariable Long dollShopId,
+            Pageable pageable) {
+        Page<ReviewDTO> reviews = reviewService.getReviewsByDollShopIdPaged(dollShopId, pageable);
+        return ResponseEntity.ok(ApiResponse.success("리뷰 목록 조회 성공", PageResponse.from(reviews)));
     }
 
     /**
-     * 리뷰 작성 폼 (1단계: 가게 검색)
+     * 특정 가게의 리뷰 통계 조회
+     * @param dollShopId 가게 ID
+     * @return 리뷰 통계 (평균 별점, 기계 힘, 비용 등)
      */
-    @GetMapping("/form")
-    public String form(Model model) {
-        return "review/form";
+    @GetMapping("/doll-shop/{dollShopId}/stats")
+    public ResponseEntity<ApiResponse<ReviewStatsDTO>> getShopReviewStats(@PathVariable Long dollShopId) {
+        ReviewStatsDTO stats = reviewService.getReviewStats(dollShopId);
+        return ResponseEntity.ok(ApiResponse.success("리뷰 통계 조회 성공", stats));
     }
 
     /**
-     * 리뷰 작성 폼 (2단계: 가게 선택 완료 후)
+     * 리뷰 작성 (인증 필요)
+     * SecurityConfig에서 POST /api/reviews/** 에 대해 authenticated() 설정됨
+     *
+     * @param createDTO 리뷰 작성 정보
+     * @param userAccount 현재 로그인한 사용자 정보 (Spring Security가 자동 주입)
+     * @return 생성된 리뷰 정보
      */
-    @GetMapping("/form/write")
-    public String formWrite(@RequestParam Long shopId, Model model) {
-        DollShop shop = dollShopRepository.findById(shopId)
-                .orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다."));
-
-        model.addAttribute("shop", shop);
-        return "review/write";
+    @PostMapping
+    public ResponseEntity<ApiResponse<ReviewDTO>> createReview(
+            @Valid @RequestBody ReviewCreateDTO createDTO,
+            @AuthenticationPrincipal CustomUserAccount userAccount) {
+        String username = userAccount.getUsername();
+        ReviewDTO createdReview = reviewService.createReview(username, createDTO, LocalDateTime.now());
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("리뷰가 작성되었습니다", createdReview));
     }
 
     /**
-     * 리뷰 작성 처리
+     * 리뷰 수정 (인증 필요)
      */
-    @PostMapping("/create")
-    public String create(@ModelAttribute ReviewEntity review, @RequestParam Long shopId) {
-        // TODO: 로그인 구현 후 세션에서 가져오기
-        Long currentUserId = 1L;
-
-        UserEntity user = userRepository.findById(currentUserId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        DollShop shop = dollShopRepository.findById(shopId)
-                .orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다."));
-
-        review.setUser(user);
-        review.setDollShop(shop);
-        review.setIsDeleted(false);
-
-        reviewService.createReview(review);
-
-        return "redirect:/review/list";
+    @PutMapping("/{reviewId}")
+    public ResponseEntity<ApiResponse<ReviewDTO>> updateReview(
+            @PathVariable Long reviewId,
+            @Valid @RequestBody ReviewUpdateDTO updateDTO,
+            @AuthenticationPrincipal CustomUserAccount userAccount) {
+        String username = userAccount.getUsername();
+        ReviewDTO updatedReview = reviewService.updateReview(reviewId, username, updateDTO);
+        return ResponseEntity.ok(ApiResponse.success("리뷰가 수정되었습니다", updatedReview));
     }
 
     /**
-     * 리뷰 상세 조회
+     * 리뷰 삭제 (인증 필요)
+     * SecurityConfig에서 DELETE /api/reviews/** 에 대해 authenticated() 설정됨
+     *
+     * @param reviewId 삭제할 리뷰 ID
+     * @param userAccount 현재 로그인한 사용자 정보 (Spring Security가 자동 주입)
+     * @return 삭제 성공 응답
      */
-    @GetMapping("/detail/{id}")
-    public String detail(@PathVariable Long id, Model model) {
-        ReviewEntity review = reviewService.getReview(id);
-        model.addAttribute("review", review);
-        return "review/detail";
-    }
-
-    /**
-     * 리뷰 수정 폼
-     */
-    @GetMapping("/edit/{id}")
-    public String edit(@PathVariable Long id, Model model) {
-        ReviewEntity review = reviewService.getReview(id);
-        model.addAttribute("review", review);
-        return "review/edit";
-    }
-
-    /**
-     * 리뷰 수정 처리
-     */
-    @PostMapping("/update/{id}")
-    public String update(@PathVariable Long id, @ModelAttribute ReviewEntity review) {
-        reviewService.updateReview(id, review);
-        return "redirect:/review/list";
-    }
-
-    /**
-     * 리뷰 삭제
-     */
-    @PostMapping("/delete/{id}")
-    public String delete(@PathVariable Long id) {
-        reviewService.deleteReview(id);
-        return "redirect:/review/list";
+    @DeleteMapping("/{reviewId}")
+    public ResponseEntity<ApiResponse<Void>> deleteReview(
+            @PathVariable Long reviewId,
+            @AuthenticationPrincipal CustomUserAccount userAccount) {
+        String username = userAccount.getUsername();
+        reviewService.deleteReview(reviewId, username);
+        return ResponseEntity.ok(ApiResponse.success("리뷰가 삭제되었습니다"));
     }
 }
-

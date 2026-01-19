@@ -9,11 +9,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.logging.Level;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -39,33 +36,37 @@ public class JwtAccessTokenCheckAndSaveUserInfoFilter extends OncePerRequestFilt
             return;
         }
 
-        //token은 access 아니면 refresh 2개뿐
-        String tokenType = jwtUtil.getTokenType(token);
-        if (tokenType.equals("refresh")) {
-            chain.doFilter(request, response);   //refresh토큰이 있다 => /api/refresh/reissue는 인증 필요없는 곳 무사통과
-            return;
+        try {
+            //token은 access 아니면 refresh 2개뿐
+            String tokenType = jwtUtil.getTokenType(token);
+            if (tokenType.equals("refresh")) {
+                chain.doFilter(request, response);   //refresh토큰이 있다 => /api/refresh/reissue는 인증 필요없는 곳 무사통과
+                return;
+            }
+
+            //access token에 대해서....
+            if (!jwtUtil.validateToken(token)) { //토큰이 문제 있다면.. jwtUtil에 문제가 없다면 만료되었을 때만.
+                request.setAttribute("ERROR_CAUSE", "토큰만료");
+                chain.doFilter(request, response);   // access_token이 만료된거라면 인증필요한 url => security가 authenticationException
+                return;
+            }
+
+            //만료 안 되었다면 SecurityContext에 인증정보 담아 로그인한걸로 판단!!
+            String username = jwtUtil.extractUsername(token);
+            UserDetails userDetails = userDetailsService.loadUserByUsername(
+                username); //내가 만든 CustomUserAccount
+            UsernamePasswordAuthenticationToken authenticationToken =
+                new UsernamePasswordAuthenticationToken(userDetails, null,
+                    userDetails.getAuthorities());
+            authenticationToken.setDetails(
+                new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);  //이걸 해야 비로소 securityConfig가 로그인한 걸로 간주
+            chain.doFilter(request, response);  //인증된 상태로 통과!
+        } catch (JwtException e) {
+            // 잘못된 토큰 형식 등 JWT 파싱 실패 시
+            request.setAttribute("ERROR_CAUSE", "잘못된토큰");
+            chain.doFilter(request, response);  // 인증 없이 통과 -> authenticationEntryPoint에서 처리
         }
-
-
-        //access token에 대해서....
-        if (!jwtUtil.validateToken(token)) { //토큰이 문제 있다면.. jwtUtil에 문제가 없다면 만료되었을 때만.
-            request.setAttribute("ERROR_CAUSE", "토큰만료");
-            chain.doFilter(request, response);   // access_token이 만료된거라면 인증필요한 url => security가 authenticationException
-            return;
-        }
-
-        //만료 안 되었다면 SecurityContext에 인증정보 담아 로그인한걸로 판단!!
-        String username = jwtUtil.extractUsername(token);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(
-            username); //내가 만든 CustomUserAccount
-        UsernamePasswordAuthenticationToken authenticationToken =
-            new UsernamePasswordAuthenticationToken(userDetails, null,
-                userDetails.getAuthorities());
-        authenticationToken.setDetails(
-            new WebAuthenticationDetailsSource().buildDetails(request));
-        SecurityContextHolder.getContext().setAuthentication(authenticationToken);  //이걸 해야 비로소 securityConfig가 로그인한 걸로 간주
-        chain.doFilter(request, response);  //인증된 상태로 통과!
-
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {

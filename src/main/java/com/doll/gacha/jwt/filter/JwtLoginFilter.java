@@ -1,10 +1,7 @@
 package com.doll.gacha.jwt.filter;
 
 import com.doll.gacha.jwt.JwtUtil;
-import com.doll.gacha.jwt.entity.RefreshEntity;
 import com.doll.gacha.jwt.model.CustomUserAccount;
-import com.doll.gacha.jwt.model.UserDTO;
-import com.doll.gacha.jwt.repository.RefreshRepository;
 import com.doll.gacha.jwt.service.RefreshService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
@@ -12,7 +9,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -109,13 +105,24 @@ public class JwtLoginFilter extends UsernamePasswordAuthenticationFilter {
         response.addHeader("Set-Cookie", cookieBuilder.build().toString());
     }
 
+
+    //로그인 시도하려고 할 때.. 즉 id pw입력한거 비교할 때
+    //securityconfig의 authEntryPoin는  로그인필요한곳에 토큰없이 요청할때
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request,
         HttpServletResponse response, AuthenticationException failed)
         throws IOException, ServletException {
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json;charset=UTF-8");
-        response.getWriter().write("{\"error\": \"아이디 또는 비밀번호가 일치하지 않습니다.\", \"cause\": \"로그인실패\"}");
+
+        // 직접 JSON 문자열 생성 (ObjectMapper의 JavaTimeModule 미등록 이슈 회피)
+        String jsonResponse = String.format(
+            "{\"success\":false,\"message\":\"%s\",\"errorCode\":\"%s\",\"timestamp\":\"%s\"}",
+            "아이디 또는 비밀번호가 일치하지 않습니다.",
+            "AUTHENTICATION_FAILED",
+            java.time.LocalDateTime.now()
+        );
+        response.getWriter().write(jsonResponse);
     }
 
 }

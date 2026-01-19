@@ -439,8 +439,6 @@
     </main>
 
 <th:block th:replace="~{layout/header :: headerScript}"></th:block>
-
-
     <script>
         // Mobile menu toggle
         document.getElementById('mobileMenuBtn')?.addEventListener('click', function() {
@@ -771,20 +769,28 @@
             }
 
             // 서버에서 데이터 가져오기
-            let apiUrl;
+            let apiUrl = `/api/doll-shops/map?gubun1=${encodeURIComponent(region)}`;
             if (sigungu) {
                 // 시군구까지 지정된 경우
-                apiUrl = `/api/doll-shops/by-region?gubun1=${encodeURIComponent(region)}&gubun2=${encodeURIComponent(sigungu)}`;
-            } else {
-                // 시도만 지정된 경우
-                apiUrl = `/api/doll-shops/by-gubun1?gubun1=${encodeURIComponent(region)}`;
+                apiUrl += `&gubun2=${encodeURIComponent(sigungu)}`;
             }
 
             console.log(`🔍 서버에서 데이터 로딩: ${displayText}`);
 
             fetch(apiUrl)
-                .then(response => response.json())
-                .then(shops => {
+                .then(async response => {
+                    if (!response.ok) {
+                        const error = await handleApiError(response);
+                        throw error;
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    const shops = result.data; // ApiResponse에서 data 추출
+                    if (!Array.isArray(shops)) {
+                        console.error("응답 데이터가 배열이 아닙니다:", shops);
+                        return;
+                    }
                     console.log(`✅ ${shops.length}개 가게 로드 완료`);
 
                     // 데이터를 allShops에 저장하고 마커 생성
@@ -827,6 +833,9 @@
                 })
                 .catch(error => {
                     console.error('❌ 데이터 로드 실패:', error);
+                    if (error.message) {
+                        alert(error.message);
+                    }
                 });
         }
 
@@ -839,7 +848,7 @@
                         <div>
                             <div class="infowindow-title">${place.place_name}</div>
                             <div class="infowindow-rating" style="color: #757575; font-size: 13px;">
-                                ${place.category_name || ''}
+                                ${place.totalGameMachines ? '총 기계 수: ' + place.totalGameMachines + '대' : ''}
                             </div>
                         </div>
                         <button class="infowindow-close" onclick="closeInfowindow()">
@@ -859,7 +868,7 @@
                         ` : ''}
                     </div>
                     <div class="infowindow-footer">
-                        <button class="infowindow-btn infowindow-btn-primary" onclick="openKakaoPlace('${place.place_url}')">
+                        <button class="infowindow-btn infowindow-btn-primary" onclick="location.href='/doll-shop/detail?id=${place.id}'">
                             <span class="material-icons">info</span>
                             상세보기
                         </button>

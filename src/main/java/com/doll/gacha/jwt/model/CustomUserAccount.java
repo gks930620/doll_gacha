@@ -17,6 +17,7 @@ public class CustomUserAccount implements UserDetails, OAuth2User {
     public CustomUserAccount(UserDTO userDTO) {  //일반 사용자로 로그인 한 경우
         this.userDTO = userDTO;
         this.attributes=null;
+
     }
 
 

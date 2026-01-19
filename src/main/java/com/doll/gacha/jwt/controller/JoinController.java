@@ -1,26 +1,28 @@
 package com.doll.gacha.jwt.controller;
 
+import com.doll.gacha.common.dto.ApiResponse;
 import com.doll.gacha.jwt.model.JoinDTO;
 import com.doll.gacha.jwt.service.JoinService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RestController;
 
-@Controller
+@RestController
 @RequestMapping("/api/join")
 @RequiredArgsConstructor
 public class JoinController {
 
-    private  final JoinService joinService;
+    private final JoinService joinService;
 
-    @ResponseBody
     @PostMapping
-    public  String joinPost(@RequestBody JoinDTO joinDTO){ //클라이언트가 body로 보낸다고 가정.
+    public ResponseEntity<ApiResponse<Void>> join(@Valid @RequestBody JoinDTO joinDTO) {
         joinService.joinProcess(joinDTO);
-        return "회원가입 완료!";
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success("회원가입이 완료되었습니다"));
     }
 }

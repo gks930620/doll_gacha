@@ -1,6 +1,15 @@
 package com.doll.gacha.dollshop;
 
+import com.doll.gacha.common.dto.ApiResponse;
+import com.doll.gacha.common.dto.PageResponse;
+import com.doll.gacha.dollshop.dto.DollShopDTO;
+import com.doll.gacha.dollshop.dto.DollShopListDTO;
+import com.doll.gacha.dollshop.dto.DollShopMapDTO;
+import com.doll.gacha.dollshop.dto.DollShopSearchDTO;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,52 +18,58 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/doll-shops")
 @RequiredArgsConstructor
+@Slf4j
 public class DollShopController {
-
-    private final DollShopRepository dollShopRepository;
+    private final DollShopService dollShopService;
 
     /**
-     * 모든 인형뽑기 가게 조회
+     * 지도용 - 전체 매장 목록 조회 (gubun1, gubun2로 필터링 가능)
+     * @param searchDTO 검색 조건 (gubun1, gubun2)
+     * @return MapDTO로 필요한 데이터만 반환 (N+1 방지)
      */
-    @GetMapping
-    public ResponseEntity<List<DollShop>> getAllShops() {
-        return ResponseEntity.ok(dollShopRepository.findAll());
+    @GetMapping("/map")
+    public ResponseEntity<ApiResponse<List<DollShopMapDTO>>> getShopsForMap(
+            @ModelAttribute DollShopSearchDTO searchDTO) {
+
+        log.info("지도용 매장 조회 - searchDTO: {}", searchDTO);
+
+        List<DollShopMapDTO> list = dollShopService.searchShopsForMap(searchDTO);
+        return ResponseEntity.ok(ApiResponse.success("지도용 매장 목록 조회 성공", list));
     }
 
     /**
-     * gubun1(시/도)으로 검색
+     * 게시판용 - 매장 목록 페이징 조회 (모든 검색 조건 지원)
+     * @param searchDTO 검색 조건 (gubun1, gubun2, keyword)
+     * @param pageable 페이징 및 정렬 정보 (스프링이 자동으로 바인딩)
+     *                 - page: 페이지 번호 (0부터 시작, 기본값: 0)
+     *                 - size: 페이지 크기 (기본값: 10)
+     *                 - sort: 정렬 기준 (예: sort=id,desc 또는 sort=averageRating,desc&sort=id,desc)
+     * @return 페이징된 매장 목록
      */
-    @GetMapping("/by-gubun1")
-    public ResponseEntity<List<DollShop>> getShopsByGubun1(@RequestParam String gubun1) {
-        return ResponseEntity.ok(dollShopRepository.findByGubun1(gubun1));
-    }
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PageResponse<DollShopListDTO>>> searchShops(
+            @ModelAttribute DollShopSearchDTO searchDTO,
+            Pageable pageable) {
 
-    /**
-     * gubun1(시/도)과 gubun2(시/군/구)로 검색
-     */
-    @GetMapping("/by-region")
-    public ResponseEntity<List<DollShop>> getShopsByRegion(
-            @RequestParam String gubun1,
-            @RequestParam String gubun2) {
-        return ResponseEntity.ok(dollShopRepository.findByGubun1AndGubun2(gubun1, gubun2));
-    }
+        log.info("매장 검색 - searchDTO: {}, pageable: {}", searchDTO, pageable);
 
-    /**
-     * 운영중인 가게만 조회
-     */
-    @GetMapping("/operating")
-    public ResponseEntity<List<DollShop>> getOperatingShops() {
-        return ResponseEntity.ok(dollShopRepository.findByIsOperating(true));
+        Page<DollShopListDTO> shops = dollShopService.searchShopsPaged(searchDTO, pageable);
+        return ResponseEntity.ok(ApiResponse.success("매장 목록 조회 성공", PageResponse.from(shops)));
     }
 
     /**
      * ID로 특정 가게 조회
+     * 이미지는 클라이언트에서 /api/files/thumbnail?refType=DOLL_SHOP&refId={id} 로 별도 요청
      */
     @GetMapping("/{id}")
-    public ResponseEntity<DollShop> getShopById(@PathVariable Long id) {
-        return dollShopRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ApiResponse<DollShopDTO>> getShopById(@PathVariable Long id) {
+        log.info("매장 상세 조회 - id: {}", id);
+        try {
+            DollShopDTO shop = dollShopService.getById(id);
+            return ResponseEntity.ok(ApiResponse.success("매장 상세 조회 성공", shop));
+        } catch (IllegalArgumentException e) {
+            log.warn("매장을 찾을 수 없음 - id: {}, error: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
     }
 }
-

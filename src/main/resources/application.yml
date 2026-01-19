@@ -10,13 +10,26 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
+    defer-datasource-initialization: true # data-users.sql 실행 시점 조정 (DDL 후 실행)
     properties:
       hibernate:
         show_sql: true
         format_sql: true
         default_batch_fetch_size: 100
     open-in-view: false
+
+  sql:
+    init:
+      mode: always
+      data-locations:
+        - classpath:data-users.sql
+        - classpath:data-dollshop.sql
+        - classpath:data-files.sql
+        - classpath:data-review.sql
+        - classpath:data-community.sql
+        - classpath:data-comment.sql
+
   devtools:
     livereload:
       enabled: true
@@ -67,5 +80,8 @@ logging:
 jwt:
   secret : ${JWT_SECRET_KEY}
   #키는 길이만 충분하고 노출되지만 않으면 됨. gpt한테 만들어하던가 내가 막 타자 아무렇게 해도됨
-  expiration_access: 1800000  #30분 테스트용
+  expiration_access:  30000 #30분 테스트용 1800000
   expiration_refresh : 14400000   #테스트용 4시간
+
+
+

@@ -34,7 +34,7 @@
         }
 
         .btn {
-            padding: 10px 24px;
+            padding: 10px 16px;
             border-radius: 4px;
             border: none;
             font-size: 14px;
@@ -45,6 +45,7 @@
             align-items: center;
             gap: 8px;
             text-decoration: none;
+            white-space: nowrap;
         }
 
         .btn-primary {
@@ -60,6 +61,10 @@
 
         .btn .material-icons {
             font-size: 18px;
+        }
+
+        .btn-primary .material-icons {
+            color: white;
         }
 
         .search-filter-section {
@@ -168,22 +173,11 @@
             font-size: 16px;
         }
 
-        .post-content {
-            font-size: 14px;
-            color: #616161;
-            line-height: 1.6;
-            margin-bottom: 12px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-        }
 
         .post-stats {
             display: flex;
             gap: 16px;
-            font-size: 13px;
+            font-size: 13px
             color: #757575;
         }
 
@@ -258,224 +252,312 @@
                 <span class="material-icons">forum</span>
                 커뮤니티
             </h1>
-            <a href="/community/write" class="btn btn-primary">
-                <span class="material-icons">edit</span>
-                글쓰기
-            </a>
+            <!-- 로그인한 사용자만 글쓰기 버튼 표시 -->
+            <div id="writeButtonContainer" style="display: none;">
+                <a href="/community/write" class="btn btn-primary">
+                    <span class="material-icons">edit</span>
+                    글쓰기
+                </a>
+            </div>
         </div>
 
         <div class="search-filter-section">
+            <select class="filter-select" id="searchType">
+                <option value="title">제목</option>
+                <option value="nickname">작성자</option>
+            </select>
             <div class="search-input-wrapper">
                 <span class="material-icons">search</span>
-                <input type="text" placeholder="게시글 검색...">
+                <input type="text" id="searchInput" placeholder="검색어를 입력하세요..." onkeypress="handleSearchKeyPress(event)">
             </div>
-            <select class="filter-select">
-                <option value="latest">최신순</option>
-                <option value="popular">인기순</option>
-                <option value="views">조회순</option>
-            </select>
-            <select class="filter-select">
-                <option value="all">전체</option>
-                <option value="review">후기</option>
-                <option value="question">질문</option>
-                <option value="tip">팁/노하우</option>
-            </select>
+            <button class="btn btn-primary" onclick="handleSearch()">
+                <span class="material-icons">search</span>
+                검색
+            </button>
         </div>
 
-        <div class="post-list">
-            <div class="post-item" onclick="location.href='/community/detail'">
-                <div class="post-header">
-                    <div>
-                        <div class="post-title">강남역 신규 오픈한 인형뽑기방 후기</div>
-                        <div class="post-meta">
-                            <span class="post-meta-item">
-                                <span class="material-icons">person</span>
-                                <span>인형러버123</span>
-                            </span>
-                            <span class="post-meta-item">
-                                <span class="material-icons">schedule</span>
-                                <span>2시간 전</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="post-content">
-                    오늘 강남역 근처에 새로 오픈한 인형뽑기방 다녀왔어요! 기계도 깨끗하고 인형도 다양해서 너무 좋았습니다. 특히 산리오 캐릭터들이 엄청 많더라구요...
-                </div>
-                <div class="post-stats">
-                    <span class="post-stat">
-                        <span class="material-icons">visibility</span>
-                        <span>245</span>
-                    </span>
-                    <span class="post-stat">
-                        <span class="material-icons">thumb_up</span>
-                        <span>32</span>
-                    </span>
-                    <span class="post-stat">
-                        <span class="material-icons">comment</span>
-                        <span>15</span>
-                    </span>
-                </div>
-            </div>
-
-            <div class="post-item" onclick="location.href='/community/detail'">
-                <div class="post-header">
-                    <div>
-                        <div class="post-title">인형뽑기 초보자인데 팁 좀 알려주세요!</div>
-                        <div class="post-meta">
-                            <span class="post-meta-item">
-                                <span class="material-icons">person</span>
-                                <span>뽑기초보</span>
-                            </span>
-                            <span class="post-meta-item">
-                                <span class="material-icons">schedule</span>
-                                <span>5시간 전</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="post-content">
-                    인형뽑기 처음 해보는데 어떻게 하면 잘 뽑을 수 있을까요? 고수님들의 팁이 궁금합니다!
-                </div>
-                <div class="post-stats">
-                    <span class="post-stat">
-                        <span class="material-icons">visibility</span>
-                        <span>189</span>
-                    </span>
-                    <span class="post-stat">
-                        <span class="material-icons">thumb_up</span>
-                        <span>18</span>
-                    </span>
-                    <span class="post-stat">
-                        <span class="material-icons">comment</span>
-                        <span>28</span>
-                    </span>
-                </div>
-            </div>
-
-            <div class="post-item" onclick="location.href='/community/detail'">
-                <div class="post-header">
-                    <div>
-                        <div class="post-title">홍대 UFO 캐처존 리뉴얼 소식!</div>
-                        <div class="post-meta">
-                            <span class="post-meta-item">
-                                <span class="material-icons">person</span>
-                                <span>홍대맛집</span>
-                            </span>
-                            <span class="post-meta-item">
-                                <span class="material-icons">schedule</span>
-                                <span>1일 전</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="post-content">
-                    홍대에 있는 UFO 캐처존이 리뉴얼했다고 해서 다녀왔습니다. 기계들이 전부 새 것으로 교체되었고 인형 라인업도 완전히 바뀌었어요!
-                </div>
-                <div class="post-stats">
-                    <span class="post-stat">
-                        <span class="material-icons">visibility</span>
-                        <span>412</span>
-                    </span>
-                    <span class="post-stat">
-                        <span class="material-icons">thumb_up</span>
-                        <span>56</span>
-                    </span>
-                    <span class="post-stat">
-                        <span class="material-icons">comment</span>
-                        <span>23</span>
-                    </span>
-                </div>
-            </div>
-
-            <div class="post-item" onclick="location.href='/community/detail'">
-                <div class="post-header">
-                    <div>
-                        <div class="post-title">오늘의 전리품 자랑 😊</div>
-                        <div class="post-meta">
-                            <span class="post-meta-item">
-                                <span class="material-icons">person</span>
-                                <span>인형수집가</span>
-                            </span>
-                            <span class="post-meta-item">
-                                <span class="material-icons">schedule</span>
-                                <span>1일 전</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="post-content">
-                    오늘 10번 만에 겨우 뽑았어요! 너무 귀여워서 사진 공유합니다 ㅎㅎ
-                </div>
-                <div class="post-stats">
-                    <span class="post-stat">
-                        <span class="material-icons">visibility</span>
-                        <span>328</span>
-                    </span>
-                    <span class="post-stat">
-                        <span class="material-icons">thumb_up</span>
-                        <span>42</span>
-                    </span>
-                    <span class="post-stat">
-                        <span class="material-icons">comment</span>
-                        <span>19</span>
-                    </span>
-                </div>
-            </div>
-
-            <div class="post-item" onclick="location.href='/community/detail'">
-                <div class="post-header">
-                    <div>
-                        <div class="post-title">서울 지역 인형뽑기방 추천 리스트</div>
-                        <div class="post-meta">
-                            <span class="post-meta-item">
-                                <span class="material-icons">person</span>
-                                <span>매장탐험가</span>
-                            </span>
-                            <span class="post-meta-item">
-                                <span class="material-icons">schedule</span>
-                                <span>2일 전</span>
-                            </span>
-                        </div>
-                    </div>
-                </div>
-                <div class="post-content">
-                    제가 직접 가본 서울 지역 인형뽑기방 중에서 추천할 만한 곳들 정리해봤어요. 위치별로 특징도 함께 정리했습니다!
-                </div>
-                <div class="post-stats">
-                    <span class="post-stat">
-                        <span class="material-icons">visibility</span>
-                        <span>567</span>
-                    </span>
-                    <span class="post-stat">
-                        <span class="material-icons">thumb_up</span>
-                        <span>78</span>
-                    </span>
-                    <span class="post-stat">
-                        <span class="material-icons">comment</span>
-                        <span>34</span>
-                    </span>
-                </div>
-            </div>
+        <!-- 로딩 상태 -->
+        <div id="loadingState" style="display: none; text-align: center; padding: 60px 20px; color: #757575;">
+            <div style="font-size: 14px;">로딩 중...</div>
         </div>
 
-        <div class="pagination">
-            <button class="pagination-btn" disabled>
-                <span class="material-icons">chevron_left</span>
-            </button>
-            <button class="pagination-btn active">1</button>
-            <button class="pagination-btn">2</button>
-            <button class="pagination-btn">3</button>
-            <button class="pagination-btn">4</button>
-            <button class="pagination-btn">5</button>
-            <button class="pagination-btn">
-                <span class="material-icons">chevron_right</span>
-            </button>
+        <!-- 게시글 목록 -->
+        <div class="post-list" id="postList">
+            <!-- JavaScript로 동적 생성 -->
+        </div>
+
+        <!-- 빈 상태 -->
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <span class="material-icons">article</span>
+            <h3>게시글이 없습니다</h3>
+            <p>첫 번째 게시글을 작성해보세요!</p>
+        </div>
+
+        <!-- 페이징 -->
+        <div class="pagination" id="pagination">
+            <!-- JavaScript로 동적 생성 -->
         </div>
     </main>
 
     <th:block th:replace="~{layout/footer :: footer}"></th:block>
     <th:block th:replace="~{layout/header :: headerScript}"></th:block>
+
+    <script>
+        let currentPage = 0;
+        const pageSize = 10;
+        let currentKeyword = '';
+        let currentSearchType = 'title';
+
+        // 페이지 로드 시 데이터 가져오기
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 페이지 로드 완료 - API 호출 시작');
+            checkLoginStatus(); // 로그인 상태 확인
+            loadCommunityList(0);
+        });
+
+        // 로그인 상태 확인 (API 호출로 정확하게 체크)
+        function checkLoginStatus() {
+            authFetch('/api/my/info')
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Not logged in');
+                })
+                .then(result => {
+                    const userInfo = result.data; // ApiResponse에서 data 추출
+                    console.log('✅ 로그인 상태: true, 사용자:', userInfo.nickname);
+                    // 글쓰기 버튼 표시
+                    const writeBtn = document.getElementById('writeButtonContainer');
+                    if (writeBtn) {
+                        writeBtn.style.display = 'block';
+                    }
+                })
+                .catch(err => {
+                    console.log('❌ 로그인 상태: false');
+                    // 글쓰기 버튼 숨김 (기본값이 display: none이므로 생략 가능)
+                });
+        }
+
+        // 커뮤니티 목록 로드
+        async function loadCommunityList(page, searchType = '', keyword = '') {
+            try {
+                showLoading(true);
+                currentPage = page;
+                currentKeyword = keyword;
+                currentSearchType = searchType;
+
+                // 기본 URL
+                let url = `/api/community?page=${page}&size=${pageSize}&sort=createdAt,desc`;
+
+                // 검색 키워드가 있으면 파라미터 추가
+                if (keyword && keyword.trim() !== '' && searchType) {
+                    url += `&searchType=${searchType}&keyword=${encodeURIComponent(keyword)}`;
+                }
+
+                console.log('🔍 API 호출 시작:', url);
+
+                const response = await fetch(url);
+
+                console.log('📡 응답 상태:', response.status, response.statusText);
+
+                if (!response.ok) {
+                    const error = await handleApiError(response);
+                    console.error('❌ API 오류 응답:', error);
+                    throw error;
+                }
+
+                const result = await response.json();
+                const data = result.data; // ApiResponse에서 data 추출
+                console.log('✅ 받은 데이터:', data);
+                console.log('📊 데이터 구조:', {
+                    hasContent: !!data.content,
+                    isArray: Array.isArray(data.content),
+                    contentLength: data.content?.length,
+                    totalElements: data.totalElements,
+                    totalPages: data.totalPages,
+                    page: data.page
+                });
+
+                renderPostList(data.content);
+                renderPagination(data);
+
+                showLoading(false);
+            } catch (error) {
+                console.error('❌ 에러 발생:', error);
+                showLoading(false);
+                // 에러 메시지가 있으면 표시
+                if (error.message && error.status !== 200) {
+                    // 조회 실패 시 빈 상태로 표시 (alert은 너무 공격적)
+                }
+                // 실패 시 빈 상태로 표시
+                renderPostList([]);
+            }
+        }
+
+        // 게시글 목록 렌더링
+        function renderPostList(posts) {
+            console.log('🎨 렌더링 시작:', {
+                posts: posts,
+                isArray: Array.isArray(posts),
+                length: posts?.length,
+                firstPost: posts?.[0]
+            });
+
+            const postList = document.getElementById('postList');
+            const emptyState = document.getElementById('emptyState');
+
+            if (!posts || posts.length === 0) {
+                console.log('📭 게시글 없음 - 빈 상태 표시');
+                postList.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            console.log(`✅ 게시글 ${posts.length}개 렌더링 시작`);
+            postList.style.display = 'block';
+            emptyState.style.display = 'none';
+
+            postList.innerHTML = posts.map(post => `
+                <div class="post-item" onclick="goToDetail(${post.id})">
+                    <div class="post-header">
+                        <div>
+                            <div class="post-title">${escapeHtml(post.title)}</div>
+                            <div class="post-meta">
+                                <span class="post-meta-item">
+                                    <span class="material-icons">person</span>
+                                    <span>${escapeHtml(post.nickname || post.username)}</span>
+                                </span>
+                                <span class="post-meta-item">
+                                    <span class="material-icons">schedule</span>
+                                    <span>${formatRelativeTime(post.createdAt)}</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="post-stats">
+                        <span class="post-stat">
+                            <span class="material-icons">visibility</span>
+                            <span>${post.viewCount || 0}</span>
+                        </span>
+                        <span class="post-stat">
+                            <span class="material-icons">comment</span>
+                            <span>${post.commentCount || 0}</span>
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 페이징 렌더링
+        function renderPagination(data) {
+            const pagination = document.getElementById('pagination');
+            const totalPages = data.totalPages;
+            const currentPage = data.page;
+
+            if (totalPages <= 1) {
+                pagination.style.display = 'none';
+                return;
+            }
+
+            pagination.style.display = 'flex';
+
+            let paginationHTML = '';
+
+            // 이전 버튼
+            paginationHTML += `
+                <button class="pagination-btn" onclick="loadCommunityList(${currentPage - 1}, '${currentSearchType}', '${currentKeyword}')" ${currentPage === 0 ? 'disabled' : ''}>
+                    <span class="material-icons">chevron_left</span>
+                </button>
+            `;
+
+            // 페이지 번호 버튼 (최대 5개 표시)
+            const startPage = Math.max(0, currentPage - 2);
+            const endPage = Math.min(totalPages - 1, startPage + 4);
+
+            for (let i = startPage; i <= endPage; i++) {
+                paginationHTML += `
+                    <button class="pagination-btn ${i === currentPage ? 'active' : ''}" onclick="loadCommunityList(${i}, '${currentSearchType}', '${currentKeyword}')">
+                        ${i + 1}
+                    </button>
+                `;
+            }
+
+            // 다음 버튼
+            paginationHTML += `
+                <button class="pagination-btn" onclick="loadCommunityList(${currentPage + 1}, '${currentSearchType}', '${currentKeyword}')" ${currentPage === totalPages - 1 ? 'disabled' : ''}>
+                    <span class="material-icons">chevron_right</span>
+                </button>
+            `;
+
+            pagination.innerHTML = paginationHTML;
+        }
+
+        // 상세 페이지로 이동
+        function goToDetail(communityId) {
+            location.href = `/community/detail?id=${communityId}`;
+        }
+
+        // 검색 처리
+        function handleSearch() {
+            const searchType = document.getElementById('searchType').value;
+            const keyword = document.getElementById('searchInput').value.trim();
+
+            if (!keyword) {
+                // 검색어 없으면 전체 목록 조회
+                loadCommunityList(0);
+                return;
+            }
+
+            loadCommunityList(0, searchType, keyword);
+        }
+
+        // 엔터키로 검색
+        function handleSearchKeyPress(event) {
+            if (event.key === 'Enter') {
+                handleSearch();
+            }
+        }
+
+        // 로딩 상태 표시
+        function showLoading(show) {
+            const loadingState = document.getElementById('loadingState');
+            const postList = document.getElementById('postList');
+            const emptyState = document.getElementById('emptyState');
+
+            if (show) {
+                loadingState.style.display = 'block';
+                postList.style.display = 'none';
+                emptyState.style.display = 'none';
+            } else {
+                loadingState.style.display = 'none';
+            }
+        }
+
+        // 상대 시간 포맷 (예: "2시간 전")
+        function formatRelativeTime(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return '방금 전';
+            if (diffMins < 60) return `${diffMins}분 전`;
+            if (diffHours < 24) return `${diffHours}시간 전`;
+            if (diffDays < 7) return `${diffDays}일 전`;
+
+            return date.toLocaleDateString('ko-KR');
+        }
+
+        // HTML 이스케이프
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
 </body>
 </html>
 
