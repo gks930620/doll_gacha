@@ -92,9 +92,10 @@ class CommentControllerIntegrationTest {
                         .param("size", "10"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.pageable").exists())
-                .andExpect(jsonPath("$.content[0].content").value("테스트 댓글입니다."));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.page").exists())
+                .andExpect(jsonPath("$.data.content[0].content").value("테스트 댓글입니다."));
     }
 
     @Test
@@ -105,7 +106,8 @@ class CommentControllerIntegrationTest {
                         .param("size", "10"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isEmpty());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isEmpty());
     }
 
     @Test
@@ -122,8 +124,9 @@ class CommentControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(createDTO)))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.content").value("새 댓글입니다."))
-                .andExpect(jsonPath("$.id").exists());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").value("새 댓글입니다."))
+                .andExpect(jsonPath("$.data.id").exists());
     }
 
     @Test
@@ -170,7 +173,8 @@ class CommentControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(updateDTO)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").value("수정된 댓글입니다."));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").value("수정된 댓글입니다."));
     }
 
     @Test
@@ -195,25 +199,30 @@ class CommentControllerIntegrationTest {
     void deleteComment_success() throws Exception {
         mockMvc.perform(delete("/api/comments/{commentId}", testComment.getId()))
                 .andDo(print())
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test
     @DisplayName("댓글 삭제 - 다른 사용자는 삭제 불가")
-    @WithMockUser(username = "otheruser")
+    @WithMockCustomUser(username = "otheruser")
     void deleteComment_forbidden() throws Exception {
         mockMvc.perform(delete("/api/comments/{commentId}", testComment.getId()))
                 .andDo(print())
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.errorCode").value("ACCESS_DENIED"));
     }
 
     @Test
     @DisplayName("댓글 삭제 - 존재하지 않는 댓글")
-    @WithMockUser(username = "testuser")
+    @WithMockCustomUser(username = "testuser")
     void deleteComment_notFound() throws Exception {
         mockMvc.perform(delete("/api/comments/{commentId}", 999999))
                 .andDo(print())
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.errorCode").value("NOT_FOUND"));
     }
 }
 

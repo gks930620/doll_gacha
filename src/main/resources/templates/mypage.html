@@ -70,34 +70,46 @@
 
 <div th:replace="~{layout/footer :: footer}"></div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', async function() {
-        try {
-            const response = await fetch('/api/my/info', {
-                credentials: 'include' // 쿠키를 포함하여 요청
-            });
+<th:block th:insert="~{layout/header :: headerScript}"></th:block>
 
-            if (response.ok) {
-                const user = await response.json();
+<script>
+    console.log('📄 마이페이지 스크립트 시작');
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        console.log('🚀 DOMContentLoaded 이벤트 발생');
+        try {
+            console.log('📡 /api/my/info 요청 시작...');
+            const response = await authFetch('/api/my/info', {
+                credentials: 'include'
+            });
+            console.log('📡 /api/my/info 최종 응답:', response?.status);
+
+            if (response && response.ok) {
+                const result = await response.json();
+                const user = result.data;
+                console.log('✅ 사용자 정보 로드 성공:', user);
+
+                // 마이페이지 정보 표시
                 document.getElementById('username').textContent = user.username || '정보 없음';
                 document.getElementById('nickname').textContent = user.nickname || '정보 없음';
                 document.getElementById('email').textContent = user.email || '정보 없음';
                 document.getElementById('provider').textContent = user.provider || '정보 없음';
+
+                // 헤더 로그인 상태도 업데이트
+                if (typeof updateHeaderLoginStatus === 'function') {
+                    updateHeaderLoginStatus(true, user.nickname);
+                }
             } else {
-                // 401 Unauthorized 또는 다른 에러 발생 시 로그인 페이지로 리디렉션
-                console.log('Failed to fetch user info:', response.status);
-                alert('로그인이 필요하거나 세션이 만료되었습니다. 로그인 페이지로 이동합니다.');
+                console.log('❌ 인증 실패 - 로그인 페이지로 이동');
                 window.location.href = '/login';
             }
         } catch (error) {
-            console.log('Error fetching user info:', error);
-            alert('오류가 발생했습니다. 로그인 페이지로 이동합니다.');
+            console.log('❌ Error:', error);
             window.location.href = '/login';
         }
     });
 </script>
 
-<th:block th:insert="~{layout/header :: headerScript}"></th:block>
 </body>
 </html>
 

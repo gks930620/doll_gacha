@@ -327,8 +327,8 @@
                     // 로그인 성공 시 쿠키가 설정되고, 페이지를 새로고침하여 header 상태 등을 업데이트
                     window.location.href = '/';
                 } else {
-                    const error = await response.json();
-                    errorDiv.textContent = error.error || '로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.';
+                    const errorData = await response.json();
+                    errorDiv.textContent = errorData.message || errorData.error || '로그인에 실패했습니다. 아이디 또는 비밀번호를 확인해주세요.';
                     errorDiv.classList.add('show');
                 }
             } catch (error) {

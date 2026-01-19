@@ -1,37 +1,40 @@
 package com.doll.gacha.jwt.service;
 
+import com.doll.gacha.common.exception.DuplicateResourceException;
 import com.doll.gacha.jwt.entity.UserEntity;
 import com.doll.gacha.jwt.model.JoinDTO;
 import com.doll.gacha.jwt.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@RequiredArgsConstructor
 public class JoinService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
+    @Transactional
     public void joinProcess(JoinDTO joinDTO) {
-
-        //db에 이미 동일한 username을 가진 회원이 존재하는지?
-        UserEntity find = userRepository.findByUsername(joinDTO.getUsername())
-            .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
-        if(find!=null) {
-            System.out.println("이미 있는 ID입니다.");
-            return ;
+        // 중복 체크: 이미 존재하면 예외 발생
+        if (userRepository.existsByUsername(joinDTO.getUsername())) {
+            throw new DuplicateResourceException("이미 사용 중인 아이디입니다: " + joinDTO.getUsername());
         }
+
+        // 이메일 중복 체크 (선택)
+        if (joinDTO.getEmail() != null && userRepository.existsByEmail(joinDTO.getEmail())) {
+            throw new DuplicateResourceException("이미 사용 중인 이메일입니다: " + joinDTO.getEmail());
+        }
+
         UserEntity user = new UserEntity();
         user.setUsername(joinDTO.getUsername());
-        user.setPassword(passwordEncoder.encode(joinDTO.getPassword()));  //DB에 저장될 때는 반드시 encoding되서 저장되어야한다.
+        user.setPassword(passwordEncoder.encode(joinDTO.getPassword()));
         user.setEmail(joinDTO.getEmail());
         user.setNickname(joinDTO.getNickname());
-        user.setProvider("LOCAL");  // 일반 회원가입은 LOCAL
-        user.getRoles().add("USER");     //hasAuthority("USER") 에 맞게 USER로 세팅
+        user.setProvider("LOCAL");
+        user.getRoles().add("USER");
 
         userRepository.save(user);
     }

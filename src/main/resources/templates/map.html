@@ -780,12 +780,13 @@
             fetch(apiUrl)
                 .then(async response => {
                     if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Server Error: ${response.status} - ${errorText}`);
+                        const error = await handleApiError(response);
+                        throw error;
                     }
                     return response.json();
                 })
-                .then(shops => {
+                .then(result => {
+                    const shops = result.data; // ApiResponse에서 data 추출
                     if (!Array.isArray(shops)) {
                         console.error("응답 데이터가 배열이 아닙니다:", shops);
                         return;
@@ -832,6 +833,9 @@
                 })
                 .catch(error => {
                     console.error('❌ 데이터 로드 실패:', error);
+                    if (error.message) {
+                        alert(error.message);
+                    }
                 });
         }
 

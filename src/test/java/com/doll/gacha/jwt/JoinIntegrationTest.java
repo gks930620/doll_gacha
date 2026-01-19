@@ -44,8 +44,9 @@ class JoinIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(joinDTO)))
                 .andDo(print())
-                .andExpect(status().isOk())
-                .andExpect(content().string("회원가입 완료!"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.message").value("회원가입이 완료되었습니다"));
     }
 
     @Test
@@ -61,7 +62,7 @@ class JoinIntegrationTest {
         mockMvc.perform(post("/api/join")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(joinDTO1)))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
 
         // 동일한 username으로 두 번째 가입 시도
         JoinDTO joinDTO2 = new JoinDTO();
@@ -70,12 +71,13 @@ class JoinIntegrationTest {
         joinDTO2.setEmail("user2@example.com");
         joinDTO2.setNickname("유저2");
 
-        // 중복 처리는 서비스 로직에 따라 다름 - 예외 발생 또는 무시될 수 있음
+        // 중복 시 에러 응답 기대 (409 Conflict 또는 400 Bad Request)
         mockMvc.perform(post("/api/join")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(joinDTO2)))
-                .andDo(print());
-        // 실제 구현에 따라 status 검증 필요
+                .andDo(print())
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.success").value(false));
     }
 
     @Test

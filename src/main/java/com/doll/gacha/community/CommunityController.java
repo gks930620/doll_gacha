@@ -1,5 +1,7 @@
 package com.doll.gacha.community;
 
+import com.doll.gacha.common.dto.ApiResponse;
+import com.doll.gacha.common.dto.PageResponse;
 import com.doll.gacha.community.dto.CommunityCreateDTO;
 import com.doll.gacha.community.dto.CommunityDTO;
 import com.doll.gacha.community.dto.CommunityUpdateDTO;
@@ -24,59 +26,59 @@ public class CommunityController {
      * 게시글 목록 조회 / 검색 (페이징)
      */
     @GetMapping
-    public ResponseEntity<Page<CommunityDTO>> getCommunityList(
+    public ResponseEntity<ApiResponse<PageResponse<CommunityDTO>>> getCommunityList(
             @RequestParam(required = false) String searchType,
             @RequestParam(required = false) String keyword,
             Pageable pageable) {
 
         Page<CommunityDTO> communities = communityService.getCommunityList(searchType, keyword, pageable);
-        return ResponseEntity.ok(communities);
+        return ResponseEntity.ok(ApiResponse.success("게시글 목록 조회 성공", PageResponse.from(communities)));
     }
 
     /**
      * 게시글 상세 조회 (조회수 증가)
      */
     @GetMapping("/{communityId}")
-    public ResponseEntity<CommunityDTO> getCommunityDetail(@PathVariable Long communityId) {
+    public ResponseEntity<ApiResponse<CommunityDTO>> getCommunityDetail(@PathVariable Long communityId) {
         CommunityDTO community = communityService.getCommunityDetail(communityId);
-        return ResponseEntity.ok(community);
+        return ResponseEntity.ok(ApiResponse.success("게시글 조회 성공", community));
     }
 
     /**
      * 게시글 작성 (로그인 필요)
      */
     @PostMapping
-    public ResponseEntity<Long> createCommunity(
+    public ResponseEntity<ApiResponse<Long>> createCommunity(
             @Valid @RequestBody CommunityCreateDTO createDTO,
             @AuthenticationPrincipal CustomUserAccount userAccount) {
 
         Long communityId = communityService.createCommunity(createDTO, userAccount.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED).body(communityId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("게시글이 작성되었습니다", communityId));
     }
 
     /**
      * 게시글 수정 (로그인 필요, 작성자만)
      */
     @PutMapping("/{communityId}")
-    public ResponseEntity<Void> updateCommunity(
+    public ResponseEntity<ApiResponse<Void>> updateCommunity(
             @PathVariable Long communityId,
             @Valid @RequestBody CommunityUpdateDTO updateDTO,
             @AuthenticationPrincipal CustomUserAccount userAccount) {
 
         communityService.updateCommunity(communityId, updateDTO, userAccount.getUsername());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("게시글이 수정되었습니다"));
     }
 
     /**
      * 게시글 삭제 (로그인 필요, 작성자만, Soft Delete)
      */
     @DeleteMapping("/{communityId}")
-    public ResponseEntity<Void> deleteCommunity(
+    public ResponseEntity<ApiResponse<Void>> deleteCommunity(
             @PathVariable Long communityId,
             @AuthenticationPrincipal CustomUserAccount userAccount) {
 
         communityService.deleteCommunity(communityId, userAccount.getUsername());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("게시글이 삭제되었습니다"));
     }
 }
 

@@ -326,7 +326,7 @@
 
         // 로그인 확인 및 데이터 로드
         function checkLoginAndLoadData() {
-            fetch('/api/my/info')
+            authFetch('/api/my/info')
                 .then(response => {
                     if (response.ok) {
                         return response.json();
@@ -397,7 +397,7 @@
                     formData.append('refType', 'COMMUNITY');
                     formData.append('usage', 'IMAGES');
 
-                    const response = await fetch('/api/files/upload', {
+                    const response = await authFetch('/api/files/upload', {
                         method: 'POST',
                         credentials: 'include',
                         body: formData
@@ -531,7 +531,8 @@
                     throw new Error('게시글을 불러오는데 실패했습니다.');
                 }
 
-                const data = await response.json();
+                const result = await response.json();
+                const data = result.data; // ApiResponse에서 data 추출
                 console.log('✅ 게시글 데이터:', data);
 
                 // 제목 설정
@@ -582,7 +583,7 @@
                     content: content
                 };
 
-                const response = await fetch(`/api/community/${currentCommunityId}`, {
+                const response = await authFetch(`/api/community/${currentCommunityId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -594,12 +595,10 @@
                 console.log('📡 응답 상태:', response.status);
 
                 if (!response.ok) {
-                    if (response.status === 401) {
-                        alert('로그인이 필요하거나 세션이 만료되었습니다.');
-                        window.location.href = '/login';
-                        return false;
-                    }
-                    throw new Error('게시글 수정에 실패했습니다.');
+                    const error = await handleApiError(response);
+                    console.error('❌ 게시글 수정 실패:', error);
+                    showApiError(error);
+                    return false;
                 }
 
                 console.log('✅ 게시글 수정 성공!');
@@ -609,7 +608,7 @@
                     console.log(`🗑️ 파일 ${deletedFileIds.length}개 삭제 중...`);
                     for (const fileId of deletedFileIds) {
                         try {
-                            const deleteResponse = await fetch(`/api/files/${fileId}`, {
+                            const deleteResponse = await authFetch(`/api/files/${fileId}`, {
                                 method: 'DELETE',
                                 credentials: 'include'
                             });
@@ -635,7 +634,7 @@
                     formData.append('usage', 'ATTACHMENT');
 
                     try {
-                        const fileResponse = await fetch('/api/files/upload', {
+                        const fileResponse = await authFetch('/api/files/upload', {
                             method: 'POST',
                             credentials: 'include',
                             body: formData

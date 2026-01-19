@@ -1,5 +1,7 @@
 package com.doll.gacha.community.comment;
 
+import com.doll.gacha.common.dto.ApiResponse;
+import com.doll.gacha.common.dto.PageResponse;
 import com.doll.gacha.community.comment.dto.CommentCreateDTO;
 import com.doll.gacha.community.comment.dto.CommentDTO;
 import com.doll.gacha.community.comment.dto.CommentUpdateDTO;
@@ -25,48 +27,48 @@ public class CommentController {
      * 특정 게시글의 댓글 목록 조회 (페이징)
      */
     @GetMapping("/community/{communityId}")
-    public ResponseEntity<Page<CommentDTO>> getComments(
+    public ResponseEntity<ApiResponse<PageResponse<CommentDTO>>> getComments(
             @PathVariable Long communityId,
             @PageableDefault(size = 10, sort = "createdAt") Pageable pageable) {
 
         Page<CommentDTO> comments = commentService.getCommentsByCommunityId(communityId, pageable);
-        return ResponseEntity.ok(comments);
+        return ResponseEntity.ok(ApiResponse.success("댓글 목록 조회 성공", PageResponse.from(comments)));
     }
 
     /**
      * 댓글 작성 (로그인 필요)
      */
     @PostMapping
-    public ResponseEntity<CommentDTO> createComment(
+    public ResponseEntity<ApiResponse<CommentDTO>> createComment(
             @Valid @RequestBody CommentCreateDTO createDTO,
             @AuthenticationPrincipal CustomUserAccount userAccount) {
 
         CommentDTO comment = commentService.createComment(createDTO, userAccount.getUsername());
-        return ResponseEntity.status(HttpStatus.CREATED).body(comment);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("댓글이 작성되었습니다", comment));
     }
 
     /**
      * 댓글 수정 (로그인 필요, 작성자만)
      */
     @PutMapping("/{commentId}")
-    public ResponseEntity<CommentDTO> updateComment(
+    public ResponseEntity<ApiResponse<CommentDTO>> updateComment(
             @PathVariable Long commentId,
             @Valid @RequestBody CommentUpdateDTO updateDTO,
             @AuthenticationPrincipal CustomUserAccount userAccount) {
 
         CommentDTO comment = commentService.updateComment(commentId, updateDTO, userAccount.getUsername());
-        return ResponseEntity.ok(comment);
+        return ResponseEntity.ok(ApiResponse.success("댓글이 수정되었습니다", comment));
     }
 
     /**
      * 댓글 삭제 (로그인 필요, 작성자만)
      */
     @DeleteMapping("/{commentId}")
-    public ResponseEntity<Void> deleteComment(
+    public ResponseEntity<ApiResponse<Void>> deleteComment(
             @PathVariable Long commentId,
             @AuthenticationPrincipal CustomUserAccount userAccount) {
         commentService.deleteComment(commentId, userAccount.getUsername());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("댓글이 삭제되었습니다"));
     }
 }
 

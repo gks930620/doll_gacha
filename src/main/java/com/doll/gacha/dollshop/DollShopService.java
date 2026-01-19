@@ -1,5 +1,6 @@
 package com.doll.gacha.dollshop;
 
+import com.doll.gacha.common.exception.EntityNotFoundException;
 import com.doll.gacha.dollshop.dto.DollShopDTO;
 import com.doll.gacha.dollshop.dto.DollShopListDTO;
 import com.doll.gacha.dollshop.dto.DollShopMapDTO;
@@ -48,6 +49,6 @@ public class DollShopService {
     public DollShopDTO getById(Long id) {
         return dollShopRepository.findById(id)
             .map(DollShopDTO::from)
-            .orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다: " + id));
+            .orElseThrow(() -> EntityNotFoundException.of("가게", id));
     }
 }

@@ -1,5 +1,7 @@
 package com.doll.gacha.dollshop;
 
+import com.doll.gacha.common.dto.ApiResponse;
+import com.doll.gacha.common.dto.PageResponse;
 import com.doll.gacha.dollshop.dto.DollShopDTO;
 import com.doll.gacha.dollshop.dto.DollShopListDTO;
 import com.doll.gacha.dollshop.dto.DollShopMapDTO;
@@ -26,14 +28,13 @@ public class DollShopController {
      * @return MapDTO로 필요한 데이터만 반환 (N+1 방지)
      */
     @GetMapping("/map")
-    public ResponseEntity<List<DollShopMapDTO>> getShopsForMap(
+    public ResponseEntity<ApiResponse<List<DollShopMapDTO>>> getShopsForMap(
             @ModelAttribute DollShopSearchDTO searchDTO) {
 
         log.info("지도용 매장 조회 - searchDTO: {}", searchDTO);
 
-        // MapDTO List 반환
         List<DollShopMapDTO> list = dollShopService.searchShopsForMap(searchDTO);
-        return ResponseEntity.ok(list);
+        return ResponseEntity.ok(ApiResponse.success("지도용 매장 목록 조회 성공", list));
     }
 
     /**
@@ -46,14 +47,14 @@ public class DollShopController {
      * @return 페이징된 매장 목록
      */
     @GetMapping("/search")
-    public ResponseEntity<Page<DollShopListDTO>> searchShops(
+    public ResponseEntity<ApiResponse<PageResponse<DollShopListDTO>>> searchShops(
             @ModelAttribute DollShopSearchDTO searchDTO,
             Pageable pageable) {
 
         log.info("매장 검색 - searchDTO: {}, pageable: {}", searchDTO, pageable);
 
         Page<DollShopListDTO> shops = dollShopService.searchShopsPaged(searchDTO, pageable);
-        return ResponseEntity.ok(shops);
+        return ResponseEntity.ok(ApiResponse.success("매장 목록 조회 성공", PageResponse.from(shops)));
     }
 
     /**
@@ -61,10 +62,11 @@ public class DollShopController {
      * 이미지는 클라이언트에서 /api/files/thumbnail?refType=DOLL_SHOP&refId={id} 로 별도 요청
      */
     @GetMapping("/{id}")
-    public ResponseEntity<DollShopDTO> getShopById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<DollShopDTO>> getShopById(@PathVariable Long id) {
         log.info("매장 상세 조회 - id: {}", id);
         try {
-            return ResponseEntity.ok(dollShopService.getById(id));
+            DollShopDTO shop = dollShopService.getById(id);
+            return ResponseEntity.ok(ApiResponse.success("매장 상세 조회 성공", shop));
         } catch (IllegalArgumentException e) {
             log.warn("매장을 찾을 수 없음 - id: {}, error: {}", id, e.getMessage());
             return ResponseEntity.notFound().build();

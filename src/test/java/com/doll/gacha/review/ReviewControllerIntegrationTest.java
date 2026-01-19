@@ -95,9 +95,10 @@ class ReviewControllerIntegrationTest {
                         .param("size", "10"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.pageable").exists())
-                .andExpect(jsonPath("$.totalElements").exists());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isArray())
+                .andExpect(jsonPath("$.data.page").exists())
+                .andExpect(jsonPath("$.data.totalElements").exists());
     }
 
     @Test
@@ -107,12 +108,13 @@ class ReviewControllerIntegrationTest {
         mockMvc.perform(get("/api/reviews/doll-shop/{dollShopId}/stats", 857))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.totalReviews").exists())
-                .andExpect(jsonPath("$.avgRating").exists())
-                .andExpect(jsonPath("$.avgMachineStrength").exists())
-                .andExpect(jsonPath("$.avgLargeDollCost").exists())
-                .andExpect(jsonPath("$.avgMediumDollCost").exists())
-                .andExpect(jsonPath("$.avgSmallDollCost").exists());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.totalReviews").exists())
+                .andExpect(jsonPath("$.data.avgRating").exists())
+                .andExpect(jsonPath("$.data.avgMachineStrength").exists())
+                .andExpect(jsonPath("$.data.avgLargeDollCost").exists())
+                .andExpect(jsonPath("$.data.avgMediumDollCost").exists())
+                .andExpect(jsonPath("$.data.avgSmallDollCost").exists());
     }
 
     @Test
@@ -123,7 +125,8 @@ class ReviewControllerIntegrationTest {
                         .param("size", "10"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isEmpty()); // 빈 배열 반환
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").isEmpty()); // 빈 배열 반환
     }
 
     @Test
@@ -148,8 +151,9 @@ class ReviewControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(createDTO)))
                 .andDo(print())
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.content").value("새 리뷰입니다. 좋아요!"))
-                .andExpect(jsonPath("$.rating").value(5));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").value("새 리뷰입니다. 좋아요!"))
+                .andExpect(jsonPath("$.data.rating").value(5));
     }
 
     @Test
@@ -205,8 +209,9 @@ class ReviewControllerIntegrationTest {
                         .content(objectMapper.writeValueAsString(updateDTO)))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").value("수정된 리뷰입니다."))
-                .andExpect(jsonPath("$.rating").value(3));
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.content").value("수정된 리뷰입니다."))
+                .andExpect(jsonPath("$.data.rating").value(3));
     }
 
     @Test
@@ -236,7 +241,8 @@ class ReviewControllerIntegrationTest {
 
         mockMvc.perform(delete("/api/reviews/{reviewId}", testReview.getId()))
                 .andDo(print())
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true));
     }
 
     @Test

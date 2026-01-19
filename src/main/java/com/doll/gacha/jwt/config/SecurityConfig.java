@@ -87,8 +87,8 @@ public class SecurityConfig {
                     "/css/**", "/js/**", "/images/**", "/favicon.ico", "/uploads/**",
                     // h2-console
                     "/h2-console/**",
-                    // 페이지 URL (CSR이므로 페이지 자체는 모두 허용)
-                    "/", "/map", "/login", "/signup", "/community/**", "/doll/**", "/doll-shop/**",  "/review/**",
+                    // 페이지 URL (CSR이므로 페이지 자체는 모두 허용 - API에서 인증 체크)
+                    "/", "/map", "/login", "/signup", "/mypage", "/community/**", "/doll/**", "/doll-shop/**",  "/review/**",
                     // 인증 관련 API
                     "/api/login", "/api/join", "/api/refresh/reissue",
                     // OAuth2
@@ -176,22 +176,37 @@ public class SecurityConfig {
        
         http
             .exceptionHandling(ex -> ex
+                  // 여기는 인증된 api요청에 토큰 없이 접근하려고 할 때
+                 //JwtLoginFilter는 로그인 시도하려고 할 때.. 즉 id pw입력한거 비교할 때
                 .authenticationEntryPoint((request, response, authException) -> {
-                    // 클라이언트 유형(웹/앱)에 관계없이 항상 JSON으로 에러 응답을 보냅니다.
-                    // 클라이언트 측에서 이 응답을 받고 로그인 페이지로 리디렉션할지 결정해야 합니다.
+                    // ErrorResponse 형식으로 통일된 응답
                     response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                     response.setContentType("application/json;charset=UTF-8");
 
-                    String errorCause = request.getAttribute("ERROR_CAUSE") != null ? (String) request.getAttribute("ERROR_CAUSE") : "NOT_AUTHENTICATED";
-                    String errorMessage = "인증이 필요합니다.";
+                    String errorCause = request.getAttribute("ERROR_CAUSE") != null
+                        ? (String) request.getAttribute("ERROR_CAUSE")
+                        : "NOT_AUTHENTICATED";
+
+                    String errorMessage;
+                    String errorCode;
 
                     if ("토큰만료".equals(errorCause)) {
-                        errorMessage = "Access Token expired";
-                    } else if ("로그인실패".equals(errorCause)) {
-                        errorMessage = "아이디 또는 비밀번호가 일치하지 않습니다.";
+                        errorMessage = "Access Token이 만료되었습니다. 토큰을 재발급해주세요.";
+                        errorCode = "TOKEN_EXPIRED";
+                    } else if ("잘못된토큰".equals(errorCause)) {
+                        errorMessage = "유효하지 않은 토큰입니다.";
+                        errorCode = "INVALID_TOKEN";
+                    } else {
+                        errorMessage = "인증이 필요합니다.";
+                        errorCode = "NOT_AUTHENTICATED";
                     }
 
-                    response.getWriter().write(String.format("{\"error\": \"%s\", \"cause\": \"%s\"}", errorMessage, errorCause));
+                    // ErrorResponse 형식으로 응답
+                    String jsonResponse = String.format(
+                        "{\"success\":false,\"message\":\"%s\",\"errorCode\":\"%s\",\"timestamp\":\"%s\"}",
+                        errorMessage, errorCode, java.time.LocalDateTime.now()
+                    );
+                    response.getWriter().write(jsonResponse);
                 })
             );
         return http.build();

@@ -317,14 +317,15 @@
 
         // 로그인 상태 확인 (API 호출로 정확하게 체크)
         function checkLoginStatus() {
-            fetch('/api/my/info')
+            authFetch('/api/my/info')
                 .then(response => {
                     if (response.ok) {
                         return response.json();
                     }
                     throw new Error('Not logged in');
                 })
-                .then(userInfo => {
+                .then(result => {
+                    const userInfo = result.data; // ApiResponse에서 data 추출
                     console.log('✅ 로그인 상태: true, 사용자:', userInfo.nickname);
                     // 글쓰기 버튼 표시
                     const writeBtn = document.getElementById('writeButtonContainer');
@@ -361,12 +362,13 @@
                 console.log('📡 응답 상태:', response.status, response.statusText);
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ API 오류 응답:', errorText);
-                    throw new Error(`API 오류: ${response.status} ${response.statusText}`);
+                    const error = await handleApiError(response);
+                    console.error('❌ API 오류 응답:', error);
+                    throw error;
                 }
 
-                const data = await response.json();
+                const result = await response.json();
+                const data = result.data; // ApiResponse에서 data 추출
                 console.log('✅ 받은 데이터:', data);
                 console.log('📊 데이터 구조:', {
                     hasContent: !!data.content,
@@ -374,7 +376,7 @@
                     contentLength: data.content?.length,
                     totalElements: data.totalElements,
                     totalPages: data.totalPages,
-                    number: data.number
+                    page: data.page
                 });
 
                 renderPostList(data.content);
@@ -383,10 +385,11 @@
                 showLoading(false);
             } catch (error) {
                 console.error('❌ 에러 발생:', error);
-                console.error('❌ 에러 타입:', error.constructor.name);
-                console.error('❌ 에러 메시지:', error.message);
-                console.error('❌ 에러 스택:', error.stack);
                 showLoading(false);
+                // 에러 메시지가 있으면 표시
+                if (error.message && error.status !== 200) {
+                    // 조회 실패 시 빈 상태로 표시 (alert은 너무 공격적)
+                }
                 // 실패 시 빈 상태로 표시
                 renderPostList([]);
             }
@@ -450,7 +453,7 @@
         function renderPagination(data) {
             const pagination = document.getElementById('pagination');
             const totalPages = data.totalPages;
-            const currentPage = data.number;
+            const currentPage = data.page;
 
             if (totalPages <= 1) {
                 pagination.style.display = 'none';

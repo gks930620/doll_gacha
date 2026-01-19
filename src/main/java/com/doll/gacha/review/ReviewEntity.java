@@ -85,7 +85,7 @@ public class ReviewEntity {
      */
     public void softDelete() {
         if (this.isDeleted) {
-            throw new IllegalStateException("이미 삭제된 리뷰입니다.");
+            throw com.doll.gacha.common.exception.DuplicateResourceException.alreadyDeleted("리뷰");
         }
         this.isDeleted = true;
     }

@@ -1,5 +1,8 @@
 package com.doll.gacha.review;
 
+import com.doll.gacha.common.exception.AccessDeniedException;
+import com.doll.gacha.common.exception.BusinessRuleException;
+import com.doll.gacha.common.exception.EntityNotFoundException;
 import com.doll.gacha.dollshop.DollShop;
 import com.doll.gacha.dollshop.repositroy.DollShopRepository;
 import com.doll.gacha.jwt.entity.UserEntity;
@@ -54,11 +57,11 @@ public class ReviewService {
     public ReviewDTO createReview(String username, ReviewCreateDTO createDTO, LocalDateTime now) {
         // 사용자 조회
         UserEntity user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> EntityNotFoundException.of("사용자", username));
 
         // 가게 조회
         DollShop dollShop = dollShopRepository.findById(createDTO.getDollShopId())
-                .orElseThrow(() -> new IllegalArgumentException("가게를 찾을 수 없습니다: " + createDTO.getDollShopId()));
+                .orElseThrow(() -> EntityNotFoundException.of("가게", createDTO.getDollShopId()));
 
         // 하루에 한 번만 작성 가능 체크
         LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
@@ -66,7 +69,7 @@ public class ReviewService {
 
         if (reviewRepository.existsByUser_IdAndDollShop_IdAndCreatedAtBetweenAndIsDeletedFalse(
                 user.getId(), dollShop.getId(), startOfDay, endOfDay)) {
-            throw new IllegalArgumentException("해당 가게에 대한 리뷰는 하루에 한 번만 작성할 수 있습니다.");
+            throw new BusinessRuleException("해당 가게에 대한 리뷰는 하루에 한 번만 작성할 수 있습니다.");
         }
 
         // DTO -> Entity 변환 및 저장 (시간 주입)
@@ -83,7 +86,7 @@ public class ReviewService {
         ReviewEntity review = findReviewByIdAndValidateUser(reviewId, username);
 
         if (review.getIsDeleted()) {
-            throw new IllegalArgumentException("삭제된 리뷰는 수정할 수 없습니다.");
+            throw new BusinessRuleException("삭제된 리뷰는 수정할 수 없습니다.");
         }
 
         updateDTO.updateEntity(review);
@@ -104,10 +107,10 @@ public class ReviewService {
      */
     private ReviewEntity findReviewByIdAndValidateUser(Long reviewId, String username) {
         ReviewEntity review = reviewRepository.findById(reviewId)
-                .orElseThrow(() -> new IllegalArgumentException("리뷰를 찾을 수 없습니다: " + reviewId));
+                .orElseThrow(() -> EntityNotFoundException.of("리뷰", reviewId));
 
         if (!review.isWrittenBy(username)) {
-            throw new IllegalArgumentException("본인의 리뷰만 삭제할 수 있습니다.");
+            throw AccessDeniedException.forDelete("리뷰");
         }
 
         return review;

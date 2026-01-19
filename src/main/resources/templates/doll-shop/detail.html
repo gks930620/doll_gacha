@@ -623,7 +623,7 @@
 
             // HttpOnly 쿠키는 JavaScript로 접근 불가능하므로
             // 서버에서 로그인 상태를 확인하는 API 호출
-            fetch('/api/my/info', {
+            authFetch('/api/my/info', {
                 credentials: 'include' // 쿠키를 함께 전송
             })
             .then(res => {
@@ -632,7 +632,8 @@
                 }
                 throw new Error('Not logged in');
             })
-            .then(userInfo => {
+            .then(result => {
+                const userInfo = result.data; // ApiResponse에서 data 추출
                 isLoggedIn = true;
                 currentUserId = userInfo.id; // 사용자 ID 저장
                 console.log('✅ 로그인 상태: true, 사용자 ID:', currentUserId);
@@ -667,12 +668,13 @@
             fetch(`/api/doll-shops/${shopId}`)
                 .then(async res => {
                     if(!res.ok) {
-                        const errorText = await res.text();
-                        throw new Error(`Server Error: ${res.status} - ${errorText}`);
+                        const error = await handleApiError(res);
+                        throw error;
                     }
                     return res.json();
                 })
-                .then(shop => {
+                .then(result => {
+                    const shop = result.data; // ApiResponse에서 data 추출
                     console.log('Shop details loaded:', shop);
                     document.getElementById('shopName').textContent = shop.businessName;
                     document.getElementById('shopAddress').textContent = shop.address;
@@ -685,7 +687,7 @@
                 })
                 .catch(err => {
                     console.error('가게 정보 로드 실패:', err);
-                    alert('가게 정보를 불러오는데 실패했습니다: ' + err.message);
+                    showApiError(err, { redirectOnUnauthorized: false });
                 });
 
             // Fetch Reviews
@@ -700,6 +702,7 @@
             fetch(`/api/files?refId=${shopId}&refType=DOLL_SHOP&usage=THUMBNAIL`)
                 .then(res => res.json())
                 .then(images => {
+                    // FileController는 List<String>을 직접 반환 (ApiResponse 아님)
                     console.log('매장 이미지 로드:', images);
                     if (images && images.length > 0) {
                         const mainImageDiv = document.querySelector('.main-image');
@@ -715,7 +718,8 @@
         function fetchReviewStats() {
             fetch(`/api/reviews/doll-shop/${shopId}/stats`)
                 .then(res => res.json())
-                .then(stats => {
+                .then(result => {
+                    const stats = result.data; // ApiResponse에서 data 추출
                     console.log('리뷰 통계 로드:', stats);
 
                     // 총 리뷰 수
@@ -756,11 +760,12 @@
         function fetchReviews(page = 0) {
             fetch(`/api/reviews/doll-shop/${shopId}?page=${page}&size=${pageSize}`)
                 .then(res => res.json())
-                .then(data => {
+                .then(result => {
+                    const data = result.data; // ApiResponse에서 data 추출
                     const container = document.getElementById('reviewsContainer');
                     const paginationContainer = document.getElementById('paginationContainer');
 
-                    // data는 Page 객체: { content: [], totalPages, totalElements, number, ... }
+                    // data는 PageResponse 객체: { content: [], page, size, totalPages, totalElements, first, last }
                     if (data.content.length === 0) {
                         container.innerHTML = '<p style="color:#757575; padding: 20px;">등록된 리뷰가 없습니다.</p>';
                         paginationContainer.innerHTML = '';
@@ -815,7 +820,7 @@
         function renderPagination(pageData) {
             const container = document.getElementById('paginationContainer');
             const totalPages = pageData.totalPages;
-            const currentPageNum = pageData.number;
+            const currentPageNum = pageData.page;
 
             if (totalPages <= 1) {
                 container.innerHTML = '';
@@ -1007,7 +1012,7 @@
             console.log('리뷰 제출:', reviewData);
 
             // HttpOnly 쿠키는 자동으로 전송되므로 credentials: 'include' 사용
-            fetch('/api/reviews', {
+            authFetch('/api/reviews', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -1016,18 +1021,15 @@
                 body: JSON.stringify(reviewData)
             })
             .then(async res => {
-                if (res.status === 401 || res.status === 403) {
-                     alert('로그인이 필요합니다.');
-                     window.location.href = '/login';
-                     return;
-                }
                 if (!res.ok) {
-                    const text = await res.text();
-                    throw new Error(text);
+                    const error = await handleApiError(res);
+                    showApiError(error);
+                    throw error; // catch로 전달
                 }
                 return res.json();
             })
-            .then(data => {
+            .then(result => {
+                const data = result ? result.data : null; // ApiResponse에서 data 추출
                 if (data && data.id) {
                     console.log('리뷰 등록 성공:', data);
 
@@ -1045,9 +1047,8 @@
                 }
             })
             .catch(err => {
-                if (err) {
-                    alert('리뷰 등록 실패: ' + err.message);
-                }
+                console.error('리뷰 등록 에러:', err);
+                // showApiError에서 이미 처리했으므로 추가 alert 불필요
             });
         });
 
@@ -1065,7 +1066,7 @@
             fileFormData.append('refType', 'REVIEW');
             fileFormData.append('usage', 'IMAGES');
 
-            fetch('/api/files/upload', {
+            authFetch('/api/files/upload', {
                 method: 'POST',
                 credentials: 'include',
                 body: fileFormData // multipart/form-data는 자동 설정
@@ -1097,26 +1098,27 @@
                 return;
             }
 
-            fetch(`/api/reviews/${reviewId}`, {
+            authFetch(`/api/reviews/${reviewId}`, {
                 method: 'DELETE',
                 credentials: 'include'
             })
-            .then(res => {
+            .then(async res => {
                 if (res.ok) {
                     alert('리뷰가 삭제되었습니다.');
                     fetchReviews(currentPage); // 현재 페이지 새로고침
-                } else if (res.status === 401) {
-                    alert('로그인이 필요합니다.');
-                    window.location.href = '/login';
-                } else if (res.status === 400) {
-                    alert('리뷰 삭제에 실패했습니다. (본인의 리뷰만 삭제 가능)');
+                    fetchReviewStats(); // 통계도 새로고침
                 } else {
-                    alert('리뷰 삭제에 실패했습니다.');
+                    const error = await handleApiError(res);
+                    showApiError(error);
                 }
             })
             .catch(err => {
                 console.error('리뷰 삭제 오류:', err);
-                alert('리뷰 삭제 중 오류가 발생했습니다.');
+                if (err.message) {
+                    alert(err.message);
+                } else {
+                    alert('리뷰 삭제 중 오류가 발생했습니다.');
+                }
             });
         }
 

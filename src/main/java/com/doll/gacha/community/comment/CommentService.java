@@ -1,5 +1,7 @@
 package com.doll.gacha.community.comment;
 
+import com.doll.gacha.common.exception.AccessDeniedException;
+import com.doll.gacha.common.exception.EntityNotFoundException;
 import com.doll.gacha.community.CommunityEntity;
 import com.doll.gacha.community.comment.dto.CommentCreateDTO;
 import com.doll.gacha.community.comment.dto.CommentDTO;
@@ -37,10 +39,10 @@ public class CommentService {
     @Transactional
     public CommentDTO createComment(CommentCreateDTO createDTO, String username) {
         CommunityEntity community = communityRepository.findById(createDTO.getCommunityId())
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+                .orElseThrow(() -> EntityNotFoundException.of("게시글", createDTO.getCommunityId()));
 
         UserEntity user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> EntityNotFoundException.of("사용자", username));
 
         CommentEntity comment = createDTO.toEntity(community, user);
 
@@ -71,10 +73,10 @@ public class CommentService {
      */
     private CommentEntity findCommentByIdAndValidateUser(Long commentId, String username) {
         CommentEntity comment = commentRepository.findById(commentId)
-                .orElseThrow(() -> new IllegalArgumentException("댓글을 찾을 수 없습니다."));
+                .orElseThrow(() -> EntityNotFoundException.of("댓글", commentId));
 
         if (!comment.isWrittenBy(username)) {
-            throw new IllegalArgumentException("권한이 없습니다.");
+            throw AccessDeniedException.forUpdate("댓글");
         }
 
         return comment;

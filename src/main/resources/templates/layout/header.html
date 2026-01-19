@@ -224,24 +224,29 @@
                 </a>
             </nav>
 
-            <div class="user-menu" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-                <!-- 로그인 전 -->
-                <a href="/login" class="login-btn" sec:authorize="!isAuthenticated()">
+            <div class="user-menu" id="userMenu">
+                <!-- 로그인 전 (기본값 - JavaScript로 업데이트됨) -->
+                <a href="/login" class="login-btn" id="loginBtn" style="display: none;">
                     <span class="material-icons">login</span>
                     <span>로그인</span>
                 </a>
 
-                <!-- 로그인 후 -->
-                <div sec:authorize="isAuthenticated()" style="display: flex; align-items: center; gap: 8px;">
+                <!-- 로그인 후 (JavaScript로 업데이트됨) -->
+                <div id="loggedInMenu" style="display: none; align-items: center; gap: 8px;">
                     <a href="/mypage" class="nav-item">
                         <span class="material-icons">person</span>
                         <span>마이페이지</span>
                     </a>
                     <div class="user-info">
                         <span class="material-icons">account_circle</span>
-                        <span sec:authentication="principal.userDTO.nickname"></span>
+                        <span id="headerNickname"></span>
                     </div>
                     <button type="button" class="logout-btn" onclick="handleLogout()">로그아웃</button>
+                </div>
+
+                <!-- 로딩 중 (초기 상태) -->
+                <div id="authLoading" style="display: flex; align-items: center; color: rgba(255,255,255,0.7); font-size: 14px;">
+                    <span>...</span>
                 </div>
             </div>
 
@@ -252,6 +257,323 @@
     </header>
 
     <script th:fragment="headerScript">
+        // ========== 헤더 로그인 상태 업데이트 ==========
+
+        /**
+         * 헤더의 로그인 상태를 업데이트
+         */
+        let headerLoginStatusUpdated = false; // 중복 업데이트 방지 플래그
+
+        function updateHeaderLoginStatus(isLoggedIn, nickname = '') {
+            const loginBtn = document.getElementById('loginBtn');
+            const loggedInMenu = document.getElementById('loggedInMenu');
+            const authLoading = document.getElementById('authLoading');
+            const headerNickname = document.getElementById('headerNickname');
+
+            if (authLoading) authLoading.style.display = 'none';
+
+            if (isLoggedIn) {
+                if (loginBtn) loginBtn.style.display = 'none';
+                if (loggedInMenu) loggedInMenu.style.display = 'flex';
+                if (headerNickname) headerNickname.textContent = nickname;
+            } else {
+                if (loginBtn) loginBtn.style.display = 'flex';
+                if (loggedInMenu) loggedInMenu.style.display = 'none';
+            }
+
+            headerLoginStatusUpdated = true;
+        }
+
+        /**
+         * 헤더 로그인 상태 체크 (페이지 로드 시 자동 실행)
+         */
+        async function checkHeaderLoginStatus() {
+            // 이미 다른 곳에서 업데이트했으면 스킵
+            if (headerLoginStatusUpdated) return;
+
+            try {
+                const response = await authFetch('/api/my/info', { credentials: 'include' });
+                if (response && response.ok) {
+                    const result = await response.json();
+                    updateHeaderLoginStatus(true, result.data.nickname);
+                } else {
+                    updateHeaderLoginStatus(false);
+                }
+            } catch (e) {
+                updateHeaderLoginStatus(false);
+            }
+        }
+
+        // ========== 토큰 재발급 관련 ==========
+        let isRefreshing = false; // 토큰 재발급 중인지 여부
+        let refreshSubscribers = []; // 재발급 대기 중인 요청들
+
+        /**
+         * 토큰 재발급 완료 후 대기 중인 요청들 처리
+         */
+        function onTokenRefreshed() {
+            refreshSubscribers.forEach(callback => callback());
+            refreshSubscribers = [];
+        }
+
+        /**
+         * 토큰 재발급 실패 시 대기 중인 요청들 처리
+         */
+        function onTokenRefreshFailed() {
+            refreshSubscribers = [];
+        }
+
+        /**
+         * 토큰 재발급 시도
+         * @returns {Promise<boolean>} 성공 여부
+         */
+        async function tryRefreshToken() {
+            try {
+                console.log('🔄 토큰 재발급 시도...');
+
+                const response = await fetch('/api/refresh/reissue', {
+                    method: 'POST',
+                    credentials: 'include' // 쿠키 포함 (refresh_token)
+                });
+
+                console.log('📡 재발급 응답 상태:', response.status);
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log('✅ 토큰 재발급 성공:', result);
+                    return true;
+                } else {
+                    const error = await response.json();
+                    console.log('❌ 토큰 재발급 실패:', error.errorCode, error.message);
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ 토큰 재발급 에러:', error);
+                return false;
+            }
+        }
+
+        // ========== 공통 API 에러 처리 유틸리티 ==========
+
+        /**
+         * API 에러 응답 처리
+         * @param {Response} response - fetch 응답 객체
+         * @returns {Promise<Object>} 에러 정보 객체
+         */
+        async function handleApiError(response) {
+            try {
+                const errorData = await response.json();
+                return {
+                    status: response.status,
+                    message: errorData.message || '오류가 발생했습니다.',
+                    errorCode: errorData.errorCode || 'UNKNOWN_ERROR',
+                    errors: errorData.errors || null
+                };
+            } catch (e) {
+                return {
+                    status: response.status,
+                    message: getDefaultErrorMessage(response.status),
+                    errorCode: 'UNKNOWN_ERROR',
+                    errors: null
+                };
+            }
+        }
+
+        /**
+         * HTTP 상태 코드별 기본 에러 메시지
+         */
+        function getDefaultErrorMessage(status) {
+            switch (status) {
+                case 400: return '잘못된 요청입니다.';
+                case 401: return '로그인이 필요합니다.';
+                case 403: return '권한이 없습니다.';
+                case 404: return '요청한 리소스를 찾을 수 없습니다.';
+                case 409: return '이미 처리된 요청입니다.';
+                case 500: return '서버 오류가 발생했습니다.';
+                default: return '오류가 발생했습니다.';
+            }
+        }
+
+        /**
+         * 에러 메시지 표시 및 리다이렉트 처리
+         * @param {Object} error - 에러 정보 객체
+         * @param {Object} options - 옵션 (redirect: boolean)
+         */
+        function showApiError(error, options = {}) {
+            // 401인 경우 로그인 페이지로 리다이렉트
+            if (error.status === 401 && options.redirectOnUnauthorized !== false) {
+                alert(error.message || '로그인이 필요합니다.');
+                window.location.href = '/login';
+                return;
+            }
+
+            // 유효성 검증 에러인 경우 상세 메시지 표시
+            if (error.errors && error.errors.length > 0) {
+                const errorMessages = error.errors.map(e => `${e.field}: ${e.message}`).join('\n');
+                alert(`${error.message}\n\n${errorMessages}`);
+                return;
+            }
+
+            // 일반 에러 메시지 표시
+            alert(error.message);
+        }
+
+        /**
+         * API 호출 래퍼 함수 (토큰 만료 시 자동 재발급 + 재시도)
+         * @param {string} url - API URL
+         * @param {Object} options - fetch 옵션
+         * @returns {Promise<Object>} API 응답
+         */
+        async function callApi(url, options = {}) {
+            const defaultOptions = {
+                credentials: 'include',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            };
+
+            const mergedOptions = { ...defaultOptions, ...options };
+
+            let response = await fetch(url, mergedOptions);
+
+            // 401 에러이고 TOKEN_EXPIRED인 경우 토큰 재발급 시도
+            if (response.status === 401) {
+                const clonedResponse = response.clone();
+                try {
+                    const errorData = await clonedResponse.json();
+
+                    if (errorData.errorCode === 'TOKEN_EXPIRED') {
+                        console.log('🔑 Access Token 만료 - 재발급 시도');
+
+                        // 이미 재발급 중이면 대기
+                        if (isRefreshing) {
+                            return new Promise((resolve, reject) => {
+                                refreshSubscribers.push(async () => {
+                                    try {
+                                        const retryResponse = await fetch(url, mergedOptions);
+                                        if (!retryResponse.ok) {
+                                            const error = await handleApiError(retryResponse);
+                                            reject(error);
+                                        } else {
+                                            resolve(await retryResponse.json());
+                                        }
+                                    } catch (e) {
+                                        reject(e);
+                                    }
+                                });
+                            });
+                        }
+
+                        isRefreshing = true;
+
+                        const refreshSuccess = await tryRefreshToken();
+
+                        isRefreshing = false;
+
+                        if (refreshSuccess) {
+                            // 재발급 성공 - 대기 중인 요청들 처리
+                            onTokenRefreshed();
+
+                            // 원래 요청 재시도
+                            console.log('🔄 원래 요청 재시도:', url);
+                            response = await fetch(url, mergedOptions);
+                        } else {
+                            // 재발급 실패 - 로그인 페이지로
+                            onTokenRefreshFailed();
+                            alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+                            window.location.href = '/login';
+                            throw { status: 401, message: '세션 만료', errorCode: 'SESSION_EXPIRED' };
+                        }
+                    }
+                } catch (e) {
+                    // JSON 파싱 실패 시 원래 response 사용
+                    if (e.status) throw e; // 우리가 던진 에러면 다시 throw
+                }
+            }
+
+            if (!response.ok) {
+                const error = await handleApiError(response);
+                throw error;
+            }
+
+            // 204 No Content인 경우 빈 객체 반환
+            if (response.status === 204) {
+                return { success: true };
+            }
+
+            const result = await response.json();
+            return result;
+        }
+
+        /**
+         * 인증이 필요한 fetch 래퍼 (토큰 만료 시 자동 재발급)
+         * 기존 fetch를 대체하여 사용
+         */
+        async function authFetch(url, options = {}) {
+            const defaultOptions = {
+                credentials: 'include'
+            };
+
+            const mergedOptions = { ...defaultOptions, ...options };
+
+            console.log('🌐 authFetch 요청:', url);
+            let response = await fetch(url, mergedOptions);
+            console.log('📡 authFetch 응답:', response.status);
+
+            // 401 에러이고 TOKEN_EXPIRED인 경우 토큰 재발급 시도
+            if (response.status === 401) {
+                const clonedResponse = response.clone();
+                try {
+                    const errorData = await clonedResponse.json();
+                    console.log('🔍 401 에러 상세:', errorData);
+
+                    if (errorData.errorCode === 'TOKEN_EXPIRED') {
+                        console.log('🔑 Access Token 만료 - 재발급 시도');
+
+                        if (!isRefreshing) {
+                            isRefreshing = true;
+                            const refreshSuccess = await tryRefreshToken();
+                            isRefreshing = false;
+
+                            if (refreshSuccess) {
+                                onTokenRefreshed();
+                                // 쿠키가 적용될 시간을 약간 줌
+                                await new Promise(resolve => setTimeout(resolve, 50));
+                                // 원래 요청 재시도
+                                console.log('🔄 원래 요청 재시도:', url);
+                                const retryResponse = await fetch(url, mergedOptions);
+                                console.log('📡 재시도 응답:', retryResponse.status);
+                                return retryResponse;
+                            } else {
+                                // 재발급 실패 - 원래 응답 반환 (호출자가 처리)
+                                onTokenRefreshFailed();
+                                console.log('❌ 재발급 실패 - 원래 401 응답 반환');
+                                return response;
+                            }
+                        } else {
+                            // 이미 재발급 중이면 대기
+                            console.log('⏳ 이미 재발급 중 - 대기');
+                            return new Promise((resolve) => {
+                                refreshSubscribers.push(async () => {
+                                    await new Promise(r => setTimeout(r, 50));
+                                    resolve(await fetch(url, mergedOptions));
+                                });
+                            });
+                        }
+                    } else {
+                        console.log('🚫 TOKEN_EXPIRED가 아님, 그냥 401:', errorData.errorCode);
+                    }
+                } catch (e) {
+                    console.log('⚠️ JSON 파싱 실패, 원래 response 반환');
+                }
+            }
+
+            return response;
+        }
+
+        // ========== 기존 코드 ==========
+
         // Set active nav item based on current path
         function setActiveNavItem() {
             const currentPath = window.location.pathname;
@@ -298,9 +620,17 @@
             }
         }
 
-        // 페이지 로드시 active 메뉴 설정
+        // 페이지 로드시 active 메뉴 설정 및 헤더 로그인 상태 체크
         document.addEventListener('DOMContentLoaded', () => {
             setActiveNavItem();
+
+            // 로그인/회원가입 페이지가 아닌 경우에만 로그인 상태 체크
+            if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+                checkHeaderLoginStatus();
+            } else {
+                // 로그인/회원가입 페이지에서는 로그인 버튼 표시
+                updateHeaderLoginStatus(false);
+            }
         });
     </script>
 

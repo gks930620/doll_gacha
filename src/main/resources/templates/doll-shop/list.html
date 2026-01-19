@@ -489,24 +489,26 @@
         console.log('Fetching shops:', apiUrl);
 
         fetch(apiUrl)
-            .then(res => {
+            .then(async res => {
                 if (!res.ok) {
-                    throw new Error(`HTTP error! status: ${res.status}`);
+                    const error = await handleApiError(res);
+                    throw error;
                 }
                 return res.json();
             })
-            .then(data => {
+            .then(result => {
+                const data = result.data; // ApiResponse에서 data 추출
                 console.log('Shops loaded:', data);
                 renderShops(data);
                 renderPagination(data);
             })
             .catch(err => {
                 console.error('매장 목록 로드 실패:', err);
+                const errorMessage = err.message || '매장 목록을 불러오는데 실패했습니다.';
                 document.getElementById('shopList').innerHTML = `
                     <div class="empty-state">
                         <div class="material-icons">error_outline</div>
-                        <div>매장 목록을 불러오는데 실패했습니다.</div>
-                        <div style="font-size: 12px; color: #999; margin-top: 8px;">${err.message}</div>
+                        <div>${errorMessage}</div>
                     </div>
                 `;
             });
@@ -611,7 +613,7 @@
     function renderPagination(pageData) {
         const container = document.getElementById('paginationContainer');
         const totalPages = pageData.totalPages;
-        const currentPageNum = pageData.number;
+        const currentPageNum = pageData.page;
 
         if (totalPages <= 1) {
             container.innerHTML = '';

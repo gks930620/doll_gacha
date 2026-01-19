@@ -1,6 +1,6 @@
 package com.doll.gacha.jwt.controller;
 
-import com.doll.gacha.jwt.entity.UserEntity;
+import com.doll.gacha.common.dto.ApiResponse;
 import com.doll.gacha.jwt.model.CustomUserAccount;
 import com.doll.gacha.jwt.model.UserDTO;
 import java.util.HashMap;
@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     @GetMapping("/info")
-    public ResponseEntity<Map<String, Object>> getMyInfo(@AuthenticationPrincipal CustomUserAccount customUserAccount) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getMyInfo(@AuthenticationPrincipal CustomUserAccount customUserAccount) {
         if (customUserAccount == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "인증이 필요합니다."));
+            return ResponseEntity.status(401).body(null);
         }
 
         UserDTO userDTO = customUserAccount.getUserDTO();
@@ -33,7 +33,7 @@ public class UserController {
         userInfo.put("provider", userDTO.getProvider());
         userInfo.put("roles", userDTO.getRoles());
 
-        return ResponseEntity.ok(userInfo);
+        return ResponseEntity.ok(ApiResponse.success("내 정보 조회 성공", userInfo));
     }
 }
 

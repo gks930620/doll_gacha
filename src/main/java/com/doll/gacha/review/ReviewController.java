@@ -1,5 +1,7 @@
 package com.doll.gacha.review;
 
+import com.doll.gacha.common.dto.ApiResponse;
+import com.doll.gacha.common.dto.PageResponse;
 import com.doll.gacha.jwt.model.CustomUserAccount;
 import com.doll.gacha.review.dto.ReviewCreateDTO;
 import com.doll.gacha.review.dto.ReviewDTO;
@@ -33,11 +35,11 @@ public class ReviewController {
      * @return 페이징된 리뷰 목록
      */
     @GetMapping("/doll-shop/{dollShopId}")
-    public ResponseEntity<Page<ReviewDTO>> getShopReviews(
+    public ResponseEntity<ApiResponse<PageResponse<ReviewDTO>>> getShopReviews(
             @PathVariable Long dollShopId,
             Pageable pageable) {
         Page<ReviewDTO> reviews = reviewService.getReviewsByDollShopIdPaged(dollShopId, pageable);
-        return ResponseEntity.ok(reviews);
+        return ResponseEntity.ok(ApiResponse.success("리뷰 목록 조회 성공", PageResponse.from(reviews)));
     }
 
     /**
@@ -46,9 +48,9 @@ public class ReviewController {
      * @return 리뷰 통계 (평균 별점, 기계 힘, 비용 등)
      */
     @GetMapping("/doll-shop/{dollShopId}/stats")
-    public ResponseEntity<ReviewStatsDTO> getShopReviewStats(@PathVariable Long dollShopId) {
+    public ResponseEntity<ApiResponse<ReviewStatsDTO>> getShopReviewStats(@PathVariable Long dollShopId) {
         ReviewStatsDTO stats = reviewService.getReviewStats(dollShopId);
-        return ResponseEntity.ok(stats);
+        return ResponseEntity.ok(ApiResponse.success("리뷰 통계 조회 성공", stats));
     }
 
     /**
@@ -60,25 +62,25 @@ public class ReviewController {
      * @return 생성된 리뷰 정보
      */
     @PostMapping
-    public ResponseEntity<ReviewDTO> createReview(
+    public ResponseEntity<ApiResponse<ReviewDTO>> createReview(
             @Valid @RequestBody ReviewCreateDTO createDTO,
             @AuthenticationPrincipal CustomUserAccount userAccount) {
         String username = userAccount.getUsername();
         ReviewDTO createdReview = reviewService.createReview(username, createDTO, LocalDateTime.now());
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdReview);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("리뷰가 작성되었습니다", createdReview));
     }
 
     /**
      * 리뷰 수정 (인증 필요)
      */
     @PutMapping("/{reviewId}")
-    public ResponseEntity<ReviewDTO> updateReview(
+    public ResponseEntity<ApiResponse<ReviewDTO>> updateReview(
             @PathVariable Long reviewId,
             @Valid @RequestBody ReviewUpdateDTO updateDTO,
             @AuthenticationPrincipal CustomUserAccount userAccount) {
         String username = userAccount.getUsername();
         ReviewDTO updatedReview = reviewService.updateReview(reviewId, username, updateDTO);
-        return ResponseEntity.ok(updatedReview);
+        return ResponseEntity.ok(ApiResponse.success("리뷰가 수정되었습니다", updatedReview));
     }
 
     /**
@@ -87,14 +89,14 @@ public class ReviewController {
      *
      * @param reviewId 삭제할 리뷰 ID
      * @param userAccount 현재 로그인한 사용자 정보 (Spring Security가 자동 주입)
-     * @return 삭제 성공 응답 (204 No Content)
+     * @return 삭제 성공 응답
      */
     @DeleteMapping("/{reviewId}")
-    public ResponseEntity<Void> deleteReview(
+    public ResponseEntity<ApiResponse<Void>> deleteReview(
             @PathVariable Long reviewId,
             @AuthenticationPrincipal CustomUserAccount userAccount) {
         String username = userAccount.getUsername();
         reviewService.deleteReview(reviewId, username);
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(ApiResponse.success("리뷰가 삭제되었습니다"));
     }
 }

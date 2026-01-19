@@ -1,5 +1,6 @@
 package com.doll.gacha.common.controller;
 
+import com.doll.gacha.common.dto.ApiResponse;
 import com.doll.gacha.common.entity.FileEntity;
 import com.doll.gacha.common.service.FileService;
 import com.doll.gacha.common.util.FileUtil;
@@ -85,7 +86,7 @@ public class FileController {
      * @return 업로드된 파일 경로 리스트
      */
     @PostMapping("/api/files/upload")
-    public ResponseEntity<List<String>> uploadFiles(
+    public ResponseEntity<ApiResponse<List<String>>> uploadFiles(
             @RequestParam("files") List<MultipartFile> files,
             @RequestParam Long refId,
             @RequestParam FileEntity.RefType refType,
@@ -105,7 +106,7 @@ public class FileController {
 
             log.info("파일 업로드 완료 - refId: {}, refType: {}, 파일 수: {}", refId, refType, savedPaths.size());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(savedPaths);
+            return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success("파일 업로드 성공", savedPaths));
 
         } catch (IllegalArgumentException e) {
             log.error("잘못된 파라미터: {}", e.getMessage());
@@ -161,14 +162,14 @@ public class FileController {
     /**
      * 파일 삭제 API
      * @param fileId 삭제할 파일 ID
-     * @return 성공 시 204 No Content
+     * @return 성공 시 삭제 완료 메시지
      */
     @DeleteMapping("/api/files/{fileId}")
-    public ResponseEntity<Void> deleteFile(@PathVariable Long fileId) {
+    public ResponseEntity<ApiResponse<Void>> deleteFile(@PathVariable Long fileId) {
         try {
             log.info("파일 삭제 요청: fileId={}", fileId);
             fileService.deleteFile(fileId);
-            return ResponseEntity.noContent().build();
+            return ResponseEntity.ok(ApiResponse.success("파일이 삭제되었습니다"));
         } catch (IllegalArgumentException e) {
             log.error("파일 삭제 실패: {}", e.getMessage());
             return ResponseEntity.notFound().build();

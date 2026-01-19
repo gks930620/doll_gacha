@@ -415,16 +415,16 @@
 
         // 로그인 상태 확인
         function checkLoginStatus() {
-            fetch('/api/my/info')
+            authFetch('/api/my/info')
                 .then(response => {
                     if (response.ok) {
                         return response.json();
                     }
                     throw new Error('Not logged in');
                 })
-                .then(userInfo => {
-                    currentUser = userInfo;
-                    console.log('✅ 로그인 상태:', userInfo.nickname);
+                .then(result => {
+                    currentUser = result.data; // ApiResponse에서 data 추출
+                    console.log('✅ 로그인 상태:', currentUser.nickname);
                     // 로그인했으면 댓글 작성 폼 표시
                     document.getElementById('commentWriteBox').style.display = 'block';
                 })
@@ -445,10 +445,15 @@
                     throw new Error('게시글을 불러오는데 실패했습니다.');
                 }
 
-                const data = await response.json();
-                console.log('✅ 게시글 데이터:', data);
+                const result = await response.json();
+                console.log('✅ 게시글 데이터:', result);
 
-                renderCommunityDetail(data);
+                // ApiResponse 형식: { success, message, data }
+                if (!result.success) {
+                    throw new Error(result.message || '게시글을 불러오는데 실패했습니다.');
+                }
+
+                renderCommunityDetail(result.data);
                 showLoading(false);
 
             } catch (error) {
@@ -548,16 +553,17 @@
             }
 
             try {
-                // 1. 현재 게시글의 첨부파일 목록 가져오기 (이미 로드된 데이터 사용)
+                // 1. 현재 게시글의 첨부파일 목록 가져오기
                 const response = await fetch(`/api/community/${currentCommunityId}`);
-                const data = await response.json();
+                const result = await response.json();
+                const data = result.data; // ApiResponse에서 data 추출
 
                 // 2. 첨부파일들 먼저 삭제
                 if (data.attachments && data.attachments.length > 0) {
                     console.log(`📎 첨부파일 ${data.attachments.length}개 삭제 중...`);
                     for (const file of data.attachments) {
                         try {
-                            await fetch(`/api/files/${file.fileId}`, {
+                            await authFetch(`/api/files/${file.fileId}`, {
                                 method: 'DELETE',
                                 credentials: 'include'
                             });
@@ -569,20 +575,25 @@
                 }
 
                 // 3. 게시글 삭제
-                const deleteResponse = await fetch(`/api/community/${currentCommunityId}`, {
+                const deleteResponse = await authFetch(`/api/community/${currentCommunityId}`, {
                     method: 'DELETE',
                     credentials: 'include'
                 });
 
-                if (deleteResponse.ok || deleteResponse.status === 204) {
+                if (deleteResponse.ok) {
                     alert('게시글이 삭제되었습니다.');
                     location.href = '/community';
                 } else {
-                    throw new Error('삭제 실패');
+                    const error = await handleApiError(deleteResponse);
+                    showApiError(error);
                 }
             } catch (error) {
                 console.error('❌ 삭제 에러:', error);
-                alert('게시글 삭제에 실패했습니다.');
+                if (error.message) {
+                    alert(error.message);
+                } else {
+                    alert('게시글 삭제에 실패했습니다.');
+                }
             }
         }
 
@@ -599,6 +610,7 @@
                     return;
                 }
 
+                // FileController는 List<String>을 직접 반환 (ApiResponse 아님)
                 const files = await response.json();
                 console.log('✅ 첨부파일 데이터:', files);
 
@@ -643,7 +655,8 @@
                     throw new Error('댓글을 불러오는데 실패했습니다.');
                 }
 
-                const data = await response.json();
+                const result = await response.json();
+                const data = result.data; // ApiResponse에서 data 추출
                 console.log('✅ 댓글 데이터:', data);
 
                 // 댓글 개수 표시 (전체 개수)
@@ -726,7 +739,7 @@
             }
 
             try {
-                const response = await fetch('/api/comments', {
+                const response = await authFetch('/api/comments', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -739,19 +752,24 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('댓글 작성 실패');
+                    const error = await handleApiError(response);
+                    showApiError(error);
+                    return;
                 }
 
                 // 댓글 작성 성공
                 document.getElementById('commentContent').value = '';
 
                 // 첫 페이지로 이동 (최신 댓글을 보기 위해)
-                // 또는 마지막 페이지로 이동하려면 먼저 전체 개수를 조회해야 함
                 await loadComments(0); // 첫 페이지 로드
 
             } catch (error) {
                 console.error('❌ 댓글 작성 에러:', error);
-                alert('댓글 작성에 실패했습니다.');
+                if (error.message) {
+                    alert(error.message);
+                } else {
+                    alert('댓글 작성에 실패했습니다.');
+                }
             }
         }
 
@@ -778,7 +796,7 @@
         // 댓글 수정 API 호출
         async function updateComment(commentId, content) {
             try {
-                const response = await fetch(`/api/comments/${commentId}`, {
+                const response = await authFetch(`/api/comments/${commentId}`, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -790,14 +808,20 @@
                 });
 
                 if (!response.ok) {
-                    throw new Error('댓글 수정 실패');
+                    const error = await handleApiError(response);
+                    showApiError(error);
+                    return;
                 }
 
                 await loadComments(currentCommentPage); // 현재 페이지 다시 로드
 
             } catch (error) {
                 console.error('❌ 댓글 수정 에러:', error);
-                alert('댓글 수정에 실패했습니다.');
+                if (error.message) {
+                    alert(error.message);
+                } else {
+                    alert('댓글 수정에 실패했습니다.');
+                }
             }
         }
 
@@ -808,20 +832,26 @@
             }
 
             try {
-                const response = await fetch(`/api/comments/${commentId}`, {
+                const response = await authFetch(`/api/comments/${commentId}`, {
                     method: 'DELETE',
                     credentials: 'include'
                 });
 
-                if (!response.ok && response.status !== 204) {
-                    throw new Error('댓글 삭제 실패');
+                if (!response.ok) {
+                    const error = await handleApiError(response);
+                    showApiError(error);
+                    return;
                 }
 
                 await loadComments(currentCommentPage); // 현재 페이지 다시 로드
 
             } catch (error) {
                 console.error('❌ 댓글 삭제 에러:', error);
-                alert('댓글 삭제에 실패했습니다.');
+                if (error.message) {
+                    alert(error.message);
+                } else {
+                    alert('댓글 삭제에 실패했습니다.');
+                }
             }
         }
 
@@ -841,7 +871,7 @@
                 return;
             }
 
-            const currentPage = pageData.number;
+            const currentPage = pageData.page;
             const totalPages = pageData.totalPages;
 
             let html = '<div style="display: flex; justify-content: center; gap: 8px; align-items: center;">';

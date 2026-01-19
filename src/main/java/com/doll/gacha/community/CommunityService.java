@@ -1,5 +1,7 @@
 package com.doll.gacha.community;
 
+import com.doll.gacha.common.exception.AccessDeniedException;
+import com.doll.gacha.common.exception.EntityNotFoundException;
 import com.doll.gacha.community.dto.CommunityCreateDTO;
 import com.doll.gacha.community.dto.CommunityDTO;
 import com.doll.gacha.community.dto.CommunityUpdateDTO;
@@ -28,7 +30,7 @@ public class CommunityService {
     @Transactional
     public Long createCommunity(CommunityCreateDTO createDTO, String username) {
         UserEntity user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + username));
+                .orElseThrow(() -> EntityNotFoundException.of("사용자", username));
         CommunityEntity community = createDTO.toEntity(user);
         CommunityEntity savedCommunity = communityRepository.save(community);
         return savedCommunity.getId();
@@ -49,7 +51,7 @@ public class CommunityService {
     @Transactional
     public CommunityDTO getCommunityDetail(Long communityId) {
         CommunityEntity community = communityRepository.findByIdAndIsDeletedFalse(communityId)
-            .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+            .orElseThrow(() -> EntityNotFoundException.of("게시글", communityId));
 
         community.incrementViewCount();
 
@@ -62,10 +64,10 @@ public class CommunityService {
     @Transactional
     public void updateCommunity(Long communityId, CommunityUpdateDTO updateDTO, String username) {
         CommunityEntity community = communityRepository.findByIdAndIsDeletedFalse(communityId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+                .orElseThrow(() -> EntityNotFoundException.of("게시글", communityId));
 
         if (!community.isWrittenBy(username)) {
-            throw new IllegalArgumentException("본인의 게시글만 수정할 수 있습니다.");
+            throw AccessDeniedException.forUpdate("게시글");
         }
 
         community.update(updateDTO.getTitle(), updateDTO.getContent());
@@ -77,14 +79,13 @@ public class CommunityService {
     @Transactional
     public void deleteCommunity(Long communityId, String username) {
         CommunityEntity community = communityRepository.findByIdAndIsDeletedFalse(communityId)
-            .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다."));
+            .orElseThrow(() -> EntityNotFoundException.of("게시글", communityId));
 
         if (!community.isWrittenBy(username)) {
-            throw new IllegalArgumentException("본인의 게시글만 삭제할 수 있습니다.");
+            throw AccessDeniedException.forDelete("게시글");
         }
 
         community.softDelete();
     }
 
 }
-

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+h<!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
@@ -282,14 +282,15 @@
 
         // 로그인 확인 (API 호출로 정확하게 체크)
         function checkLoginAndRedirect() {
-            fetch('/api/my/info')
+            authFetch('/api/my/info')
                 .then(response => {
                     if (response.ok) {
                         return response.json();
                     }
                     throw new Error('Not logged in');
                 })
-                .then(userInfo => {
+                .then(result => {
+                    const userInfo = result.data; // ApiResponse에서 data 추출
                     console.log('✅ 로그인 상태 확인: true, 사용자:', userInfo.nickname);
                 })
                 .catch(err => {
@@ -354,7 +355,7 @@
                     formData.append('refType', 'COMMUNITY');
                     formData.append('usage', 'IMAGES');
 
-                    const response = await fetch('/api/files/upload', {
+                    const response = await authFetch('/api/files/upload', {
                         method: 'POST',
                         credentials: 'include',
                         body: formData
@@ -470,7 +471,7 @@
                 console.log('📤 게시글 데이터:', communityData);
 
                 // credentials: 'include'로 쿠키를 자동으로 전달 (Authorization 헤더 불필요)
-                const response = await fetch('/api/community', {
+                const response = await authFetch('/api/community', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -482,20 +483,15 @@
                 console.log('📡 응답 상태:', response.status);
 
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    console.error('❌ 게시글 작성 실패:', errorText);
-
-                    // 401 Unauthorized인 경우 로그인 페이지로
-                    if (response.status === 401) {
-                        alert('로그인이 필요하거나 세션이 만료되었습니다.');
-                        window.location.href = '/login';
-                        return false;
-                    }
-
-                    throw new Error('게시글 작성에 실패했습니다.');
+                    const error = await handleApiError(response);
+                    console.error('❌ 게시글 작성 실패:', error);
+                    showApiError(error);
+                    return false;
                 }
 
-                const communityId = await response.json();
+
+                const result = await response.json();
+                const communityId = result.data; // ApiResponse에서 data 추출
                 console.log('✅ 게시글 작성 성공! ID:', communityId);
 
                 // 2. 첨부파일이 있으면 업로드
@@ -510,7 +506,7 @@
                     formData.append('refType', 'COMMUNITY');
                     formData.append('usage', 'ATTACHMENT'); // 첨부파일은 ATTACHMENT
 
-                    const fileResponse = await fetch('/api/files/upload', {
+                    const fileResponse = await authFetch('/api/files/upload', {
                         method: 'POST',
                         credentials: 'include',
                         body: formData

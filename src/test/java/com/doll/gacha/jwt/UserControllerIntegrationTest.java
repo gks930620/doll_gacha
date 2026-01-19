@@ -52,9 +52,10 @@ class UserControllerIntegrationTest {
         mockMvc.perform(get("/api/my/info"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("testuser"))
-                .andExpect(jsonPath("$.email").exists())
-                .andExpect(jsonPath("$.nickname").exists());
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.username").value("testuser"))
+                .andExpect(jsonPath("$.data.email").exists())
+                .andExpect(jsonPath("$.data.nickname").exists());
     }
 
     @Test

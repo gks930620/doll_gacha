@@ -3,7 +3,6 @@ package com.doll.gacha.jwt;
 import com.doll.gacha.jwt.entity.UserEntity;
 import com.doll.gacha.jwt.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -116,11 +115,13 @@ class LoginIntegrationTest {
 
     @Test
     @DisplayName("로그인 실패: 비밀번호 불일치")
-    // [테스트 대상] JwtLoginFilter.unsuccessfulAuthentication() 및 SecurityConfig.authenticationEntryPoint
+    // [테스트 대상] JwtLoginFilter.unsuccessfulAuthentication()
     // 1. 클라이언트가 /api/login 으로 잘못된 비밀번호 전송
-    // 2. [JwtLoginFilter.attemptAuthentication] -> authenticationManager.authenticate() 에서 AuthenticationException 발생
+    // 2. [JwtLoginFilter.attemptAuthentication]
+    //    → authenticationManager.authenticate() 에서 AuthenticationException 발생
     // 3. [JwtLoginFilter.unsuccessfulAuthentication] 실행
-    // 4. 401 Unauthorized 상태코드와 에러 메시지 JSON 반환 검증
+    //    → ErrorResponse 형식으로 401 + errorCode:"AUTHENTICATION_FAILED" 반환
+    // ※ SecurityConfig.authenticationEntryPoint는 로그인 이외의 인증 필요 API에서 동작
     void loginFail_WrongPassword() throws Exception {
         // given
         Map<String, String> loginRequest = Map.of(
@@ -135,7 +136,8 @@ class LoginIntegrationTest {
 
         // then
         result.andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").exists())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.errorCode").value("AUTHENTICATION_FAILED"))
                 .andDo(print());
     }
 }

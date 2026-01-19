@@ -77,7 +77,7 @@ public class CommunityEntity {
      */
     public void softDelete() {
         if (this.isDeleted) {
-            throw new IllegalStateException("이미 삭제된 게시글입니다.");
+            throw com.doll.gacha.common.exception.DuplicateResourceException.alreadyDeleted("게시글");
         }
         this.isDeleted = true;
     }
