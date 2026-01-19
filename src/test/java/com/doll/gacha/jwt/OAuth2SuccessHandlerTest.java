@@ -1,7 +1,7 @@
 package com.doll.gacha.jwt;
 
-import com.doll.gacha.jwt.config.InMemoryAuthorizationRequestRepository;
-import com.doll.gacha.jwt.config.OAuth2LoginSuccessHandler;
+import com.doll.gacha.jwt.repository.InMemoryAuthorizationRequestRepository;
+import com.doll.gacha.jwt.handler.OAuth2LoginSuccessHandler;
 import com.doll.gacha.jwt.JwtUtil;
 import com.doll.gacha.jwt.model.CustomUserAccount;
 import com.doll.gacha.jwt.model.UserDTO;

@@ -3,34 +3,25 @@ package com.doll.gacha.jwt.config;
 import com.doll.gacha.jwt.JwtUtil;
 import com.doll.gacha.jwt.filter.JwtAccessTokenCheckAndSaveUserInfoFilter;
 import com.doll.gacha.jwt.filter.JwtLoginFilter;
+import com.doll.gacha.jwt.handler.CustomLogoutSuccessHandler;
+import com.doll.gacha.jwt.handler.OAuth2LoginSuccessHandler;
 import com.doll.gacha.jwt.service.CustomOAuth2UserService;
 import com.doll.gacha.jwt.service.CustomUserDetailsService;
 import com.doll.gacha.jwt.service.RefreshService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.ResponseCookie;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
-import org.springframework.stereotype.Component;
 
 @Configuration
 @EnableWebSecurity
@@ -38,15 +29,15 @@ import org.springframework.stereotype.Component;
 public class SecurityConfig {
 
     private final JwtUtil jwtUtil;
-    private final CustomUserDetailsService customUserDetailsService;  //내가 빈으로 등록한것들
+    private final CustomUserDetailsService customUserDetailsService;
     private final CustomOAuth2UserService customOAuth2UserService;
 
-    private final AuthenticationConfiguration authenticationConfiguration;  //authenticationManger를 갖고있는 빈.
+    private final AuthenticationConfiguration authenticationConfiguration;
 
     private final RefreshService refreshService;
     private final AuthorizationRequestRepository authorizationRequestRepository;
 
-
+    // handler 패키지로 이동된 클래스들
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
     private final CustomLogoutSuccessHandler customLogoutSuccessHandler;
 
@@ -68,6 +59,7 @@ public class SecurityConfig {
                 headers -> headers.frameOptions(frame -> frame.disable())); // H2 콘솔을 iframe에서 허용
 
         http    //기본 session방식관련 다 X
+            .cors(Customizer.withDefaults())  // CORS 활성화 (CorsConfig 설정 사용)
             .csrf(csrf -> csrf.disable())
             .sessionManagement(
                 session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

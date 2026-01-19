@@ -1,4 +1,4 @@
-package com.doll.gacha.common.entity;
+package com.doll.gacha.file.entity;
 
 import jakarta.persistence.*;
 import lombok.*;

@@ -1,9 +1,10 @@
 package com.doll.gacha.review.repositroy;
 
-import com.doll.gacha.common.entity.FileEntity;
-import com.doll.gacha.common.entity.QFileEntity;
-import com.doll.gacha.jwt.entity.QUserEntity;
-import com.doll.gacha.review.QReviewEntity;
+import static com.doll.gacha.file.entity.QFileEntity.fileEntity;
+import static com.doll.gacha.jwt.entity.QUserEntity.userEntity;
+import static com.doll.gacha.review.QReviewEntity.reviewEntity;
+
+import com.doll.gacha.file.entity.FileEntity;
 import com.doll.gacha.review.ReviewEntity;
 import com.doll.gacha.review.dto.ReviewDTO;
 import com.querydsl.jpa.impl.JPAQueryFactory;
@@ -26,17 +27,15 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
     @Override
     public Page<ReviewDTO> findReviewsWithFilesByDollShopId(Long dollShopId, Pageable pageable) {
-        QReviewEntity review = QReviewEntity.reviewEntity;
-        QUserEntity user = QUserEntity.userEntity;
-        QFileEntity file = QFileEntity.fileEntity;
+        // static import로 reviewEntity, userEntity, fileEntity 사용
 
         // 1. 전체 카운트 조회
         Long total = queryFactory
-                .select(review.count())
-                .from(review)
+                .select(reviewEntity.count())
+                .from(reviewEntity)
                 .where(
-                        review.dollShop.id.eq(dollShopId),
-                        review.isDeleted.eq(false)
+                        reviewEntity.dollShop.id.eq(dollShopId),
+                        reviewEntity.isDeleted.eq(false)
                 )
                 .fetchOne();
 
@@ -46,13 +45,13 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
 
         // 2. 리뷰 Entity 목록 조회 (User Fetch Join)
         List<ReviewEntity> entities = queryFactory
-                .selectFrom(review)
-                .join(review.user, user).fetchJoin()
+                .selectFrom(reviewEntity)
+                .join(reviewEntity.user, userEntity).fetchJoin()
                 .where(
-                        review.dollShop.id.eq(dollShopId),
-                        review.isDeleted.eq(false)
+                        reviewEntity.dollShop.id.eq(dollShopId),
+                        reviewEntity.isDeleted.eq(false)
                 )
-                .orderBy(review.createdAt.desc())
+                .orderBy(reviewEntity.createdAt.desc())
                 .offset(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .fetch();
@@ -68,10 +67,10 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
             fileUrlsMap = Collections.emptyMap();
         } else {
             List<FileEntity> files = queryFactory
-                    .selectFrom(file)
+                    .selectFrom(fileEntity)
                     .where(
-                            file.refId.in(reviewIds),
-                            file.refType.eq(FileEntity.RefType.REVIEW)
+                            fileEntity.refId.in(reviewIds),
+                            fileEntity.refType.eq(FileEntity.RefType.REVIEW)
                     )
                     .fetch();
 

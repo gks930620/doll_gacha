@@ -1,4 +1,4 @@
-package com.doll.gacha.jwt.config;
+package com.doll.gacha.jwt.repository;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -9,15 +9,18 @@ import org.springframework.security.oauth2.client.web.AuthorizationRequestReposi
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.stereotype.Component;
 
-//redis 말고 그냥 Map에 토큰저장해서 임시로 하는거..
-
+/**
+ * OAuth2 인증 요청을 메모리에 임시 저장하는 Repository
+ * - config가 아닌 repository 패키지로 이동 (역할에 맞는 패키지 분리)
+ * - TODO: 서버 다중화 시 Redis로 변경 필요
+ */
 @Component
 public class InMemoryAuthorizationRequestRepository implements
     AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
-    private final Map<String, OAuth2AuthorizationRequest> authorizationRequests = new ConcurrentHashMap<>();
-    //지금은 Map이지만 이게 redis가 되야함
-    // 내 서버1-> 카카오 -> 내 서버2  로 올 때    redis를 통해 state를 조회하는거임.  지금은 내 서버가 1개니까 그냥map으로
 
+    // 지금은 Map이지만 서버 다중화 시 Redis로 변경 필요
+    // 내 서버1 -> 카카오 -> 내 서버2로 올 때 Redis를 통해 state를 조회
+    private final Map<String, OAuth2AuthorizationRequest> authorizationRequests = new ConcurrentHashMap<>();
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
@@ -33,7 +36,7 @@ public class InMemoryAuthorizationRequestRepository implements
         if (authorizationRequest == null) {
             return;
         }
-        
+
         String state = authorizationRequest.getState();
         authorizationRequests.put(state, authorizationRequest);
 
@@ -49,10 +52,9 @@ public class InMemoryAuthorizationRequestRepository implements
         }).start();
     }
 
-    // OAuth2 로그인 성공 후 리다이렉트 되었을 때, Spring Security 필터(OAuth2LoginAuthenticationFilter)에 의해 호출됨
-    // (여기서 저장된 정보를 꺼내서 검증하고, SuccessHandler로 정보를 넘겨줌)
+    // OAuth2 로그인 성공 후 리다이렉트 되었을 때, Spring Security 필터에 의해 호출됨
     @Override
-    public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request,HttpServletResponse response) {
+    public OAuth2AuthorizationRequest removeAuthorizationRequest(HttpServletRequest request, HttpServletResponse response) {
         String state = request.getParameter("state");
         if (state == null) {
             return null;
@@ -69,3 +71,4 @@ public class InMemoryAuthorizationRequestRepository implements
         }
     }
 }
+

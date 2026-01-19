@@ -1,8 +1,8 @@
-package com.doll.gacha.common.service;
+package com.doll.gacha.file.service;
 
-import com.doll.gacha.common.entity.FileEntity;
-import com.doll.gacha.common.repository.FileRepository;
-import com.doll.gacha.common.util.FileUtil;
+import com.doll.gacha.file.entity.FileEntity;
+import com.doll.gacha.file.repository.FileRepository;
+import com.doll.gacha.file.util.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -78,7 +78,7 @@ logging:
 jwt:
   secret : ${JWT_SECRET_KEY}
   #키는 길이만 충분하고 노출되지만 않으면 됨. gpt한테 만들어하던가 내가 막 타자 아무렇게 해도됨
-  expiration_access:  30000 #30분 테스트용 1800000
+  expiration_access:  1800000 #30분 테스트용 1800000    30초=30000
   expiration_refresh : 14400000   #테스트용 4시간
 
 # Actuator 설정 (서버 상태 모니터링)

@@ -1,6 +1,6 @@
-package com.doll.gacha.common.dto;
+package com.doll.gacha.file.dto;
 
-import com.doll.gacha.common.entity.FileEntity;
+import com.doll.gacha.file.entity.FileEntity;
 import lombok.*;
 
 import java.time.LocalDateTime;

@@ -1,9 +1,9 @@
-package com.doll.gacha.common.controller;
+package com.doll.gacha.file.controller;
 
 import com.doll.gacha.common.dto.ApiResponse;
-import com.doll.gacha.common.entity.FileEntity;
-import com.doll.gacha.common.service.FileService;
-import com.doll.gacha.common.util.FileUtil;
+import com.doll.gacha.file.entity.FileEntity;
+import com.doll.gacha.file.service.FileService;
+import com.doll.gacha.file.util.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;

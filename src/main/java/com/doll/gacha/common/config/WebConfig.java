@@ -1,4 +1,4 @@
-package com.doll.gacha.config;
+package com.doll.gacha.common.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.PageRequest;

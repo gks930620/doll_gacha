@@ -1,10 +1,10 @@
 package com.doll.gacha.dollshop.repositroy;
 
 import static com.doll.gacha.dollshop.QDollShop.dollShop;
-import static com.doll.gacha.common.entity.QFileEntity.fileEntity;
+import static com.doll.gacha.file.entity.QFileEntity.fileEntity;
 import static com.doll.gacha.review.QReviewEntity.reviewEntity;
 
-import com.doll.gacha.common.entity.FileEntity;
+import com.doll.gacha.file.entity.FileEntity;
 import com.doll.gacha.dollshop.dto.DollShopListDTO;
 import com.doll.gacha.dollshop.dto.DollShopMapDTO;
 import com.doll.gacha.dollshop.dto.DollShopSearchDTO;

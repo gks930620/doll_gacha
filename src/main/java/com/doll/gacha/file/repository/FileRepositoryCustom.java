@@ -1,6 +1,6 @@
-package com.doll.gacha.common.repository;
+package com.doll.gacha.file.repository;
 
-import com.doll.gacha.common.entity.FileEntity;
+import com.doll.gacha.file.entity.FileEntity;
 
 import java.util.List;
 import java.util.Map;

@@ -1,4 +1,4 @@
-package com.doll.gacha.jwt.config;
+package com.doll.gacha.jwt.handler;
 
 import com.doll.gacha.jwt.service.RefreshService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +16,10 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
 import org.springframework.stereotype.Component;
 
+/**
+ * 로그아웃 성공 시 처리하는 Handler
+ * - config가 아닌 handler 패키지로 이동 (역할에 맞는 패키지 분리)
+ */
 @Component
 @RequiredArgsConstructor
 public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
@@ -71,3 +75,4 @@ public class CustomLogoutSuccessHandler implements LogoutSuccessHandler {
         response.addHeader("Set-Cookie", cookie.toString());
     }
 }
+
