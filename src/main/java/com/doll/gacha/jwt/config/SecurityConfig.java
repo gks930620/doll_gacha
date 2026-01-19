@@ -87,6 +87,10 @@ public class SecurityConfig {
                     "/css/**", "/js/**", "/images/**", "/favicon.ico", "/uploads/**",
                     // h2-console
                     "/h2-console/**",
+                    // Swagger UI
+                    "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/swagger-resources/**",
+                    // Actuator (서버 상태 모니터링)
+                    "/actuator/**",
                     // 페이지 URL (CSR이므로 페이지 자체는 모두 허용 - API에서 인증 체크)
                     "/", "/map", "/login", "/signup", "/mypage", "/community/**", "/doll/**", "/doll-shop/**",  "/review/**",
                     // 인증 관련 API
