@@ -1,6 +1,8 @@
-package com.doll.gacha.common.repository;
+package com.doll.gacha.file.repository;
 
-import com.doll.gacha.common.entity.FileEntity;
+import static com.doll.gacha.file.entity.QFileEntity.fileEntity;
+
+import com.doll.gacha.file.entity.FileEntity;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
@@ -9,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.doll.gacha.common.entity.QFileEntity.fileEntity;
 
 @RequiredArgsConstructor
 public class FileRepositoryCustomImpl implements FileRepositoryCustom {

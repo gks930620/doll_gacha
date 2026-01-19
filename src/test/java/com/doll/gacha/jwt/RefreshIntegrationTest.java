@@ -71,10 +71,10 @@ class RefreshIntegrationTest {
     @Test
     @DisplayName("토큰 재발급 성공 - 웹 (쿠키)")
     void reissue_success_web() throws Exception {
-        // 쿠키로 refresh_token 전송 + Accept: text/html (브라우저)
+        // 쿠키로 refresh_token 전송 (Authorization 헤더 없이)
+        // 실제 브라우저는 Accept: text/html, application/json 등 여러 타입을 보냄
         mockMvc.perform(post("/api/refresh/reissue")
-                        .cookie(new jakarta.servlet.http.Cookie("refresh_token", validRefreshToken))
-                        .header("Accept", "text/html"))
+                        .cookie(new jakarta.servlet.http.Cookie("refresh_token", validRefreshToken)))
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))

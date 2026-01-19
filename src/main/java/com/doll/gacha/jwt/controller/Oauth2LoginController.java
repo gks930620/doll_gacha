@@ -1,6 +1,6 @@
 package com.doll.gacha.jwt.controller;
 
-import com.doll.gacha.jwt.config.InMemoryAuthorizationRequestRepository;
+import com.doll.gacha.jwt.repository.InMemoryAuthorizationRequestRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;

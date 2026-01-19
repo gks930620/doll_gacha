@@ -75,13 +75,27 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.type: trace
 
-
-
 jwt:
   secret : ${JWT_SECRET_KEY}
   #키는 길이만 충분하고 노출되지만 않으면 됨. gpt한테 만들어하던가 내가 막 타자 아무렇게 해도됨
-  expiration_access:  30000 #30분 테스트용 1800000
+  expiration_access:  1800000 #30분 테스트용 1800000    30초=30000
   expiration_refresh : 14400000   #테스트용 4시간
 
+# Actuator 설정 (서버 상태 모니터링)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info, metrics  # 노출할 엔드포인트
+  endpoint:
+    health:
+      show-details: when_authorized  # 인증된 사용자만 상세 정보
 
-
+# Swagger 설정
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html  # Swagger UI 경로
+    tags-sorter: alpha      # 태그 알파벳 순 정렬
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
