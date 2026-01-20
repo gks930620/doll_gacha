@@ -31,10 +31,11 @@ public class CommunityRepositoryImpl implements CommunityRepositoryCustom {
         QUserEntity user = QUserEntity.userEntity;
         QCommentEntity comment = QCommentEntity.commentEntity;
 
-        // 1. 전체 카운트 조회
+        // 1. 전체 카운트 조회 (user join 필요 - nickname 검색용)
         Long total = queryFactory
                 .select(community.count())
                 .from(community)
+                .join(community.user, user)
                 .where(
                         community.isDeleted.eq(false),
                         searchCondition(searchType, keyword)

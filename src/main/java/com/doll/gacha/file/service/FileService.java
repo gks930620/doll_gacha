@@ -1,5 +1,6 @@
 package com.doll.gacha.file.service;
 
+import com.doll.gacha.file.dto.FileDetailDTO;
 import com.doll.gacha.file.entity.FileEntity;
 import com.doll.gacha.file.repository.FileRepository;
 import com.doll.gacha.file.util.FileUtil;
@@ -94,5 +95,25 @@ public class FileService {
 
         fileRepository.delete(fileEntity);
         log.info("파일 삭제 완료 - fileId: {}, 파일명: {}", fileId, fileEntity.getOriginalFileName());
+    }
+
+    /**
+     * 파일 상세 정보 조회 (원본 파일명 포함)
+     * @param refId 참조 ID
+     * @param refType DOLL_SHOP, COMMUNITY, REVIEW, DOLL
+     * @param usage THUMBNAIL, IMAGES, ATTACHMENT (선택, null 가능)
+     * @return 파일 상세 정보 리스트
+     */
+    public List<FileDetailDTO> getFileDetails(Long refId, String refType, String usage) {
+        FileEntity.RefType type = FileEntity.RefType.valueOf(refType);
+        FileEntity.Usage usageType = usage != null && !usage.isEmpty()
+                ? FileEntity.Usage.valueOf(usage)
+                : null;
+
+        List<FileEntity> files = fileRepository.searchFiles(refId, type, usageType);
+
+        return files.stream()
+                .map(FileDetailDTO::from)
+                .toList();
     }
 }

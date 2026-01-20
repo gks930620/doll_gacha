@@ -407,12 +407,15 @@
                         throw new Error('이미지 업로드 실패');
                     }
 
-                    const uploadedUrls = await response.json();
-                    const imageUrl = uploadedUrls[0];
+                    const result = await response.json();
+                    // ApiResponse 구조: { data: [...], message: "..." }
+                    const uploadedUrls = result.data || result;
+                    const imageUrl = Array.isArray(uploadedUrls) ? uploadedUrls[0] : uploadedUrls;
 
-                    const range = quill.getSelection();
-                    quill.insertEmbed(range.index, 'image', imageUrl);
-                    quill.setSelection(range.index + 1);
+                    const range = quill.getSelection(true);
+                    const index = range ? range.index : quill.getLength();
+                    quill.insertEmbed(index, 'image', imageUrl);
+                    quill.setSelection(index + 1);
 
                     console.log('✅ 에디터 이미지 업로드 성공:', imageUrl);
 
@@ -522,6 +525,36 @@
             return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
         }
 
+        // 기존 첨부파일 로드 (별도 API)
+        async function loadExistingFiles() {
+            try {
+                const response = await fetch(`/api/files/detail?refId=${currentCommunityId}&refType=COMMUNITY&usage=ATTACHMENT`);
+
+                if (!response.ok) {
+                    console.log('첨부파일 없음 또는 조회 실패');
+                    existingFiles = [];
+                    return;
+                }
+
+                const result = await response.json();
+                const files = result.data || [];
+                console.log('✅ 기존 첨부파일 데이터:', files);
+
+                // API 응답을 displayExistingFiles에서 사용하는 형식으로 변환
+                existingFiles = files.map(file => ({
+                    fileId: file.fileId,
+                    originalFileName: file.originalFileName,
+                    fileSize: file.fileSize,
+                    downloadUrl: file.downloadUrl
+                }));
+
+                displayExistingFiles();
+            } catch (error) {
+                console.error('❌ 첨부파일 로드 에러:', error);
+                existingFiles = [];
+            }
+        }
+
         // 게시글 데이터 로드
         async function loadCommunityData() {
             try {
@@ -541,9 +574,8 @@
                 // 내용 설정 (Quill 에디터에)
                 quill.root.innerHTML = data.content;
 
-                // 기존 첨부파일 설정
-                existingFiles = data.attachments || [];
-                displayExistingFiles();
+                // 기존 첨부파일 별도 로드
+                await loadExistingFiles();
 
                 // 로딩 숨기고 폼 표시
                 document.getElementById('loadingState').style.display = 'none';

@@ -99,3 +99,8 @@ springdoc:
     operations-sorter: alpha
   api-docs:
     path: /v3/api-docs
+
+# 파일 업로드 경로 (개발환경)
+file:
+  upload-dir: C:/workspace/simple_side/doll_gacha/uploads/
+

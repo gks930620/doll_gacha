@@ -553,23 +553,26 @@
             }
 
             try {
-                // 1. 현재 게시글의 첨부파일 목록 가져오기
-                const response = await fetch(`/api/community/${currentCommunityId}`);
-                const result = await response.json();
-                const data = result.data; // ApiResponse에서 data 추출
+                // 1. 첨부파일 목록 가져오기 (별도 API)
+                const filesResponse = await fetch(`/api/files/detail?refId=${currentCommunityId}&refType=COMMUNITY&usage=ATTACHMENT`);
 
-                // 2. 첨부파일들 먼저 삭제
-                if (data.attachments && data.attachments.length > 0) {
-                    console.log(`📎 첨부파일 ${data.attachments.length}개 삭제 중...`);
-                    for (const file of data.attachments) {
-                        try {
-                            await authFetch(`/api/files/${file.fileId}`, {
-                                method: 'DELETE',
-                                credentials: 'include'
-                            });
-                            console.log(`✅ 파일 삭제: ${file.originalFileName}`);
-                        } catch (err) {
-                            console.warn(`⚠️ 파일 삭제 실패: ${file.originalFileName}`, err);
+                if (filesResponse.ok) {
+                    const filesResult = await filesResponse.json();
+                    const files = filesResult.data || [];
+
+                    // 2. 첨부파일들 먼저 삭제
+                    if (files.length > 0) {
+                        console.log(`📎 첨부파일 ${files.length}개 삭제 중...`);
+                        for (const file of files) {
+                            try {
+                                await authFetch(`/api/files/${file.fileId}`, {
+                                    method: 'DELETE',
+                                    credentials: 'include'
+                                });
+                                console.log(`✅ 파일 삭제: ${file.originalFileName}`);
+                            } catch (err) {
+                                console.warn(`⚠️ 파일 삭제 실패: ${file.originalFileName}`, err);
+                            }
                         }
                     }
                 }
@@ -602,16 +605,16 @@
         // 파일 로드 (별도 API 호출)
         async function loadFiles() {
             try {
-                // ATTACHMENT 파일만 조회 (첨부파일)
-                const response = await fetch(`/api/files?refId=${currentCommunityId}&refType=COMMUNITY&usage=ATTACHMENT`);
+                // ATTACHMENT 파일 상세 정보 조회 (원본 파일명 포함)
+                const response = await fetch(`/api/files/detail?refId=${currentCommunityId}&refType=COMMUNITY&usage=ATTACHMENT`);
 
                 if (!response.ok) {
                     console.log('첨부파일 없음 또는 조회 실패');
                     return;
                 }
 
-                // FileController는 List<String>을 직접 반환 (ApiResponse 아님)
-                const files = await response.json();
+                const result = await response.json();
+                const files = result.data || [];
                 console.log('✅ 첨부파일 데이터:', files);
 
                 if (files && files.length > 0) {
@@ -624,18 +627,18 @@
         }
 
         // 첨부파일 렌더링
-        function renderAttachments(filePaths) {
+        function renderAttachments(files) {
             const attachmentsHtml = `
                 <div style="border: 1px solid #e0e0e0; border-radius: 4px; padding: 16px; background: #f5f5f5;">
                     <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #424242;">첨부파일</h4>
-                    ${filePaths.map(filePath => {
-                        const fileName = filePath.split('/').pop();
+                    ${files.map(file => {
                         return `
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                 <span class="material-icons" style="font-size: 20px; color: #757575;">attach_file</span>
-                                <a href="${filePath}" style="color: #6200ea; text-decoration: none;" download>
-                                    ${fileName}
+                                <a href="${file.downloadUrl}" style="color: #6200ea; text-decoration: none;">
+                                    ${file.originalFileName}
                                 </a>
+                                <span style="color: #9e9e9e; font-size: 12px;">(${formatFileSize(file.fileSize)})</span>
                             </div>
                         `;
                     }).join('')}
@@ -643,6 +646,7 @@
             `;
             document.getElementById('postAttachments').innerHTML = attachmentsHtml;
         }
+
 
         // ========== 댓글 기능 =========="
 

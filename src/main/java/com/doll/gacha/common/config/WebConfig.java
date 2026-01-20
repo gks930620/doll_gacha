@@ -1,5 +1,6 @@
 package com.doll.gacha.common.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -13,12 +14,19 @@ import java.util.List;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+    @Value("${file.upload-dir:./uploads/}")
+    private String uploadDir;
+
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 업로드된 이미지 파일을 제공하기 위한 설정
-        // /uploads/** 요청이 들어오면 C:/workspace/simple_side/doll_gacha/uploads/ 폴더에서 파일을 찾음
+        // /uploads/** 요청이 들어오면 설정된 uploads 폴더에서 파일을 찾음
+        String resourceLocation = "file:" + uploadDir;
+        if (!resourceLocation.endsWith("/")) {
+            resourceLocation += "/";
+        }
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:///C:/workspace/simple_side/doll_gacha/uploads/");
+                .addResourceLocations(resourceLocation);
     }
 
     @Override

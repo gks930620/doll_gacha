@@ -1,6 +1,7 @@
 package com.doll.gacha.file.controller;
 
 import com.doll.gacha.common.dto.ApiResponse;
+import com.doll.gacha.file.dto.FileDetailDTO;
 import com.doll.gacha.file.entity.FileEntity;
 import com.doll.gacha.file.service.FileService;
 import com.doll.gacha.file.util.FileUtil;
@@ -114,6 +115,27 @@ public class FileController {
         } catch (Exception e) {
             log.error("파일 업로드 실패: {}", e.getMessage(), e);
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * 첨부파일 상세 정보 조회 API (원본 파일명 포함)
+     * @param refId 참조 ID
+     * @param refType DOLL_SHOP, COMMUNITY, REVIEW, DOLL
+     * @param usage THUMBNAIL, IMAGES, ATTACHMENT (선택)
+     * @return 파일 상세 정보 리스트
+     */
+    @GetMapping("/api/files/detail")
+    public ResponseEntity<ApiResponse<List<FileDetailDTO>>> getFileDetails(
+            @RequestParam Long refId,
+            @RequestParam String refType,
+            @RequestParam(required = false) String usage) {
+        try {
+            List<FileDetailDTO> fileDetails = fileService.getFileDetails(refId, refType, usage);
+            return ResponseEntity.ok(ApiResponse.success("파일 조회 성공", fileDetails));
+        } catch (IllegalArgumentException e) {
+            log.error("잘못된 파라미터: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 

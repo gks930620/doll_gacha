@@ -515,7 +515,7 @@
         <div class="review-list">
             <div class="review-header-section">
                 <h2 style="font-size: 20px;">리뷰</h2>
-                <button id="writeReviewBtn" class="btn btn-primary" onclick="toggleReviewForm()">리뷰 작성</button>
+                <button id="writeReviewBtn" class="btn btn-primary" onclick="toggleReviewForm()" style="display: none;">리뷰 작성</button>
             </div>
 
             <!-- Review Write Form -->
@@ -587,6 +587,8 @@
             </div>
         </div>
     </main>
+
+    <th:block th:replace="~{layout/header :: headerScript}"></th:block>
 
     <script>
         const urlParams = new URLSearchParams(window.location.search);
@@ -1208,7 +1210,6 @@
         // Check Login Status for header (Simplified check, assuming header script handles it usually, but here adding minimal check)
         // Actually layout/header usually handles user menu.
     </script>
-    <th:block th:replace="~{layout/header :: headerScript}"></th:block>
 <th:block th:replace="~{layout/footer :: footer}"></th:block>
 
 </body>

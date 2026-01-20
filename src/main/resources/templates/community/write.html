@@ -365,13 +365,16 @@ h<!DOCTYPE html>
                         throw new Error('이미지 업로드 실패');
                     }
 
-                    const uploadedUrls = await response.json();
-                    const imageUrl = uploadedUrls[0]; // 첫 번째 URL
+                    const result = await response.json();
+                    // ApiResponse 구조: { data: [...], message: "..." }
+                    const uploadedUrls = result.data || result;
+                    const imageUrl = Array.isArray(uploadedUrls) ? uploadedUrls[0] : uploadedUrls;
 
                     // 에디터에 이미지 URL 삽입
-                    const range = quill.getSelection();
-                    quill.insertEmbed(range.index, 'image', imageUrl);
-                    quill.setSelection(range.index + 1);
+                    const range = quill.getSelection(true);
+                    const index = range ? range.index : quill.getLength();
+                    quill.insertEmbed(index, 'image', imageUrl);
+                    quill.setSelection(index + 1);
 
                     console.log('✅ 에디터 이미지 업로드 성공:', imageUrl);
 

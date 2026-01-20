@@ -1,0 +1,533 @@
+# 🐳 Docker 배포 가이드 - Doll Gacha 프로젝트
+
+## 📋 목차
+1. [Docker란?](#1-docker란)
+2. [생성된 파일 설명](#2-생성된-파일-설명)
+3. [작업 순서 및 명령어](#3-작업-순서-및-명령어)
+4. [자주 사용하는 Docker 명령어](#4-자주-사용하는-docker-명령어)
+5. [트러블슈팅](#5-트러블슈팅)
+
+---
+
+## 1. Docker란?
+
+### 🤔 Docker가 뭔가요?
+Docker는 애플리케이션을 **컨테이너**라는 격리된 환경에서 실행하게 해주는 도구입니다.
+
+### 왜 Docker를 사용하나요?
+- **"내 컴퓨터에서는 되는데..."** 문제 해결 → 어디서든 동일한 환경
+- **설치 간편** → Java, DB 등을 일일이 설치할 필요 없음
+- **배포 쉬움** → 이미지만 있으면 어디서든 실행 가능
+
+### 핵심 개념
+| 용어 | 설명 | 비유 |
+|------|------|------|
+| **Image (이미지)** | 실행에 필요한 모든 것이 담긴 템플릿 | 붕어빵 틀 |
+| **Container (컨테이너)** | 이미지를 실행한 인스턴스 | 붕어빵 |
+| **Dockerfile** | 이미지를 만드는 레시피 | 붕어빵 레시피 |
+| **docker-compose** | 여러 컨테이너를 한번에 관리 | 세트 메뉴 주문서 |
+
+---
+
+## 2. 생성된 파일 설명
+
+### 📁 프로젝트 구조
+```
+doll_gacha/
+├── Dockerfile              ← 앱 이미지 빌드 레시피
+├── docker-compose.yml      ← 전체 서비스 구성
+├── .dockerignore           ← Docker 빌드 시 제외할 파일
+├── .env                    ← 실제 환경변수 (비밀!)
+├── settings.gradle         ← Gradle 프로젝트 설정
+└── src/main/resources/
+    ├── application.yml     ← 개발용 설정
+    └── application-prod.yml ← 프로덕션용 설정
+```
+---
+### 📄 Dockerfile - 이미지 빌드 레시피
+
+```dockerfile
+# ===== Stage 1: 빌드 스테이지 =====
+FROM gradle:8-jdk17 AS builder
+# → Gradle + JDK 17이 설치된 이미지를 기반으로 시작
+# → "builder"라는 이름을 붙여서 나중에 참조
+
+WORKDIR /build
+# → 작업 디렉토리를 /build로 설정
+
+COPY build.gradle settings.gradle ./
+COPY gradle ./gradle
+# → Gradle 설정 파일들을 먼저 복사 (캐싱 활용)
+
+RUN gradle dependencies --no-daemon || true
+# → 의존성 다운로드 (변경 없으면 캐시 사용)
+
+COPY src ./src
+# → 소스코드 복사
+
+RUN gradle bootJar --no-daemon -x test
+# → JAR 파일 빌드 (테스트 스킵)
+
+# ===== Stage 2: 실행 스테이지 =====
+FROM eclipse-temurin:17-jre-alpine
+# → 가벼운 JRE 이미지 사용 (약 200MB vs 전체 JDK 800MB)
+
+WORKDIR /app
+
+ENV TZ=Asia/Seoul
+RUN apk add --no-cache tzdata curl && \
+    cp /usr/share/zoneinfo/$TZ /etc/localtime
+# → 시간대 설정 + curl 설치 (헬스체크용)
+
+RUN mkdir -p /app/uploads
+# → 업로드 디렉토리 생성
+
+COPY --from=builder /build/build/libs/*.jar app.jar
+# → builder 스테이지에서 빌드한 JAR만 가져옴
+
+EXPOSE 8080
+# → 8080 포트 사용한다고 문서화 (실제 열리는 건 아님)
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:8080/actuator/health || exit 1
+# → 30초마다 헬스체크, 실패하면 컨테이너 재시작
+
+ENTRYPOINT ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]
+# → 컨테이너 시작 시 실행할 명령 (프로덕션 프로파일로 실행)
+```
+
+**💡 멀티스테이지 빌드란?**
+- Stage 1에서 빌드하고, Stage 2에서는 결과물(JAR)만 가져감
+- 최종 이미지에 Gradle, 소스코드 등 불필요한 것이 포함되지 않음
+- 이미지 크기 대폭 감소 (1GB → 200MB)
+
+---
+
+### 📄 docker-compose.yml - 서비스 구성
+
+```yaml
+services:
+  # ===== MariaDB 데이터베이스 =====
+  db:
+    image: mariadb:10.11           # MariaDB 공식 이미지 사용
+    container_name: doll_gacha_db  # 컨테이너 이름 지정
+    restart: unless-stopped        # 수동 중지 전까지 자동 재시작
+    environment:                   # 환경변수 설정
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: doll_gacha   # 자동으로 생성할 DB
+      MYSQL_USER: doll_gacha       # 생성할 사용자
+      MYSQL_PASSWORD: ${DB_PASSWORD:-ckdlsk13!}
+      TZ: Asia/Seoul
+    ports:
+      - "3407:3306"                # 호스트:컨테이너 포트 매핑
+    volumes:
+      - db_data:/var/lib/mysql     # 데이터 영구 저장
+    networks:
+      - doll_gacha_network         # 같은 네트워크에 연결
+    healthcheck:                   # DB 준비 상태 확인
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===== Spring Boot 애플리케이션 =====
+  app:
+    build:
+      context: .                   # 현재 디렉토리의 Dockerfile 사용
+      dockerfile: Dockerfile
+    container_name: doll_gacha_app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"                # 웹 접속 포트
+    environment:
+      # DB 연결 (db는 컨테이너 이름, 내부 네트워크로 연결)
+      SPRING_DATASOURCE_URL: jdbc:mariadb://db:3306/doll_gacha
+      SPRING_DATASOURCE_USERNAME: doll_gacha
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-ckdlsk13!}
+      
+      # OAuth2, JWT 등 민감한 정보는 .env에서 가져옴
+      KAKAO_CLIENT_ID: ${KAKAO_CLIENT_ID}
+      KAKAO_CLIENT_SECRET: ${KAKAO_CLIENT_SECRET}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:8080}
+    volumes:
+      - ./uploads:/app/uploads     # 업로드 파일 영구 저장
+    depends_on:
+      db:
+        condition: service_healthy # DB가 준비된 후에 앱 시작
+    networks:
+      - doll_gacha_network
+
+networks:
+  doll_gacha_network:
+    driver: bridge                 # 기본 네트워크 드라이버
+
+volumes:
+  db_data:                         # 이름 있는 볼륨 (Docker가 관리)
+```
+
+**💡 주요 개념**
+- `${변수:-기본값}`: 환경변수가 없으면 기본값 사용
+- `depends_on`: 의존성 순서 지정 (DB 먼저 → 앱 나중에)
+- `volumes`: 컨테이너가 삭제되어도 데이터 유지
+- `networks`: 컨테이너끼리 통신할 수 있는 가상 네트워크
+
+---
+
+### 📄 .dockerignore - 빌드 제외 파일
+
+Docker 이미지 빌드 시 불필요한 파일을 제외합니다.
+`.gitignore`와 비슷한 역할입니다.
+
+```
+build/           # 빌드 결과물 (Docker에서 새로 빌드함)
+.gradle/         # Gradle 캐시
+.idea/           # IDE 설정
+*.iml
+logs/            # 로그 파일
+.git/            # Git 히스토리
+doll_gacha_app/  # Flutter 앱 (별도 배포)
+.env             # 환경변수 (보안!)
+```
+
+---
+
+### 📄 .env.example / .env - 환경변수
+
+```bash
+# ===== 데이터베이스 설정 =====
+DB_ROOT_PASSWORD=your_root_password_here
+DB_PASSWORD=your_db_password_here
+
+# ===== OAuth2 설정 =====
+KAKAO_CLIENT_ID=your_kakao_client_id
+KAKAO_CLIENT_SECRET=your_kakao_client_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# ===== JWT 설정 =====
+JWT_SECRET_KEY=your_super_secret_jwt_key_at_least_32_characters_long
+
+# ===== 앱 설정 =====
+APP_BASE_URL=http://localhost:8080
+```
+
+**⚠️ 중요!**
+- `.env.example`: 템플릿 (Git에 올려도 됨)
+- `.env`: 실제 비밀키 (절대 Git에 올리면 안 됨!)
+
+---
+
+### 📄 application-prod.yml - 프로덕션 설정
+
+개발 설정(`application.yml`)과 다른 점:
+
+| 항목 | 개발 | 프로덕션 |
+|------|------|----------|
+| `ddl-auto` | create (매번 테이블 재생성) | update (변경만 적용) |
+| `sql.init.mode` | always (초기 데이터 삽입) | never (실행 안함) |
+| `show_sql` | true (SQL 로그 출력) | false (성능 향상) |
+| `thymeleaf.cache` | false (즉시 반영) | true (성능 향상) |
+| `devtools` | enabled | disabled |
+
+---
+
+### 📄 settings.gradle - Gradle 프로젝트 설정
+
+```groovy
+rootProject.name = 'doll_gacha'
+```
+
+Gradle 빌드 시 프로젝트 이름을 지정합니다.
+Docker 멀티스테이지 빌드에서 필요합니다.
+
+---
+
+## 3. 작업 순서 및 명령어
+
+### 🔧 사전 준비
+
+#### Step 1: Docker Desktop 설치 확인 - 사이트에서 설치해야됨 
+```powershell
+# Docker 버전 확인
+docker --version
+# 예상 출력: Docker version 24.x.x
+
+# Docker Compose 버전 확인
+docker-compose --version
+# 예상 출력: Docker Compose version v2.x.x
+```
+
+#### Step 2: Docker Desktop 실행
+Windows에서 Docker Desktop 앱을 실행하고 
+우측 하단 트레이에서 🐳 아이콘이 "Docker Desktop is running" 상태인지 확인
+
+---
+
+### 🚀 배포 실행
+
+#### Step 3: 프로젝트 폴더로 이동
+```powershell
+cd C:\workspace\simple_side\doll_gacha
+```
+
+#### Step 4: 환경변수 파일 생성
+```powershell
+# 템플릿 복사
+Copy-Item .env.example .env
+
+# .env 파일 편집 (메모장으로 열기)
+notepad .env
+```
+
+**.env 파일 수정 예시:**
+```
+DB_ROOT_PASSWORD=mySecureRootPass123!
+DB_PASSWORD=ckdlsk13!
+KAKAO_CLIENT_ID=abc123...
+KAKAO_CLIENT_SECRET=def456...
+GOOGLE_CLIENT_ID=ghi789...
+GOOGLE_CLIENT_SECRET=jkl012...
+JWT_SECRET_KEY=mySuperSecretJWTKeyThatIsAtLeast32CharactersLong
+APP_BASE_URL=http://localhost:8080
+```
+
+#### Step 5: Docker 이미지 빌드
+```powershell
+# 이미지 빌드 (처음에는 5-10분 소요)
+docker-compose build
+
+# 빌드 과정 상세 보기
+docker-compose build --progress=plain
+```
+
+**이 명령이 하는 일:**
+1. Dockerfile 읽기
+2. Gradle 이미지 다운로드 (처음만)
+3. 의존성 다운로드
+4. JAR 파일 빌드
+5. 최종 실행 이미지 생성
+
+#### Step 6: 컨테이너 실행
+```powershell
+# 백그라운드에서 실행 (-d = detached)
+docker-compose up -d
+```
+
+**이 명령이 하는 일:**
+1. MariaDB 컨테이너 시작
+2. DB 헬스체크 대기 (약 30초)
+3. Spring Boot 앱 컨테이너 시작
+4. 앱 시작 완료 (약 30-60초)
+
+#### Step 7: 실행 상태 확인
+```powershell
+# 컨테이너 상태 확인
+docker-compose ps
+
+# 예상 출력:
+# NAME              STATUS                   PORTS
+# doll_gacha_app    Up 2 minutes (healthy)   0.0.0.0:8080->8080/tcp
+# doll_gacha_db     Up 2 minutes (healthy)   0.0.0.0:3407->3306/tcp
+```
+
+#### Step 8: 로그 확인
+```powershell
+# 전체 로그 보기
+docker-compose logs
+
+# 실시간 로그 보기 (Ctrl+C로 종료)
+docker-compose logs -f
+
+# 앱 로그만 보기
+docker-compose logs -f app
+
+# DB 로그만 보기
+docker-compose logs -f db
+```
+
+#### Step 9: 접속 테스트
+```powershell
+# 브라우저에서 열기
+Start-Process "http://localhost:8080"
+
+# 또는 curl로 테스트
+curl http://localhost:8080/actuator/health
+```
+
+---
+
+### 🛑 서비스 중지/삭제
+
+#### 서비스 중지 (데이터 유지)
+```powershell
+docker-compose stop
+```
+
+#### 서비스 재시작
+```powershell
+docker-compose start
+```
+
+#### 컨테이너 삭제 (데이터 유지)
+```powershell
+docker-compose down
+```
+
+#### 완전 삭제 (데이터 포함)
+```powershell
+# 볼륨(DB 데이터)까지 삭제
+docker-compose down -v
+
+# 이미지까지 삭제
+docker-compose down -v --rmi all
+```
+
+---
+
+### 🔄 업데이트 배포
+
+코드 수정 후 재배포:
+```powershell
+# 1. 새로 빌드하면서 실행
+docker-compose up -d --build
+
+# 또는 단계별로:
+# 1. 컨테이너 중지
+docker-compose down
+
+# 2. 새로 빌드
+docker-compose build
+
+# 3. 다시 실행
+docker-compose up -d
+```
+
+---
+
+## 4. 자주 사용하는 Docker 명령어
+
+### 📊 상태 확인
+```powershell
+# 실행 중인 컨테이너 목록
+docker ps
+
+# 모든 컨테이너 (중지된 것 포함)
+docker ps -a
+
+# 이미지 목록
+docker images
+
+# 디스크 사용량
+docker system df
+```
+
+### 🔍 디버깅
+```powershell
+# 컨테이너 내부 접속 (bash)
+docker exec -it doll_gacha_app sh
+
+# 컨테이너 내부에서 명령 실행
+docker exec doll_gacha_app ls -la /app
+
+# DB 컨테이너 접속
+docker exec -it doll_gacha_db mysql -u doll_gacha -p
+```
+
+### 🧹 정리
+```powershell
+# 사용하지 않는 리소스 정리
+docker system prune
+
+# 모든 미사용 이미지 삭제
+docker image prune -a
+
+# 모든 볼륨 삭제 (주의!)
+docker volume prune
+```
+
+---
+
+## 5. 트러블슈팅
+
+### ❌ "port is already allocated"
+```powershell
+# 포트 사용 중인 프로세스 확인
+netstat -ano | findstr :8080
+
+# 해당 프로세스 종료 (PID 확인 후)
+taskkill /PID <PID번호> /F
+
+# 또는 docker-compose.yml에서 포트 변경
+# ports:
+#   - "8081:8080"  ← 8081로 변경
+```
+
+### ❌ "Cannot connect to the Docker daemon"
+```powershell
+# Docker Desktop이 실행 중인지 확인
+# 시스템 트레이에서 Docker 아이콘 확인
+
+# Docker Desktop 재시작
+# 또는 서비스 재시작
+Restart-Service docker
+```
+
+### ❌ "database connection failed"
+```powershell
+# DB 컨테이너 상태 확인
+docker-compose logs db
+
+# DB가 완전히 시작될 때까지 대기 (처음 실행 시 1-2분)
+docker-compose logs -f db
+
+# 앱만 재시작
+docker-compose restart app
+```
+
+### ❌ 이미지 빌드 실패
+```powershell
+# 캐시 없이 새로 빌드
+docker-compose build --no-cache
+
+# 빌드 로그 상세 확인
+docker-compose build --progress=plain 2>&1 | Tee-Object build.log
+```
+
+### ❌ 메모리 부족
+Docker Desktop 설정에서 메모리 할당 늘리기:
+1. Docker Desktop → Settings → Resources
+2. Memory를 4GB 이상으로 설정
+3. Apply & Restart
+
+---
+
+## 📚 참고 자료
+
+- [Docker 공식 문서](https://docs.docker.com/)
+- [Docker Compose 공식 문서](https://docs.docker.com/compose/)
+- [Spring Boot Docker 가이드](https://spring.io/guides/topicals/spring-boot-docker/)
+
+---
+
+## ✅ 체크리스트
+
+배포 전 확인사항:
+- [ ] Docker Desktop 실행 중
+- [ ] `.env` 파일에 모든 환경변수 설정
+- [ ] 8080 포트 사용 가능
+- [ ] 3407 포트 사용 가능 (DB)
+
+배포 후 확인사항:
+- [ ] `docker-compose ps`에서 모든 서비스 healthy
+- [ ] http://localhost:8080 접속 가능
+- [ ] 로그인 기능 정상 작동
+- [ ] 파일 업로드 정상 작동
+
+---
+
+*문서 작성일: 2026-01-20*
+*프로젝트: Doll Gacha*
+
