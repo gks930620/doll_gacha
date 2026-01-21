@@ -9,6 +9,8 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 
 @Configuration
@@ -21,7 +23,11 @@ public class WebConfig implements WebMvcConfigurer {
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         // 업로드된 이미지 파일을 제공하기 위한 설정
         // /uploads/** 요청이 들어오면 설정된 uploads 폴더에서 파일을 찾음
-        String resourceLocation = "file:" + uploadDir;
+
+        // Path.toUri()를 사용하여 OS에 관계없이 올바른 file:// URL 생성
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        String resourceLocation = uploadPath.toUri().toString();
+
         if (!resourceLocation.endsWith("/")) {
             resourceLocation += "/";
         }

@@ -38,7 +38,7 @@ public class CommunityRepositoryImpl implements CommunityRepositoryCustom {
                 .join(community.user, user)
                 .where(
                         community.isDeleted.eq(false),
-                        searchCondition(searchType, keyword)
+                        searchCondition(community, user, searchType, keyword)
                 )
                 .fetchOne();
 
@@ -52,7 +52,7 @@ public class CommunityRepositoryImpl implements CommunityRepositoryCustom {
                 .join(community.user, user).fetchJoin() // User Fetch Join 유지
                 .where(
                         community.isDeleted.eq(false),
-                        searchCondition(searchType, keyword)
+                        searchCondition(community, user, searchType, keyword)
                 )
                 .orderBy(community.createdAt.desc())
                 .offset(pageable.getOffset())
@@ -102,13 +102,11 @@ public class CommunityRepositoryImpl implements CommunityRepositoryCustom {
      * 검색 조건 동적 생성
      * keyword가 null이면 null 반환 → where 조건에서 무시됨 (전체 조회)
      */
-    private BooleanExpression searchCondition(String searchType, String keyword) {
+    private BooleanExpression searchCondition(QCommunityEntity community, QUserEntity user, String searchType, String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return null;
         }
 
-        QCommunityEntity community = QCommunityEntity.communityEntity;
-        QUserEntity user = QUserEntity.userEntity;
 
         String trimmedKeyword = keyword.trim();
 

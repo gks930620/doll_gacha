@@ -55,14 +55,14 @@ FROM gradle:8-jdk17 AS builder
 WORKDIR /build
 # → 작업 디렉토리를 /build로 설정
 
-COPY build.gradle settings.gradle ./
-COPY gradle ./gradle
+COPY ../../build.gradle settings.gradle ./
+COPY ../../gradle ./gradle
 # → Gradle 설정 파일들을 먼저 복사 (캐싱 활용)
 
 RUN gradle dependencies --no-daemon || true
 # → 의존성 다운로드 (변경 없으면 캐시 사용)
 
-COPY src ./src
+COPY ../../src ./src
 # → 소스코드 복사
 
 RUN gradle bootJar --no-daemon -x test
