@@ -10,14 +10,17 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+@Slf4j
 @RequiredArgsConstructor
 public class JwtAccessTokenCheckAndSaveUserInfoFilter extends OncePerRequestFilter {
 
@@ -66,6 +69,21 @@ public class JwtAccessTokenCheckAndSaveUserInfoFilter extends OncePerRequestFilt
             // 잘못된 토큰 형식 등 JWT 파싱 실패 시
             request.setAttribute("ERROR_CAUSE", "잘못된토큰");
             chain.doFilter(request, response);  // 인증 없이 통과 -> authenticationEntryPoint에서 처리
+        } catch (UsernameNotFoundException e) {
+            // DB에 사용자가 없는 경우 (로컬 DB와 Docker DB가 다를 때 발생)
+            log.warn("JWT 토큰의 사용자가 DB에 없음: {}. 쿠키 삭제 후 비로그인 상태로 처리", e.getMessage());
+            // 쿠키 삭제
+            Cookie accessTokenCookie = new Cookie("access_token", null);
+            accessTokenCookie.setMaxAge(0);
+            accessTokenCookie.setPath("/");
+            response.addCookie(accessTokenCookie);
+
+            Cookie refreshTokenCookie = new Cookie("refresh_token", null);
+            refreshTokenCookie.setMaxAge(0);
+            refreshTokenCookie.setPath("/");
+            response.addCookie(refreshTokenCookie);
+
+            chain.doFilter(request, response);  // 인증 없이 통과
         }
     }
 

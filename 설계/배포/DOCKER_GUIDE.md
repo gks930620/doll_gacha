@@ -294,6 +294,14 @@ JWT_SECRET_KEY=mySuperSecretJWTKeyThatIsAtLeast32CharactersLong
 APP_BASE_URL=http://localhost:8080
 ```
 
+
+5,6,7 요약
+  이미지 재빌드 (코드 변경 반영)
+docker-compose build --no-cache
+  기존 컨테이너 중지 및 새로 시작
+docker-compose down
+docker-compose up -d
+
 #### Step 5: Docker 이미지 빌드
 ```powershell
 # 이미지 빌드 (처음에는 5-10분 소요)

@@ -41,17 +41,18 @@ public class FileUtil {
             String extension = extractExtension(originalFilename);
             String storedFilename = generateUniqueFilename(extension);
 
-            // 파일 저장
-            Path filePath = Paths.get(uploadDir + storedFilename);
+            // 파일 저장 - Paths.resolve()로 안전하게 경로 결합
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+            Path filePath = uploadPath.resolve(storedFilename);
             Files.write(filePath, file.getBytes());
 
-            log.info("파일 저장 완료 - 원본: {}, 저장: {}", originalFilename, storedFilename);
+            log.info("파일 저장 완료 - 원본: {}, 저장: {}, 경로: {}", originalFilename, storedFilename, filePath);
 
             // 저장된 파일 정보 반환
             return FileUploadResult.builder()
                     .originalFilename(originalFilename)
                     .storedFilename(storedFilename)
-                    .filePath(uploadDir + storedFilename)
+                    .filePath(filePath.toString())
                     .fileSize(file.getSize())
                     .contentType(file.getContentType())
                     .build();
@@ -67,10 +68,10 @@ public class FileUtil {
      */
     private void ensureUploadDirectoryExists() {
         try {
-            Path uploadPath = Paths.get(uploadDir);
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
-                log.info("업로드 디렉토리 생성: {}", uploadDir);
+                log.info("업로드 디렉토리 생성: {}", uploadPath);
             }
         } catch (IOException e) {
             throw new RuntimeException("업로드 디렉토리 생성 실패", e);

@@ -36,7 +36,8 @@ public class FileController {
     @GetMapping("/images/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
         try {
-            Path file = Paths.get(fileUtil.getUploadDir()).resolve(filename);
+            Path uploadPath = Paths.get(fileUtil.getUploadDir()).toAbsolutePath().normalize();
+            Path file = uploadPath.resolve(filename);
             Resource resource = new UrlResource(file.toUri());
 
             if (resource.exists() || resource.isReadable()) {
@@ -150,11 +151,15 @@ public class FileController {
             // 1. DB에서 파일 정보 조회
             FileEntity fileEntity = fileService.getFileById(fileId);
             if (fileEntity == null) {
+                log.warn("파일을 찾을 수 없습니다: fileId={}", fileId);
                 return ResponseEntity.notFound().build();
             }
 
-            // 2. 물리적 파일 로드
-            Path file = Paths.get(fileUtil.getUploadDir()).resolve(fileEntity.getStoredFileName());
+            // 2. 물리적 파일 로드 - 절대 경로로 안전하게 처리
+            Path uploadPath = Paths.get(fileUtil.getUploadDir()).toAbsolutePath().normalize();
+            Path file = uploadPath.resolve(fileEntity.getStoredFileName());
+            log.info("파일 다운로드 시도: fileId={}, path={}", fileId, file);
+
             Resource resource = new UrlResource(file.toUri());
 
             if (!resource.exists() || !resource.isReadable()) {

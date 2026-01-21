@@ -1,5 +1,6 @@
 package com.doll.gacha.common.config;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.domain.PageRequest;
@@ -14,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 @Configuration
+@Slf4j
 public class WebConfig implements WebMvcConfigurer {
 
     @Value("${file.upload-dir:./uploads/}")
@@ -31,6 +33,9 @@ public class WebConfig implements WebMvcConfigurer {
         if (!resourceLocation.endsWith("/")) {
             resourceLocation += "/";
         }
+
+        log.info("📁 파일 업로드 설정 - uploadDir: {}, resourceLocation: {}", uploadDir, resourceLocation);
+
         registry.addResourceHandler("/uploads/**")
                 .addResourceLocations(resourceLocation);
     }

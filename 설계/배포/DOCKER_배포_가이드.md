@@ -138,14 +138,14 @@ services:
       - "3407:3306"               # 호스트 3407 → 컨테이너 3306
     volumes:
       - db_data:/var/lib/mysql    # 데이터 영구 저장
-    healthcheck:                  # DB 준비 완료 체크
-      test: ["CMD", "healthcheck.sh", "--connect"]
+    healthcheck: # DB 준비 완료 체크
+      test: [ "CMD", "healthcheck.sh", "--connect" ]
       interval: 10s
 
   # 2. Spring Boot 애플리케이션 컨테이너
   app:
     build:
-      context: .
+      context: ..
       dockerfile: Dockerfile      # 위의 Dockerfile 사용
     container_name: doll_gacha_app
     ports:
