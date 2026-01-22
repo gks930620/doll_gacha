@@ -12,19 +12,25 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: create  # Docker 테스트용: 매번 테이블 새로 생성
+      ddl-auto: create  # 연습용: 매번 테이블 새로 생성
     defer-datasource-initialization: true  # JPA 초기화 후 SQL 실행
     properties:
       hibernate:
         show_sql: false
         format_sql: false
         default_batch_fetch_size: 100
+        # MySQL 8.x dialect
+        dialect: org.hibernate.dialect.MySQLDialect
+        # 스키마 생성 전 FK 체크 비활성화
+        "[javax.persistence.schema-generation.scripts.action]": drop-and-create
     open-in-view: false
+    database-platform: org.hibernate.dialect.MySQLDialect
 
   sql:
     init:
-      mode: always     # 테스트용.  싲레 배포 시 삭제 .
+      mode: always  # 연습용: 매번 초기 데이터 삽입
       data-locations:
+        - classpath:data-init.sql
         - classpath:data-users.sql
         - classpath:data-dollshop.sql
         - classpath:data-files.sql
