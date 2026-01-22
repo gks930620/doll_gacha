@@ -100,5 +100,5 @@ management:
 
 # 파일 업로드 경로
 file:
-  upload-dir: /app/uploads/
+  upload-dir: /app/uploads
 

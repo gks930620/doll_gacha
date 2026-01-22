@@ -103,3 +103,5 @@ Thumbs.db
 *-private.*
 # application-prod.yml은 환경변수로 처리되므로 커밋 가능
 application-prod.properties
+
+/uploads/
