@@ -1,0 +1,98 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://localhost:3406/doll_gacha}
+    driver-class-name: org.mariadb.jdbc.Driver
+    username: ${SPRING_DATASOURCE_USERNAME:doll_gacha}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      connection-timeout: 20000
+
+  jpa:
+    hibernate:
+      ddl-auto: create  # Docker 테스트용: 매번 테이블 새로 생성
+    defer-datasource-initialization: true  # JPA 초기화 후 SQL 실행
+    properties:
+      hibernate:
+        show_sql: false
+        format_sql: false
+        default_batch_fetch_size: 100
+    open-in-view: false
+
+  sql:
+    init:
+      mode: always     # 테스트용.  싲레 배포 시 삭제 .
+      data-locations:
+        - classpath:data-users.sql
+        - classpath:data-dollshop.sql
+        - classpath:data-files.sql
+        - classpath:data-review.sql
+        - classpath:data-community.sql
+        - classpath:data-comment.sql
+
+  devtools:
+    livereload:
+      enabled: false
+    restart:
+      enabled: false
+
+  thymeleaf:
+    cache: true
+
+  security:
+    oauth2:
+      client:
+        registration:
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            client-authentication-method: client_secret_post
+            redirect-uri: ${APP_BASE_URL:http://localhost:8080}/login/oauth2/code/kakao
+            authorization-grant-type: authorization_code
+            scope:
+              - profile_nickname
+              - account_email
+
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: ${APP_BASE_URL:http://localhost:8080}/login/oauth2/code/google
+            scope:
+              - profile
+              - email
+            authorization-grant-type: authorization_code
+        provider:
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: WARN
+    org.hibernate.type: WARN
+    com.example: INFO
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  expiration_access: 1800000   # 30분
+  expiration_refresh: 14400000 # 4시간
+
+# Actuator 설정 (서버 상태 모니터링)
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+# 파일 업로드 경로
+file:
+  upload-dir: /app/uploads/
+

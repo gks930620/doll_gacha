@@ -48,7 +48,4 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Trigger Railway Redeploy
-        run: |
-          curl -X POST "${{ secrets.RAILWAY_WEBHOOK_URL }}"
 

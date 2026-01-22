@@ -101,5 +101,5 @@ Thumbs.db
 # API 키가 포함된 설정 파일
 *-secret.*
 *-private.*
-application-prod.yml
+# application-prod.yml은 환경변수로 처리되므로 커밋 가능
 application-prod.properties

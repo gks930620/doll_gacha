@@ -3,10 +3,54 @@
 ## 📋 목표
 GitHub에 커밋/푸시만 하면 자동으로 Railway에 배포되는 CI/CD 파이프라인 구축
 
-## 🔄 전체 흐름
+---
+
+## 🔄 자동 배포 방법 비교
+
+### 📌 방법 A: Railway GitHub 직접 연동 (⭐ 추천)
+
 ```
-GitHub Push → GitHub Actions → Docker Hub → Railway 배포
+GitHub Push → Railway가 직접 감지 → Railway가 Dockerfile로 이미지 빌드 → 자동 배포
 ```
+
+| 장점 | 단점 |
+|------|------|
+| 설정이 가장 간단함 | Docker Hub에 이미지가 저장되지 않음 |
+| 별도 Secret/Webhook 불필요 | Railway 서비스가 GitHub 저장소에 연결되어야 함 |
+| Railway가 모든 것을 처리 | |
+
+**설정 방법:**
+1. Railway에서 서비스 생성 시 **"Deploy from GitHub Repo"** 선택
+2. GitHub 저장소 연결
+3. 서비스 Settings → **Deploy on Push = Enabled** 확인
+4. 끝! GitHub에 push하면 자동 배포됨
+
+---
+
+### 📌 방법 B: GitHub Actions + Docker Hub + Railway (현재 방식)
+
+```
+GitHub Push → GitHub Actions → Gradle 빌드 → Docker 이미지 빌드 → Docker Hub 푸시 → Railway가 Docker Hub 이미지 pull → 배포
+```
+
+| 장점 | 단점 |
+|------|------|
+| Docker Hub에 이미지 보관됨 | 설정이 복잡함 (Secrets, Webhook 등) |
+| GitHub Actions에서 테스트 가능 | Docker Hub 무료 계정은 제한 있음 |
+| 빌드 과정을 세밀하게 제어 가능 | Railway 자동 재배포 설정 필요 |
+
+**필요한 설정:**
+- GitHub Secrets: `DOCKER_USERNAME`, `DOCKER_TOKEN`
+- GitHub Actions workflow 파일 (`.github/workflows/deploy.yml`)
+- Railway: Docker Image 소스로 서비스 생성
+
+---
+
+## ✅ 현재 선택: 방법 A (Railway GitHub 직접 연동)
+
+> 💡 Docker Hub를 거치지 않고, Railway가 직접 GitHub 저장소를 감지해서 Dockerfile로 이미지를 빌드하고 배포함.
+
+---
 
 ---
 
@@ -260,20 +304,53 @@ SPRING_DATASOURCE_URL=jdbc:mariadb://${{MySQL.MYSQLHOST}}:${{MySQL.MYSQLPORT}}/$
 
 ## 📌 8단계: Railway 자동 배포 설정
 
-### 옵션 A: Docker Hub Webhook (권장)
-1. Railway 프로젝트 → **Settings**
-2. **Deploy on Push** 활성화
-3. Docker Hub → Repository → **Webhooks**
-4. Railway webhook URL 추가
+### ⭐ 방법 A: Railway GitHub 직접 연동 (추천)
 
-### 옵션 B: GitHub Actions에서 Railway 배포 추가
-`deploy.yml`에 Railway 배포 단계 추가:
+> Railway가 GitHub 저장소를 직접 감지해서 Dockerfile로 이미지를 빌드하고 배포함.
+> Docker Hub를 거치지 않음!
 
-```yaml
-      - name: Deploy to Railway
-        run: |
-          curl -X POST ${{ secrets.RAILWAY_WEBHOOK_URL }}
-```
+**설정 방법:**
+
+1. **기존 Docker Image 서비스 삭제** (선택사항)
+   - 현재 Docker Hub 이미지로 만든 서비스가 있다면 삭제
+
+2. **새 서비스 생성 (GitHub 연동)**
+   - Railway 프로젝트에서 **+ New** → **GitHub Repo** 선택
+   - GitHub 저장소 (`gks930620/doll_gacha`) 연결
+   - Railway가 자동으로 Dockerfile을 감지하여 빌드
+
+3. **Deploy on Push 확인**
+   - 서비스 클릭 → **Settings** 탭
+   - **Source** 섹션에서 GitHub 저장소가 연결되어 있는지 확인
+   - **Automatic Deploys** 또는 **Deploy on Push**가 **Enabled** 상태인지 확인
+
+4. **환경변수 재설정**
+   - 새로 만든 서비스에 5-4단계의 환경변수 다시 설정
+
+5. **테스트**
+   - GitHub에 아무 변경사항이나 커밋/푸시
+   - Railway Deployments 탭에서 자동으로 빌드 시작되는지 확인
+
+---
+
+### 방법 B: Docker Hub + Railway (기존 방식, 참고용)
+
+> GitHub Actions에서 Docker Hub로 이미지 푸시 → Railway가 Docker Hub 이미지 사용
+
+**이 방법을 사용하려면:**
+
+1. GitHub Secrets 설정:
+   - `DOCKER_USERNAME`: Docker Hub 사용자명
+   - `DOCKER_TOKEN`: Docker Hub Access Token
+
+2. Railway 서비스:
+   - **Docker Image** 소스로 생성
+   - 이미지: `{DOCKER_USERNAME}/doll-gacha:latest`
+
+3. Railway 자동 재배포 설정:
+   - Railway는 Docker Hub 이미지 변경을 자동 감지하지 않음
+   - 수동으로 **Redeploy** 버튼 클릭 필요
+   - 또는 Railway CLI/API로 재배포 트리거 필요
 
 ---
 
@@ -330,20 +407,32 @@ SPRING_DATASOURCE_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 
 ## 📝 체크리스트
 
+### 방법 A 사용 시 (Railway GitHub 직접 연동 - 추천)
+- [ ] Railway 프로젝트 생성
+- [ ] Railway MySQL 서비스 추가
+- [ ] Railway에서 GitHub Repo로 서비스 생성
+- [ ] Deploy on Push 활성화 확인
+- [ ] Railway 서비스 환경변수 설정
+- [ ] Railway 도메인 생성
+- [ ] 카카오 개발자센터 Redirect URI 추가
+- [ ] 구글 클라우드 콘솔 Redirect URI 추가
+- [ ] GitHub 커밋 & 푸시로 자동 배포 테스트
+
+### 방법 B 사용 시 (Docker Hub 경유)
 - [ ] Docker Hub 계정 생성
 - [ ] Docker Hub Access Token 생성
-- [ ] GitHub Secrets 설정 (DOCKER_USERNAME, DOCKER_PASSWORD)
+- [ ] GitHub Secrets 설정 (DOCKER_USERNAME, DOCKER_TOKEN)
 - [ ] GitHub Actions 워크플로우 파일 생성
 - [ ] 커밋 & 푸시
 - [ ] GitHub Actions 성공 확인
 - [ ] Docker Hub에 이미지 업로드 확인
-- [ ] Railway 프로젝트 생성
+- [ ] Railway 프로젝트 생성 (Docker Image 소스)
 - [ ] Railway MySQL 서비스 추가
 - [ ] Railway doll-gacha 서비스 환경변수 설정
 - [ ] Railway 도메인 생성
 - [ ] 카카오 개발자센터 Redirect URI 추가
 - [ ] 구글 클라우드 콘솔 Redirect URI 추가
-- [ ] 최종 테스트
+- [ ] 수동 Redeploy 또는 자동화 설정
 
 ---
 
@@ -351,20 +440,20 @@ SPRING_DATASOURCE_PASSWORD=${{MySQL.MYSQLPASSWORD}}
 
 | 단계 | 상태 | 설명 |
 |------|------|------|
-| 1단계 | ✅ 완료 | Docker Hub 토큰 생성 |
-| 2단계 | ✅ 완료 | GitHub Secrets 설정 |
-| 3단계 | ✅ 완료 | deploy.yml 파일 생성됨 |
-| 4단계 | ✅ 완료 | GitHub Actions 실행 성공 |
-| 5단계 | ✅ 완료 | Railway 설정 (MySQL + doll-gacha 서비스) |
-| 6단계 | ✅ 완료 | Railway 도메인 생성 |
-| 7단계 | ⏳ 대기중 | OAuth2 개발자센터 Redirect URI 설정 |
-| 8단계 | 🔧 설정중 | Railway 자동 배포 설정 (RAILWAY_WEBHOOK_URL Secret 추가 필요) |
+| MySQL 서비스 | ✅ 완료 | Railway에 MySQL 서비스 생성됨 (Online) |
+| doll-gacha 서비스 | ✅ 완료 | 환경변수 설정 완료 (MariaDB 형식) |
+| 도메인 생성 | ✅ 완료 | `doll-gacha-production.up.railway.app` |
+| OAuth2 설정 | ⏳ 대기중 | 카카오/구글 개발자센터 Redirect URI 추가 필요 |
+| CI/CD | 🔧 전환중 | 방법 A (Railway GitHub 직접 연동)로 전환 권장 |
 
 ---
 
 ## 🚀 다음 할 일
 
-1. **GitHub에 `RAILWAY_WEBHOOK_URL` Secret 추가** (8단계 참조)
+1. **Railway에서 GitHub 저장소 직접 연동** (방법 A로 전환)
+   - 기존 Docker Image 서비스 → GitHub Repo 서비스로 변경
+   
 2. **카카오/구글 개발자센터에서 Redirect URI 추가** (7단계 참조)
-3. **커밋 & 푸시하여 CI/CD 테스트**
+
+3. **GitHub 커밋 & 푸시하여 자동 배포 테스트**
 
