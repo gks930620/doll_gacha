@@ -635,7 +635,7 @@
                         return `
                             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
                                 <span class="material-icons" style="font-size: 20px; color: #757575;">attach_file</span>
-                                <a href="${file.downloadUrl}" style="color: #6200ea; text-decoration: none;">
+                                <a href="${file.downloadUrl}" download="${file.originalFileName}" style="color: #6200ea; text-decoration: none;">
                                     ${file.originalFileName}
                                 </a>
                                 <span style="color: #9e9e9e; font-size: 12px;">(${formatFileSize(file.fileSize)})</span>
