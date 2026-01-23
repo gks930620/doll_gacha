@@ -149,6 +149,8 @@ public class FileController {
 
     /**
      * 첨부파일 다운로드 API
+     * - 로컬 파일: 직접 서빙
+     * - Supabase 파일: CDN에서 가져와서 원본 파일명으로 응답
      * @param fileId 파일 ID
      * @return 파일 리소스 (원본 파일명으로 다운로드)
      */
@@ -162,15 +164,24 @@ public class FileController {
                 return ResponseEntity.notFound().build();
             }
 
-            // 2. 물리적 파일 로드 - 절대 경로로 안전하게 처리
-            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
-            Path file = uploadPath.resolve(fileEntity.getStoredFileName());
-            log.info("파일 다운로드 시도: fileId={}, path={}", fileId, file);
+            String filePath = fileEntity.getFilePath();
+            Resource resource;
 
-            Resource resource = new UrlResource(file.toUri());
+            // 2. CDN URL인지 로컬 파일인지 판단
+            if (filePath != null && filePath.startsWith("http")) {
+                // Supabase CDN URL → URL Resource로 로드
+                log.info("CDN 파일 다운로드: fileId={}, url={}", fileId, filePath);
+                resource = new UrlResource(filePath);
+            } else {
+                // 로컬 파일 → 기존 방식
+                Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+                Path file = uploadPath.resolve(fileEntity.getStoredFileName());
+                log.info("로컬 파일 다운로드: fileId={}, path={}", fileId, file);
+                resource = new UrlResource(file.toUri());
+            }
 
             if (!resource.exists() || !resource.isReadable()) {
-                log.error("파일을 찾을 수 없습니다: {}", fileEntity.getStoredFileName());
+                log.error("파일을 찾을 수 없습니다: {}", filePath);
                 return ResponseEntity.notFound().build();
             }
 
@@ -178,7 +189,7 @@ public class FileController {
             String encodedFileName = URLEncoder.encode(fileEntity.getOriginalFileName(), StandardCharsets.UTF_8)
                     .replaceAll("\\+", "%20");
 
-            // 4. 다운로드 응답 헤더 설정
+            // 4. 다운로드 응답 헤더 설정 (원본 파일명으로!)
             return ResponseEntity.ok()
                     .contentType(MediaType.APPLICATION_OCTET_STREAM)
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + encodedFileName + "\"")
