@@ -26,7 +26,8 @@ public interface FileRepository extends JpaRepository<FileEntity, Long>, FileRep
                 .collect(Collectors.groupingBy(
                         FileEntity::getRefId,
                         Collectors.mapping(
-                                file -> "/uploads/" + file.getStoredFileName(),
+                                // DB에 이미 완성된 URL 저장됨 (CDN URL 또는 /uploads/xxx)
+                                FileEntity::getFilePath,
                                 Collectors.toList()
                         )
                 ));

@@ -17,11 +17,6 @@ public class FileDetailDTO {
     private String previewUrl;   // 미리보기용 (CDN 직접 사용 가능)
 
     public static FileDetailDTO from(FileEntity entity) {
-        String fileUrl = entity.getFilePath();
-
-        // CDN URL인지 확인 (https://로 시작하면 Supabase)
-        boolean isCdnUrl = fileUrl != null && fileUrl.startsWith("http");
-
         return FileDetailDTO.builder()
                 .fileId(entity.getId())
                 .originalFileName(entity.getOriginalFileName())
@@ -29,8 +24,8 @@ public class FileDetailDTO {
                 .fileSize(entity.getFileSize())
                 // 다운로드: 원본 파일명이 필요하므로 서버 API 유지 (CDN은 UUID로 다운됨)
                 .downloadUrl("/api/files/download/" + entity.getId())
-                // 미리보기(이미지): CDN URL이면 직접 사용 (빠름!)
-                .previewUrl(isCdnUrl ? fileUrl : "/uploads/" + entity.getStoredFileName())
+                // 미리보기: DB에 이미 완성된 URL 저장됨 (CDN URL 또는 /uploads/xxx)
+                .previewUrl(entity.getFilePath())
                 .build();
     }
 }

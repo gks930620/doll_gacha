@@ -78,7 +78,8 @@ public class ReviewRepositoryImpl implements ReviewRepositoryCustom {
                     .collect(Collectors.groupingBy(
                             FileEntity::getRefId,
                             Collectors.mapping(
-                                    f -> "/uploads/" + f.getStoredFileName(),
+                                    // DB에 이미 완성된 URL 저장됨 (CDN URL 또는 /uploads/xxx)
+                                    FileEntity::getFilePath,
                                     Collectors.toList()
                             )
                     ));

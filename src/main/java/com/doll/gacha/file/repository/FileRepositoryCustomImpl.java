@@ -45,7 +45,8 @@ public class FileRepositoryCustomImpl implements FileRepositoryCustom {
         return files.stream()
                 .collect(Collectors.toMap(
                         FileEntity::getRefId,
-                        file -> "/uploads/" + file.getStoredFileName(),
+                        // DB에 이미 완성된 URL 저장됨 (CDN URL 또는 /uploads/xxx)
+                        FileEntity::getFilePath,
                         (existing, replacement) -> existing // 중복 시 첫 번째 유지
                 ));
     }
