@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -28,6 +29,9 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private final RefreshService refreshService;
     private final InMemoryAuthorizationRequestRepository authorizationRequestRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    @Value("${app.cookie.secure:false}")
+    private boolean secureCookie;  // 로컬: false, 운영(HTTPS): true
 
     // OAuth2 인증 필터(OAuth2LoginAuthenticationFilter)가 인증을 완료한 후 호출됨
     @Override
@@ -74,7 +78,7 @@ public class OAuth2LoginSuccessHandler extends SimpleUrlAuthenticationSuccessHan
     private void addCookie(HttpServletResponse response, String name, String value, int maxAge) {
         ResponseCookie.ResponseCookieBuilder cookieBuilder = ResponseCookie.from(name, value)
             .httpOnly(true)
-            .secure(false) // 운영 환경(HTTPS)에서는 true 권장
+            .secure(secureCookie)  // 로컬(HTTP): false, 운영(HTTPS): true
             .sameSite("Lax")
             .path("/");
 

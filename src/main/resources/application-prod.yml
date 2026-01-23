@@ -88,6 +88,18 @@ jwt:
   expiration_access: 1800000   # 30분
   expiration_refresh: 14400000 # 4시간
 
+# 쿠키 보안 설정 (운영: HTTPS이므로 true)
+app:
+  cookie:
+    secure: true
+
+# Supabase Storage 설정 (운영: 활성화)
+supabase:
+  url: ${SUPABASE_URL}
+  key: ${SUPABASE_ANON_KEY}
+  bucket: uploads
+  enabled: true  # 운영에서 Supabase 사용
+
 # Actuator 설정 (서버 상태 모니터링)
 management:
   endpoints:

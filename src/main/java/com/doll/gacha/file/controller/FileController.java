@@ -4,9 +4,11 @@ import com.doll.gacha.common.dto.ApiResponse;
 import com.doll.gacha.file.dto.FileDetailDTO;
 import com.doll.gacha.file.entity.FileEntity;
 import com.doll.gacha.file.service.FileService;
+import com.doll.gacha.file.strategy.FileStorageStrategy.FileUploadResult;
 import com.doll.gacha.file.util.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
@@ -30,13 +32,18 @@ public class FileController {
     private final FileService fileService;
     private final FileUtil fileUtil;
 
+    @Value("${file.upload-dir:./uploads/}")
+    private String uploadDir;
+
     /**
      * 이미지 파일 서빙 (HTML img 태그에서 호출)
+     * - 로컬 저장 모드에서만 사용
+     * - Supabase 모드에서는 CDN URL로 직접 접근하므로 이 API 사용 안 함
      */
     @GetMapping("/images/{filename:.+}")
     public ResponseEntity<Resource> serveFile(@PathVariable String filename) {
         try {
-            Path uploadPath = Paths.get(fileUtil.getUploadDir()).toAbsolutePath().normalize();
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
             Path file = uploadPath.resolve(filename);
             Resource resource = new UrlResource(file.toUri());
 
@@ -96,7 +103,7 @@ public class FileController {
 
         try {
             // 1. FileUtil로 물리적 파일 저장
-            List<FileUtil.FileUploadResult> uploadResults = files.stream()
+            List<FileUploadResult> uploadResults = files.stream()
                     .filter(file -> !file.isEmpty())
                     .map(fileUtil::saveFile)
                     .toList();
@@ -156,7 +163,7 @@ public class FileController {
             }
 
             // 2. 물리적 파일 로드 - 절대 경로로 안전하게 처리
-            Path uploadPath = Paths.get(fileUtil.getUploadDir()).toAbsolutePath().normalize();
+            Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
             Path file = uploadPath.resolve(fileEntity.getStoredFileName());
             log.info("파일 다운로드 시도: fileId={}, path={}", fileId, file);
 

@@ -81,6 +81,18 @@ jwt:
   expiration_access:  1800000 #30분 테스트용 1800000    30초=30000
   expiration_refresh : 14400000   #테스트용 4시간
 
+# 쿠키 보안 설정 (로컬: HTTP이므로 false)
+app:
+  cookie:
+    secure: false
+
+# Supabase Storage 설정 (로컬: 비활성화)
+supabase:
+  url: ${SUPABASE_URL:}
+  key: ${SUPABASE_ANON_KEY:}
+  bucket: uploads
+  enabled: false  # 로컬은 기존 로컬 저장 방식 사용
+
 # Actuator 설정 (서버 상태 모니터링)
 management:
   endpoints:
