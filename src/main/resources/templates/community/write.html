@@ -341,9 +341,9 @@ h<!DOCTYPE html>
                     return;
                 }
 
-                // 파일 크기 체크 (5MB 제한)
-                if (file.size > 5 * 1024 * 1024) {
-                    alert('이미지 크기는 5MB 이하여야 합니다.');
+                // 파일 크기 체크 (10MB 제한)
+                if (file.size > 10 * 1024 * 1024) {
+                    alert('파일 크기가 너무 큽니다!\n\n최대 10MB까지 업로드 가능합니다.\n현재 파일 크기: ' + (file.size / 1024 / 1024).toFixed(2) + 'MB');
                     return;
                 }
 
@@ -362,7 +362,11 @@ h<!DOCTYPE html>
                     });
 
                     if (!response.ok) {
-                        throw new Error('이미지 업로드 실패');
+                        if (response.status === 413) {
+                            throw new Error('파일 크기가 너무 큽니다! 최대 10MB까지 업로드 가능합니다.');
+                        }
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.message || '이미지 업로드 실패');
                     }
 
                     const result = await response.json();
@@ -380,7 +384,7 @@ h<!DOCTYPE html>
 
                 } catch (error) {
                     console.error('❌ 이미지 업로드 실패:', error);
-                    alert('이미지 업로드에 실패했습니다.');
+                    alert(error.message || '이미지 업로드에 실패했습니다.');
                 }
             };
         }

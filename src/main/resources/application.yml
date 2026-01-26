@@ -3,6 +3,11 @@ dotenv:
 
 
 spring:
+  servlet:
+    multipart:
+      max-file-size: 10MB      # 단일 파일 최대 크기
+      max-request-size: 50MB   # 전체 요청 최대 크기
+
   datasource:
     url: jdbc:mariadb://localhost:3406/doll_gacha
     driver-class-name: org.mariadb.jdbc.Driver

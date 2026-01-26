@@ -706,14 +706,22 @@
                 .then(images => {
                     // FileController는 List<String>을 직접 반환 (ApiResponse 아님)
                     console.log('매장 이미지 로드:', images);
+                    const mainImageDiv = document.querySelector('.main-image');
                     if (images && images.length > 0) {
-                        const mainImageDiv = document.querySelector('.main-image');
-                        mainImageDiv.innerHTML = `<img src="${images[0]}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+                        mainImageDiv.innerHTML = `<img src="${images[0]}" style="width:100%; height:100%; object-fit:cover; border-radius:8px;" onerror="this.src='/images/default-shop.png'">`;
+                        mainImageDiv.style.background = 'none';
+                    } else {
+                        // 이미지가 없으면 기본 이미지 표시
+                        mainImageDiv.innerHTML = `<img src="/images/default-shop.png" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
                         mainImageDiv.style.background = 'none';
                     }
                 })
                 .catch(err => {
                     console.error('이미지 로드 실패:', err);
+                    // 에러 시에도 기본 이미지 표시
+                    const mainImageDiv = document.querySelector('.main-image');
+                    mainImageDiv.innerHTML = `<img src="/images/default-shop.png" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">`;
+                    mainImageDiv.style.background = 'none';
                 });
         }
 

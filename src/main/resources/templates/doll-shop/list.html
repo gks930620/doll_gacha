@@ -548,10 +548,7 @@
         container.innerHTML = pageData.content.map(shop => `
             <div class="shop-item" onclick="goToDetail(${shop.id})">
                 <div class="shop-image">
-                    ${shop.imagePath ?
-                        `<img src="${shop.imagePath}" alt="${shop.businessName}">` :
-                        '<span class="material-icons">store_mall_directory</span>'
-                    }
+                    <img src="${shop.imagePath || '/images/default-shop.png'}" alt="${shop.businessName}" onerror="this.src='/images/default-shop.png'">
                 </div>
                 <div class="shop-info">
                     <div class="shop-name">${shop.businessName}</div>
