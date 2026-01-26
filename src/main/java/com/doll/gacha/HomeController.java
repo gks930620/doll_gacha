@@ -8,18 +8,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class HomeController {
 
-    @Value("${kakao.map.javascript-key}")
-    private String kakaoMapJsKey;
 
     @GetMapping("/")
-    public String home(Model model) {
-        model.addAttribute("kakaoMapJsKey", kakaoMapJsKey);
+    public String home() {
         return "map";
     }
 
     @GetMapping("/map")
-    public String map(Model model) {
-        model.addAttribute("kakaoMapJsKey", kakaoMapJsKey);
+    public String map() {
         return "map";
     }
 
