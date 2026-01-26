@@ -80,7 +80,9 @@ class AuthService {
       );
 
       if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
+        final json = jsonDecode(response.body);
+        // ApiResponse 형식: { data: {...} }
+        final data = json['data'] ?? json;
         return User.fromJson(data);
       }
     } catch (e) {

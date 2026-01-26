@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'map_screen.dart';
+import 'shop_list_screen.dart';
+import 'community_list_screen.dart';
+import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,8 +14,15 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
-  bool isLoggedIn = false;
-  bool isLoading = true;
+  int _currentIndex = 0;
+  bool _isLoggedIn = false;
+
+  final List<Widget> _screens = [
+    const MapScreen(), // 카카오맵 지도
+    const ShopListScreen(),
+    const CommunityListScreen(),
+    const ProfileScreen(),
+  ];
 
   @override
   void initState() {
@@ -22,105 +33,51 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _checkLoginStatus() async {
     final loggedIn = await _authService.isLoggedIn();
     if (mounted) {
-      setState(() {
-        isLoggedIn = loggedIn;
-        isLoading = false;
-      });
-    }
-  }
-
-  Future<void> _handleLogout() async {
-    await _authService.logout();
-    if (mounted) {
-      setState(() {
-        isLoggedIn = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('로그아웃 되었습니다.')),
-      );
+      setState(() => _isLoggedIn = loggedIn);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Doll Gacha'),
-        centerTitle: true,
+      body: IndexedStack(
+        index: _currentIndex,
+        children: _screens,
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const Spacer(),
-              const Icon(
-                Icons.videogame_asset,
-                size: 100,
-                color: Colors.deepPurple,
-              ),
-              const SizedBox(height: 24),
-              Text(
-                'Welcome to Doll Gacha',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-              ),
-              const Spacer(),
-              if (!isLoggedIn)
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/login');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('로그인', style: TextStyle(fontSize: 18)),
-                ),
-              if (isLoggedIn) ...[
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pushNamed(context, '/profile');
-                  },
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('내 정보', style: TextStyle(fontSize: 18)),
-                ),
-                const SizedBox(height: 16),
-                OutlinedButton(
-                  onPressed: _handleLogout,
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  child: const Text('로그아웃', style: TextStyle(fontSize: 18)),
-                ),
-              ],
-              const SizedBox(height: 40),
-            ],
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          // 프로필 탭 클릭 시 로그인 체크
+          if (index == 3 && !_isLoggedIn) {
+            Navigator.pushNamed(context, '/login').then((_) {
+              _checkLoginStatus();
+            });
+            return;
+          }
+          setState(() => _currentIndex = index);
+        },
+        type: BottomNavigationBarType.fixed,
+        selectedItemColor: Colors.deepPurple,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.map),
+            label: '지도',
           ),
-        ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.store),
+            label: '매장',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.forum),
+            label: '커뮤니티',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: '마이',
+          ),
+        ],
       ),
     );
   }
 }
-

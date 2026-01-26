@@ -1,114 +1,64 @@
-import 'dart:io';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/constants.dart';
+import '../models/page_response_model.dart';
 import '../models/review_model.dart';
-import 'package:uuid/uuid.dart';
+import '../models/review_stats_model.dart';
+import 'api_client.dart';
 
+/// 리뷰 서비스
 class ReviewService {
-  final SupabaseClient _supabase = Supabase.instance.client;
-  final _uuid = const Uuid();
+  final ApiClient _apiClient = ApiClient();
 
-  // 리뷰 생성
-  Future<Review> createReview({
-    required String userId,
-    required String shopId,
-    required String content,
-    required double rating,
-    required List<File> imageFiles,
+  /// 매장별 리뷰 목록 조회 (페이징)
+  Future<ApiResult<PageResponse<Review>>> getReviewsByShop(
+    int shopId, {
+    int page = 0,
+    int size = 10,
   }) async {
-    // 이미지 업로드
-    final imageUrls = await _uploadImages(imageFiles);
-
-    final reviewData = {
-      'user_id': userId,
-      'shop_id': shopId,
-      'content': content,
-      'rating': rating,
-      'image_urls': imageUrls,
-      'created_at': DateTime.now().toIso8601String(),
+    final queryParams = <String, String>{
+      'page': page.toString(),
+      'size': size.toString(),
     };
 
-    final response = await _supabase
-        .from('reviews')
-        .insert(reviewData)
-        .select()
-        .single();
-
-    return Review.fromJson(response);
+    return _apiClient.get<PageResponse<Review>>(
+      AppConstants.reviewsByShopEndpoint(shopId),
+      queryParams: queryParams,
+      fromJson: (data) => PageResponse.fromJson(
+        data,
+        (item) => Review.fromJson(item),
+      ),
+    );
   }
 
-  // 이미지 업로드 (최대 3개)
-  Future<List<String>> _uploadImages(List<File> imageFiles) async {
-    if (imageFiles.isEmpty) return [];
-    if (imageFiles.length > 3) {
-      throw Exception('최대 3개의 이미지만 업로드할 수 있습니다.');
-    }
-
-    final List<String> imageUrls = [];
-
-    for (final file in imageFiles) {
-      final fileExtension = file.path.split('.').last.toLowerCase();
-      final fileName = '${_uuid.v4()}.$fileExtension';
-      final filePath = 'reviews/$fileName';
-
-      // Supabase Storage에 업로드
-      await _supabase.storage.from('review-images').upload(
-            filePath,
-            file,
-            fileOptions: const FileOptions(
-              cacheControl: '3600',
-              upsert: false,
-            ),
-          );
-
-      // Public URL 가져오기
-      final publicUrl = _supabase.storage
-          .from('review-images')
-          .getPublicUrl(filePath);
-
-      imageUrls.add(publicUrl);
-    }
-
-    return imageUrls;
+  /// 매장 리뷰 통계 조회
+  Future<ApiResult<ReviewStats>> getReviewStats(int shopId) async {
+    return _apiClient.get<ReviewStats>(
+      AppConstants.reviewStatsEndpoint(shopId),
+      fromJson: (data) => ReviewStats.fromJson(data),
+    );
   }
 
-  // 특정 가게의 리뷰 목록 가져오기
-  Future<List<Review>> getReviewsByShopId(String shopId) async {
-    final response = await _supabase
-        .from('reviews')
-        .select()
-        .eq('shop_id', shopId)
-        .order('created_at', ascending: false);
-
-    return (response as List).map((json) => Review.fromJson(json)).toList();
+  /// 리뷰 작성
+  Future<ApiResult<Review>> createReview(ReviewCreate review) async {
+    return _apiClient.post<Review>(
+      AppConstants.reviewsEndpoint,
+      body: review.toJson(),
+      fromJson: (data) => Review.fromJson(data),
+    );
   }
 
-  // 리뷰 삭제
-  Future<void> deleteReview(String reviewId, List<String> imageUrls) async {
-    // 먼저 이미지 삭제
-    await _deleteImages(imageUrls);
-
-    // 리뷰 삭제
-    await _supabase.from('reviews').delete().eq('id', reviewId);
+  /// 리뷰 수정
+  Future<ApiResult<Review>> updateReview(int reviewId, ReviewUpdate review) async {
+    return _apiClient.put<Review>(
+      '${AppConstants.reviewsEndpoint}/$reviewId',
+      body: review.toJson(),
+      fromJson: (data) => Review.fromJson(data),
+    );
   }
 
-  // 이미지 삭제
-  Future<void> _deleteImages(List<String> imageUrls) async {
-    for (final url in imageUrls) {
-      try {
-        // URL에서 파일 경로 추출
-        final uri = Uri.parse(url);
-        final pathSegments = uri.pathSegments;
-
-        // 'review-images' 다음의 경로 추출
-        final storageIndex = pathSegments.indexOf('review-images');
-        if (storageIndex != -1 && storageIndex < pathSegments.length - 1) {
-          final filePath = pathSegments.sublist(storageIndex + 1).join('/');
-          await _supabase.storage.from('review-images').remove([filePath]);
-        }
-      } catch (e) {
-        print('이미지 삭제 중 오류 발생: $e');
-      }
-    }
+  /// 리뷰 삭제
+  Future<ApiResult<void>> deleteReview(int reviewId) async {
+    return _apiClient.delete<void>(
+      '${AppConstants.reviewsEndpoint}/$reviewId',
+    );
   }
 }
-
