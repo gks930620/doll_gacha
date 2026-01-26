@@ -1,18 +1,25 @@
 package com.doll.gacha;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
 public class HomeController {
 
+    @Value("${kakao.map.javascript-key}")
+    private String kakaoMapJsKey;
+
     @GetMapping("/")
-    public String home() {
+    public String home(Model model) {
+        model.addAttribute("kakaoMapJsKey", kakaoMapJsKey);
         return "map";
     }
 
     @GetMapping("/map")
-    public String map() {
+    public String map(Model model) {
+        model.addAttribute("kakaoMapJsKey", kakaoMapJsKey);
         return "map";
     }
 
@@ -55,22 +62,6 @@ public class HomeController {
     public String communityEdit() {
         return "community/edit";
     }
-
-    @GetMapping("/doll")
-    public String doll() {
-        return "doll/list";
-    }
-
-    @GetMapping("/doll/write")
-    public String dollWrite() {
-        return "doll/write";
-    }
-
-    @GetMapping("/doll/detail")
-    public String dollDetail() {
-        return "doll/detail";
-    }
-
 
     @GetMapping("/doll-shop/list")
     public String dollShops() {

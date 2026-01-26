@@ -1,3 +1,7 @@
+kakao:
+  map:
+    javascript-key: ${KAKAO_MAP_JAVASCRIPT_KEY}
+
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mariadb://localhost:3406/doll_gacha}
@@ -26,17 +30,17 @@ spring:
     open-in-view: false
     database-platform: org.hibernate.dialect.MySQLDialect
 
-  sql:
-    init:
-      mode: always  # 연습용: 매번 초기 데이터 삽입
-      data-locations:
-        - classpath:data-init.sql
-        - classpath:data-users.sql
-        - classpath:data-dollshop.sql
-        - classpath:data-files.sql
-        - classpath:data-review.sql
-        - classpath:data-community.sql
-        - classpath:data-comment.sql
+#  sql:    #  운영에서 이제 데이터 삭제 
+#    init:
+#      mode: always  # 연습용: 매번 초기 데이터 삽입
+#      data-locations:
+#        - classpath:data-init.sql
+#        - classpath:data-users.sql
+#        - classpath:data-dollshop.sql
+#        - classpath:data-files.sql
+#        - classpath:data-review.sql
+#        - classpath:data-community.sql
+#        - classpath:data-comment.sql
 
   devtools:
     livereload:

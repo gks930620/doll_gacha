@@ -1,5 +1,10 @@
 dotenv:
   enabled: true  # .env파일설정.    KAKAO_CLIENT_ID 직접 쓰려면 없어도됨.
+
+kakao:
+  map:
+    javascript-key: ${KAKAO_MAP_JAVASCRIPT_KEY}
+
 spring:
   datasource:
     url: jdbc:mariadb://localhost:3406/doll_gacha
