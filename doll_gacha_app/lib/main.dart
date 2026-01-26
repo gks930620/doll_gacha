@@ -26,6 +26,20 @@ void main() async {
     javaScriptAppKey: dotenv.env['KAKAO_MAP_JAVASCRIPT_KEY'] ?? '',
   );
 
+  // 카카오 키 해시 출력 (디버깅용 - 카카오 개발자 콘솔에 등록 필요)
+  try {
+    // origin은 "android:키해시" 형태로 반환됨
+    String origin = await kakao_sdk.KakaoSdk.origin;
+    print('===== Kakao Origin: $origin =====');
+    // 키 해시만 추출 (android: 제거)
+    if (origin.startsWith('android:')) {
+      String keyHash = origin.substring(8);
+      print('===== Kakao Key Hash (카카오 개발자 콘솔에 등록): $keyHash =====');
+    }
+  } catch (e) {
+    print('키 해시 확인 실패: $e');
+  }
+
   // 카카오맵 SDK 초기화
   AuthRepository.initialize(
     appKey: dotenv.env['KAKAO_MAP_JAVASCRIPT_KEY'] ?? '',

@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao;
+import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart' as kakao;
 import '../config/constants.dart';
 import '../models/user_model.dart';
 
@@ -177,12 +177,9 @@ class AuthService {
     try {
       kakao.OAuthToken token;
 
-      // 카카오톡 설치 여부에 따라 로그인 방식 선택
       if (await kakao.isKakaoTalkInstalled()) {
-        // 카카오톡으로 로그인
         token = await kakao.UserApi.instance.loginWithKakaoTalk();
       } else {
-        // 카카오 계정으로 로그인 (웹)
         token = await kakao.UserApi.instance.loginWithKakaoAccount();
       }
 
@@ -203,7 +200,6 @@ class AuthService {
           'id': kakaoId,
           'email': email,
           'nickname': nickname,
-          'accessToken': token.accessToken,
         }),
       );
 
@@ -221,7 +217,6 @@ class AuthService {
         }
       }
 
-      print('Server response error: ${response.statusCode}');
       return false;
     } catch (e) {
       print('Kakao login error: $e');

@@ -32,14 +32,20 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
-            <!-- Kakao OAuth Intent Filter -->
-            <intent-filter android:autoVerify="true">
+        </activity>
+
+        <!-- Kakao SDK Auth Activity -->
+        <activity
+            android:name="com.kakao.sdk.auth.AuthCodeHandlerActivity"
+            android:exported="true">
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="http" android:host="kakao7a62538fff918f35a41aa2db46c1fcbc" android:path="/oauth" />
+                <data android:scheme="kakaoad95c5f5bdc2a47abde23bf44898c86f" android:host="oauth" />
             </intent-filter>
         </activity>
+
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
