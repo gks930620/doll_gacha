@@ -92,7 +92,9 @@ class ApiClient {
   /// 헤더 생성 (토큰 포함)
   Future<Map<String, String>> _getHeaders() async {
     final headers = <String, String>{
-      'Content-Type': 'application/json',
+      'Content-Type': 'application/json; charset=utf-8',
+      'Accept': 'application/json',
+      'Accept-Charset': 'utf-8',
     };
 
     final token = await _storage.read(key: _accessTokenKey);
@@ -108,12 +110,15 @@ class ApiClient {
     http.Response response,
     T Function(dynamic)? fromJson,
   ) {
+    // UTF-8로 명시적 디코딩
+    final responseBody = utf8.decode(response.bodyBytes);
+
     if (response.statusCode >= 200 && response.statusCode < 300) {
-      if (response.body.isEmpty) {
+      if (responseBody.isEmpty) {
         return ApiResult.success(null as T);
       }
 
-      final json = jsonDecode(response.body);
+      final json = jsonDecode(responseBody);
 
       // ApiResponse 형식: { success, message, data }
       if (json is Map<String, dynamic> && json.containsKey('data')) {
@@ -137,7 +142,7 @@ class ApiClient {
       return ApiResult.error('데이터를 찾을 수 없습니다', statusCode: 404);
     } else {
       try {
-        final json = jsonDecode(response.body);
+        final json = jsonDecode(responseBody);
         final message = json['message'] ?? '요청 처리 중 오류가 발생했습니다';
         return ApiResult.error(message, statusCode: response.statusCode);
       } catch (e) {

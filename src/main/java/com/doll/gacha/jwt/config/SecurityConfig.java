@@ -89,6 +89,7 @@ public class SecurityConfig {
                     "/api/login", "/api/join", "/api/refresh/reissue",
                     // OAuth2
                     "/custom-oauth2/login/**",
+                    "/api/oauth2/**",  // 앱용 OAuth2 엔드포인트
                     // 공개 API
                     "/api/doll-shops/**",
                     "/api/reviews/doll-shop/**",  // 리뷰 조회는 공개

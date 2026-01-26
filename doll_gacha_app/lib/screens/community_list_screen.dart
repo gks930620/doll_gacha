@@ -122,7 +122,6 @@ class _CommunityListScreenState extends State<CommunityListScreen> {
                   underline: const SizedBox(),
                   items: const [
                     DropdownMenuItem(value: 'title', child: Text('제목')),
-                    DropdownMenuItem(value: 'content', child: Text('내용')),
                     DropdownMenuItem(value: 'nickname', child: Text('작성자')),
                   ],
                   onChanged: (value) {

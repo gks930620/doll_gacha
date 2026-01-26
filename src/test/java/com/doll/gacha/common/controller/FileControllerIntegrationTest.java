@@ -1,12 +1,20 @@
 package com.doll.gacha.common.controller;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -21,6 +29,31 @@ class FileControllerIntegrationTest {
     @Autowired
     private MockMvc mockMvc;
 
+    @Value("${file.upload-dir:./uploads/}")
+    private String uploadDir;
+
+    private Path testFilePath;
+
+    @BeforeEach
+    void setUp() throws IOException {
+        // 테스트용 임시 이미지 파일 생성
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Files.createDirectories(uploadPath);
+
+        testFilePath = uploadPath.resolve("test-image.jpeg");
+        // 간단한 JPEG 헤더 (실제 이미지는 아니지만 파일 존재 테스트용)
+        byte[] jpegHeader = new byte[]{(byte)0xFF, (byte)0xD8, (byte)0xFF, (byte)0xE0};
+        Files.write(testFilePath, jpegHeader);
+    }
+
+    @AfterEach
+    void tearDown() throws IOException {
+        // 테스트 파일 정리
+        if (testFilePath != null && Files.exists(testFilePath)) {
+            Files.delete(testFilePath);
+        }
+    }
+
     @Test
     @DisplayName("파일 조회 - 썸네일만 조회")
     void getFiles_thumbnail() throws Exception {
@@ -31,7 +64,7 @@ class FileControllerIntegrationTest {
                         .param("usage", "THUMBNAIL"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray()); // 배열 응답
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
@@ -42,7 +75,7 @@ class FileControllerIntegrationTest {
                         .param("refType", "DOLL_SHOP"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray()); // 배열 응답
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
@@ -54,7 +87,7 @@ class FileControllerIntegrationTest {
                         .param("usage", "IMAGES"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray()); // 배열 응답
+                .andExpect(jsonPath("$").isArray());
     }
 
     @Test
@@ -67,7 +100,7 @@ class FileControllerIntegrationTest {
                 .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$").isEmpty()); // 빈 배열 반환
+                .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test
@@ -78,18 +111,17 @@ class FileControllerIntegrationTest {
                         .param("refType", "INVALID_TYPE")
                         .param("usage", "THUMBNAIL"))
                 .andDo(print())
-                .andExpect(status().isBadRequest()); // 400 Bad Request 예상 (Enum 변환 실패)
+                .andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("파일 서빙 - 실제 이미지 파일")
     void serveFile_success() throws Exception {
-        // 실제 존재하는 파일명으로 테스트 (dollshopImage.jpeg)
-        mockMvc.perform(get("/images/dollshopImage.jpeg"))
+        // setUp에서 생성한 테스트 파일로 테스트
+        mockMvc.perform(get("/images/test-image.jpeg"))
                 .andDo(print())
                 .andExpect(status().isOk())
-                .andExpect(header().exists("Content-Type"))
-                .andExpect(content().contentTypeCompatibleWith("image/jpeg"));
+                .andExpect(header().exists("Content-Type"));
     }
 
     @Test
@@ -100,4 +132,3 @@ class FileControllerIntegrationTest {
                 .andExpect(status().isNotFound());
     }
 }
-

@@ -1,18 +1,10 @@
-import 'dart:io';
-
 class AppConstants {
-  // Android Emulator uses 10.0.2.2 for localhost
-  // iOS Simulator uses localhost
-  static String get baseUrl {
-    if (Platform.isAndroid) {
-      // 에뮬레이터 사용 시: 10.0.2.2
-      return 'http://10.0.2.2:8080';
-    }
-    return 'http://localhost:8080';
-  }
-
   // 운영 서버 URL (Railway)
-  static const String prodBaseUrl = 'https://dollcatch.store';
+  static const String baseUrl = 'https://dollgacha-production.up.railway.app';
+
+  // Google OAuth2 Web Client ID (서버와 동일)
+  // Google Cloud Console에서 발급받은 Web Client ID
+  static const String googleWebClientId = '117898675158-q8av68g6rm9d91988m8umlvjm5u3gnp0.apps.googleusercontent.com';
 
   // Auth Endpoints
   static const String loginEndpoint = '/api/login';

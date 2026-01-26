@@ -69,6 +69,66 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final success = await _authService.loginWithGoogle();
+
+      if (success) {
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Google 로그인에 실패했습니다.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류가 발생했습니다: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  Future<void> _handleKakaoLogin() async {
+    setState(() => _isLoading = true);
+
+    try {
+      final success = await _authService.loginWithKakao();
+
+      if (success) {
+        if (mounted) {
+          Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('카카오 로그인에 실패했습니다.')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('오류가 발생했습니다: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -150,7 +210,7 @@ class _LoginScreenState extends State<LoginScreen> {
               color: const Color(0xFFFEE500),
               textColor: Colors.black87,
               icon: Icons.chat_bubble, // 카카오 아이콘 대신 임시
-              onPressed: () => _handleOAuth2Login('kakao'),
+              onPressed: _handleKakaoLogin,
             ),
             const SizedBox(height: 12),
             _SocialLoginButton(
@@ -158,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> {
               color: Colors.white,
               textColor: Colors.black87,
               icon: Icons.g_mobiledata, // 구글 아이콘 대신 임시
-              onPressed: () => _handleOAuth2Login('google'),
+              onPressed: _handleGoogleLogin,
               hasBorder: true,
             ),
             const SizedBox(height: 40),

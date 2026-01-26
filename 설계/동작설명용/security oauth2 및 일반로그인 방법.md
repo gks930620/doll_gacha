@@ -48,7 +48,32 @@ OAuth2 Request Repository 주의사항 (State 유지)
 
 
 지금 이 상태가 앱 웹 다 로그인되는데  앱의 경우 앱웹브라우저를 통해 oauth2로그인이 되도록 함.
-(구글은 앱 용  10.0.2.2 redirect-uri 등록못해서... )
+
+## 앱 OAuth2 로그인 URL 관련 정리
+
+### 카카오 (WebView 방식)
+- 앱에서 WebView를 띄워서 OAuth2 로그인을 진행함
+- WebView 내에서는 사실상 웹 브라우저와 동일하게 동작
+- 따라서 `/custom-oauth2/login/app/kakao`로 요청해도 실제로는 **웹과 동일한 OAuth2 플로우**를 탐
+- redirect-uri도 웹과 동일하게 서버 URL 사용 가능
+- 카카오는 WebView에서 OAuth2 로그인을 허용하므로 문제없음
+- 
+### Google (Native 방식 필수)
+- **Google은 WebView에서 OAuth2 로그인을 금지함** (403 disallowed_useragent 에러)
+- 따라서 앱에서는 `google_sign_in` 패키지를 사용한 **네이티브 방식** 필수
+- 네이티브 로그인 후 사용자 정보를 서버 `/api/oauth2/google/app`로 전송
+- 서버에서 사용자 생성/조회 후 JWT 토큰 발급
+
+### 정리
+| Provider | 앱 로그인 방식 | 설명 |
+|----------|--------------|------|
+| 카카오 | Native SDK | `kakao_flutter_sdk` 패키지 사용 후 서버에 토큰 전송 |
+| Google | Native SDK | WebView 금지, `google_sign_in` 패키지 사용 후 서버에 토큰 전송 |
+
+### 결론
+- **카카오, Google 모두 네이티브 SDK 방식으로 통일**
+- 앱에서 네이티브 로그인 후 사용자 정보를 서버 `/api/oauth2/{provider}/app`로 전송
+- 서버의 `AppOAuth2Controller`에서 JWT 발급
 
 
 
