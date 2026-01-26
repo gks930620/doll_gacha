@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:kakao_map_plugin/kakao_map_plugin.dart';
+import 'package:kakao_flutter_sdk/kakao_flutter_sdk.dart' as kakao_sdk;
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/signup_screen.dart';
@@ -18,6 +19,12 @@ void main() async {
 
   // .env 파일 로드
   await dotenv.load(fileName: ".env");
+
+  // 카카오 로그인 SDK 초기화
+  kakao_sdk.KakaoSdk.init(
+    nativeAppKey: dotenv.env['KAKAO_NATIVE_APP_KEY'] ?? '',
+    javaScriptAppKey: dotenv.env['KAKAO_MAP_JAVASCRIPT_KEY'] ?? '',
+  );
 
   // 카카오맵 SDK 초기화
   AuthRepository.initialize(
