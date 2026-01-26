@@ -263,7 +263,7 @@
                 <div class="form-group">
                     <label class="form-label required">내용</label>
                     <div id="editor" style="height: 400px; background: white;"></div>
-                    <div class="form-help">최소 10자 이상 작성해주세요.</div>
+                    <div class="form-help">최소 5자 이상 작성해주세요.</div>
                 </div>
 
                 <div class="form-group">
@@ -606,8 +606,8 @@
                 return false;
             }
 
-            if (!textContent || textContent.length < 10) {
-                alert('내용을 10자 이상 입력해주세요.');
+            if (!textContent || textContent.length < 5) {
+                alert('내용을 5자 이상 입력해주세요.');
                 return false;
             }
 

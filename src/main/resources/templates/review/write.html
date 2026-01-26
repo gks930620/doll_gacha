@@ -110,6 +110,37 @@
             color: #ffd700;
         }
 
+        /* 기계 힘 선택 버튼 스타일 */
+        .strength-input {
+            display: flex;
+            gap: 8px;
+        }
+
+        .strength-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .strength-btn:hover {
+            border-color: #6200ea;
+            color: #6200ea;
+        }
+
+        .strength-btn.active {
+            background: #6200ea;
+            border-color: #6200ea;
+            color: white;
+        }
+
         .form-input,
         .form-textarea {
             width: 100%;
@@ -245,17 +276,16 @@
                 <!-- 기계 힘 평가 -->
                 <div class="form-group">
                     <label class="form-label">
-                        기계 힘 평가 <span class="required">*</span>
+                        기계 힘 평가 (1: 약함 ~ 5: 강함) <span class="required">*</span>
                     </label>
-                    <div class="rating-input" id="strengthInput">
-                        <span class="material-icons rating-star" data-value="1">star</span>
-                        <span class="material-icons rating-star" data-value="2">star</span>
-                        <span class="material-icons rating-star" data-value="3">star</span>
-                        <span class="material-icons rating-star" data-value="4">star</span>
-                        <span class="material-icons rating-star" data-value="5">star</span>
+                    <div class="strength-input" id="strengthInput">
+                        <span class="strength-btn" data-value="1">1</span>
+                        <span class="strength-btn" data-value="2">2</span>
+                        <span class="strength-btn" data-value="3">3</span>
+                        <span class="strength-btn" data-value="4">4</span>
+                        <span class="strength-btn" data-value="5">5</span>
                     </div>
                     <input type="hidden" name="machineStrength" id="strengthValue" required>
-                    <div class="helper-text">1: 매우 약함, 5: 매우 강함</div>
                 </div>
 
                 <!-- 리뷰 내용 -->
@@ -275,23 +305,32 @@
                 <!-- 인형 크기별 지출 금액 -->
                 <div class="form-group">
                     <label class="form-label">
-                        인형 크기별 지출 금액 (선택)
+                        인형 크기별 지출 금액 (천원 단위, 선택)
                     </label>
                     <div class="cost-inputs">
                         <div class="cost-input-group">
-                            <label class="cost-label">대형 인형 (원)</label>
-                            <input type="number" name="largeDollCost" class="form-input" placeholder="예: 10000">
+                            <label class="cost-label">대형 인형</label>
+                            <div style="position:relative;">
+                                <input type="number" name="largeDollCost" class="form-input" placeholder="예: 10" min="1" max="100">
+                                <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#757575; font-size:12px;">천원</span>
+                            </div>
                         </div>
                         <div class="cost-input-group">
-                            <label class="cost-label">중형 인형 (원)</label>
-                            <input type="number" name="mediumDollCost" class="form-input" placeholder="예: 5000">
+                            <label class="cost-label">중형 인형</label>
+                            <div style="position:relative;">
+                                <input type="number" name="mediumDollCost" class="form-input" placeholder="예: 5" min="1" max="100">
+                                <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#757575; font-size:12px;">천원</span>
+                            </div>
                         </div>
                         <div class="cost-input-group">
-                            <label class="cost-label">소형 인형 (원)</label>
-                            <input type="number" name="smallDollCost" class="form-input" placeholder="예: 2000">
+                            <label class="cost-label">소형 인형</label>
+                            <div style="position:relative;">
+                                <input type="number" name="smallDollCost" class="form-input" placeholder="예: 2" min="1" max="100">
+                                <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#757575; font-size:12px;">천원</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="helper-text">인형 1개당 대략 지출한 금액을 입력해주세요</div>
+                    <div class="helper-text">인형 1개당 대략 지출한 금액 (천원 단위)</div>
                 </div>
 
                 <!-- 버튼 -->
@@ -332,11 +371,44 @@
             });
         }
 
+        // 기계 힘 버튼 입력 처리
+        function setupStrengthInput(containerId, valueInputId) {
+            const container = document.getElementById(containerId);
+            const valueInput = document.getElementById(valueInputId);
+            const btns = container.querySelectorAll('.strength-btn');
+
+            btns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const value = this.getAttribute('data-value');
+                    valueInput.value = value;
+
+                    btns.forEach(b => {
+                        if (b.getAttribute('data-value') === value) {
+                            b.classList.add('active');
+                        } else {
+                            b.classList.remove('active');
+                        }
+                    });
+                });
+            });
+        }
+
         // 전체 별점
         setupRatingInput('ratingInput', 'ratingValue');
 
         // 기계 힘 평가
-        setupRatingInput('strengthInput', 'strengthValue');
+        setupStrengthInput('strengthInput', 'strengthValue');
+
+        // 폼 제출 시 비용을 천원 단위에서 원 단위로 변환
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const largeCost = document.querySelector('input[name="largeDollCost"]');
+            const mediumCost = document.querySelector('input[name="mediumDollCost"]');
+            const smallCost = document.querySelector('input[name="smallDollCost"]');
+
+            if (largeCost.value) largeCost.value = parseInt(largeCost.value) * 1000;
+            if (mediumCost.value) mediumCost.value = parseInt(mediumCost.value) * 1000;
+            if (smallCost.value) smallCost.value = parseInt(smallCost.value) * 1000;
+        });
     </script>
 </body>
 </html>

@@ -194,6 +194,37 @@
             color: #ff9800;
         }
 
+        /* 기계 힘 선택 버튼 스타일 */
+        .strength-input {
+            display: flex;
+            gap: 8px;
+        }
+
+        .strength-btn {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .strength-btn:hover {
+            border-color: #6200ea;
+            color: #6200ea;
+        }
+
+        .strength-btn.active {
+            background: #6200ea;
+            border-color: #6200ea;
+            color: white;
+        }
+
         /* Image Upload Styles */
         .image-upload-container {
             display: flex;
@@ -537,16 +568,32 @@
                     </div>
 
                     <div class="form-group">
-                        <label>기계 힘 (1-5)</label>
-                        <input type="number" name="machineStrength" class="form-control" min="1" max="5" value="3">
+                        <label>기계 힘 (1: 약함 ~ 5: 강함)</label>
+                        <div class="strength-input" id="strengthStars">
+                            <span class="strength-btn" data-value="1">1</span>
+                            <span class="strength-btn" data-value="2">2</span>
+                            <span class="strength-btn active" data-value="3">3</span>
+                            <span class="strength-btn" data-value="4">4</span>
+                            <span class="strength-btn" data-value="5">5</span>
+                        </div>
+                        <input type="hidden" name="machineStrength" id="strengthValue" value="3">
                     </div>
 
                     <div class="form-group">
-                        <label>비용 (대형/중형/소형)</label>
+                        <label>비용 (천원 단위, 예: 3 = 3,000원)</label>
                         <div style="display:flex; gap:10px;">
-                            <input type="number" name="costLarge" class="form-control" placeholder="대형 비용">
-                            <input type="number" name="costMedium" class="form-control" placeholder="중형 비용">
-                            <input type="number" name="costSmall" class="form-control" placeholder="소형 비용">
+                            <div style="flex:1; position:relative;">
+                                <input type="number" name="costLarge" class="form-control" placeholder="대형" min="1" max="100">
+                                <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#757575; font-size:12px;">천원</span>
+                            </div>
+                            <div style="flex:1; position:relative;">
+                                <input type="number" name="costMedium" class="form-control" placeholder="중형" min="1" max="100">
+                                <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#757575; font-size:12px;">천원</span>
+                            </div>
+                            <div style="flex:1; position:relative;">
+                                <input type="number" name="costSmall" class="form-control" placeholder="소형" min="1" max="100">
+                                <span style="position:absolute; right:10px; top:50%; transform:translateY(-50%); color:#757575; font-size:12px;">천원</span>
+                            </div>
                         </div>
                     </div>
 
@@ -743,7 +790,7 @@
                     const avgStrength = stats.avgMachineStrength ? stats.avgMachineStrength.toFixed(1) : '0.0';
                     document.getElementById('statAvgMachineStrength').textContent = avgStrength + ' / 5';
 
-                    // 평균 대형 비용
+                    // 평균 대형 비용 (원 단위를 천원 단위로 표시)
                     const avgLarge = stats.avgLargeDollCost ? Math.round(stats.avgLargeDollCost).toLocaleString() + '원' : '데이터 없음';
                     document.getElementById('statAvgLargeCost').textContent = avgLarge;
 
@@ -909,6 +956,26 @@
         }
         updateStarDisplay(5); // initialize
 
+        // 기계 힘 선택 로직
+        document.getElementById('strengthStars').addEventListener('click', function(e) {
+            if(e.target.classList.contains('strength-btn')) {
+                const value = e.target.getAttribute('data-value');
+                document.getElementById('strengthValue').value = value;
+                updateStrengthDisplay(value);
+            }
+        });
+
+        function updateStrengthDisplay(value) {
+            const btns = document.querySelectorAll('#strengthStars .strength-btn');
+            btns.forEach(btn => {
+                if (btn.getAttribute('data-value') === value) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+        }
+
         // ========== 이미지 파일 관리 함수 ==========
 
         // 파일 선택 트리거
@@ -1008,15 +1075,15 @@
 
             const formData = new FormData(this);
 
-            // JSON 형태로 데이터 구성
+            // JSON 형태로 데이터 구성 (비용은 천원 단위 입력 -> 원 단위 저장)
             const reviewData = {
                 dollShopId: parseInt(shopId),
                 content: formData.get('content'),
                 rating: parseInt(formData.get('rating')),
                 machineStrength: parseInt(formData.get('machineStrength')),
-                largeDollCost: formData.get('costLarge') ? parseInt(formData.get('costLarge')) : null,
-                mediumDollCost: formData.get('costMedium') ? parseInt(formData.get('costMedium')) : null,
-                smallDollCost: formData.get('costSmall') ? parseInt(formData.get('costSmall')) : null
+                largeDollCost: formData.get('costLarge') ? parseInt(formData.get('costLarge')) * 1000 : null,
+                mediumDollCost: formData.get('costMedium') ? parseInt(formData.get('costMedium')) * 1000 : null,
+                smallDollCost: formData.get('costSmall') ? parseInt(formData.get('costSmall')) * 1000 : null
             };
 
             console.log('리뷰 제출:', reviewData);
